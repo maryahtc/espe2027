@@ -1,6 +1,6 @@
 # Portal da Especialização — Documento Técnico (v0, para aprovação)
 
-> Status: **proposta**. Nenhum código de aplicação foi escrito. A implementação começa após aprovação.
+> Status: **aprovado e implementado** (fases 1–6). Ajustes feitos durante a implementação estão marcados com **[impl.]**.
 > Base: briefing completo + leitura da planilha real **"Cronograma Módulo Espe"** (Google Drive, 26/09/2026).
 
 ---
@@ -87,6 +87,7 @@ Outros achados menores:
 Module {
   number: number            // 7
   slug: string              // "07"
+  month: 'YYYY-MM' | null   // [impl.] "Mês previsto" — módulos 5–10 ainda não têm datas
   startDate, endDate: ISODate | null
   title: string | null      // tema principal
   description: string | null
@@ -98,7 +99,8 @@ Module {
 Class {                     // "Aula"
   id: string                // estável: módulo + data + início + ordem
   moduleNumber: number
-  date: ISODate
+  day: number | null        // [impl.] "Dia do módulo" (1, 2, 3) — ordena aulas ainda sem data
+  date: ISODate | null      // [impl.] opcional: "Dia 2 · data a definir"
   weekday: string           // derivado da data
   start, end: HH:mm | null
   period: 'manha' | 'tarde' | 'noite' | 'integral' | null   // fallback quando não há horário
@@ -203,6 +205,7 @@ A leitura é por **nome do cabeçalho**, não pela letra da coluna — a coorden
 | Coluna | Uso |
 |---|---|
 | Professor | 🟢 nome completo — é a chave |
+| Apelidos *(coluna nova)* | ⚙️ **[impl.]** vincula nomes curtos das AULAS ("Thiago") ao nome completo; não publicado |
 | Especialidade / tema | 🟢 |
 | Bio curta *(coluna nova, opcional)* | 🟢 |
 | Módulo(s), Data(s) | ⛔ derivados das AULAS (evita cadastro duplo) |
@@ -424,7 +427,8 @@ Regra de evolução: **nova coluna na planilha é invisível por padrão.** Publ
 
 ## 11. Design system (resumo)
 
-- **Tipografia:** títulos em serif editorial (**Newsreader**), interface e corpo em **Inter**, números tabulares para datas/horários. Auto-hospedadas via `next/font` (sem requisição externa).
+- **Tipografia [impl.]:** títulos em serif editorial (**Instrument Serif**), interface e corpo em **Schibsted Grotesk**, datas/horários/números em **IBM Plex Mono** (tabular). Auto-hospedadas via `next/font` (sem requisição externa).
+- **Detalhe de identidade [impl.]:** régua milimetrada (como uma sonda periodontal) nos cartões de destaque, cronograma e rodapé.
 - **Hierarquia:** Data (sans, peso 600, caixa alta, tracking) → Módulo (número grande) → Tema (serif) → Professor → Horário (tabular).
 - **Cor:** off-white `#FAFAF7`, tinta `#111`, 5 cinzas, bordas hairline. Destaque = tinta (placeholder `--accent`) até aprovação de uma cor. Status: verde, âmbar e vermelho **dessaturados**, sempre ponto + palavra.
 - **Espaço:** escala de 4 px; conteúdo max 720 px (leitura) / 1120 px (listas); gutter 16 px no mobile.
@@ -490,3 +494,13 @@ PORTAL_INDEXING=noindex|index
 PORTAL_BASE_URL=
 ```
 Passos de Google (detalhados no README na Fase 5): criar projeto no Google Cloud → ativar Sheets API → criar Service Account → gerar chave JSON → compartilhar a planilha com o e-mail da Service Account como **Leitor** → colar as variáveis no painel da Vercel.
+
+---
+
+## 15. Registro de implementação
+
+- Professores **sem aula publicada** não aparecem (evita expor convites em negociação).
+- Aulas e módulos com Status **Rascunho** nunca saem do servidor.
+- A página do módulo é estática; o destaque "Sua aula" (`?professor=slug`) é aplicado no navegador por um componente mínimo.
+- "Ver todos" da busca abre o grupo completo em `/busca?q=…&grupo=…`.
+- CSVs de migração da grade antiga em `docs/migracao/` (validados por teste automatizado).

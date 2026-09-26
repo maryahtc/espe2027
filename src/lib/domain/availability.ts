@@ -38,3 +38,28 @@ export function computeInventoryStatus(current: number | null, minimum: number |
   if (minimum !== null && current < minimum) return 'baixo'
   return 'ok'
 }
+
+/**
+ * Demanda acumulada: soma do que os módulos AINDA NÃO REALIZADOS pedem de cada
+ * item, comparada ao estoque atual. Revela faltas que a visão por módulo esconde
+ * (ex.: M05 pede 20, M06 pede 15, estoque 25 → cada um "OK", mas faltam 10).
+ */
+export function aggregateDemand<T extends { inventoryKey: string | null; moduleNumber: number; required: number | null }>(
+  materials: T[],
+  stock: Map<string, number | null>,
+  isUpcoming: (moduleNumber: number) => boolean,
+): Map<string, Availability & { modules: number[] }> {
+  const totals = new Map<string, { required: number; modules: Set<number> }>()
+  for (const m of materials) {
+    if (!m.inventoryKey || m.required === null || !isUpcoming(m.moduleNumber)) continue
+    const entry = totals.get(m.inventoryKey) ?? { required: 0, modules: new Set<number>() }
+    entry.required += m.required
+    entry.modules.add(m.moduleNumber)
+    totals.set(m.inventoryKey, entry)
+  }
+  const result = new Map<string, Availability & { modules: number[] }>()
+  for (const [key, { required, modules }] of totals) {
+    result.set(key, { ...computeAvailability(required, stock.get(key) ?? null), modules: [...modules].sort((a, b) => a - b) })
+  }
+  return result
+}

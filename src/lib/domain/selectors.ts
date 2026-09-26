@@ -116,8 +116,8 @@ export type ProfessorParticipation = { module: PublicModule; classes: PublicClas
 
 export function getModuleProfessors(ds: PublicDataset, number: number) {
   const classes = getModuleClasses(ds, number)
-  const module = ds.modules.find((m) => m.number === number)
-  return professorNames(ds, module?.professorSlugs ?? []).map((professor) => ({
+  const mod = ds.modules.find((m) => m.number === number)
+  return professorNames(ds, mod?.professorSlugs ?? []).map((professor) => ({
     professor,
     classes: classes.filter((c) => c.professorSlugs.includes(professor.slug)),
   }))

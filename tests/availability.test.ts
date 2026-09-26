@@ -27,3 +27,19 @@ describe('status de estoque', () => {
     expect(computeInventoryStatus(null, 10)).toBe('sem-dados')
   })
 })
+
+import { aggregateDemand } from '@/lib/domain/availability'
+
+describe('demanda acumulada', () => {
+  it('soma módulos futuros e compara com o estoque', () => {
+    const materials = [
+      { inventoryKey: 'resina', moduleNumber: 5, required: 20 },
+      { inventoryKey: 'resina', moduleNumber: 6, required: 15 },
+      { inventoryKey: 'resina', moduleNumber: 2, required: 50 }, // já realizado
+      { inventoryKey: null, moduleNumber: 5, required: 3 },
+    ]
+    const result = aggregateDemand(materials, new Map([['resina', 25]]), (n) => n >= 5)
+    expect(result.get('resina')).toEqual({ required: 35, available: 25, missing: 10, status: 'atencao', modules: [5, 6] })
+    expect(result.size).toBe(1)
+  })
+})
