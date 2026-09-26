@@ -1,0 +1,141 @@
+@import 'tailwindcss';
+
+/*
+ * DESIGN SYSTEM — tokens
+ * Direção: editorial + precisão clínica. Papel off-white, tinta grafite,
+ * régua milimetrada como detalhe. Uma única cor de destaque (a definir) → --accent.
+ */
+:root {
+  --paper: #f7f6f2;
+  --surface: #fdfcfa;
+  --ink: #16161a;
+  --ink-2: #3b3b40;
+  --muted: #6b6a66;
+  --faint: #9a9892;
+  --rule: #e2e0da;
+  --rule-strong: #c9c6be;
+  --accent: var(--ink);
+
+  --ok: #3d7355;
+  --ok-bg: #e9f0ea;
+  --warn: #93600f;
+  --warn-bg: #f5eddc;
+  --danger: #9c3a2e;
+  --danger-bg: #f5e3df;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+
+  --font-display: var(--font-instrument-serif), 'Times New Roman', serif;
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SFMono-Regular', monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Rótulo editorial: caixa alta, espaçado */
+  .label {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Datas, horários, números: monoespaçada tabular */
+  .data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  /* Régua milimetrada (sonda periodontal) — detalhe de identidade */
+  .ruler {
+    height: 9px;
+    background-image:
+      linear-gradient(to right, var(--rule-strong) 1px, transparent 1px),
+      linear-gradient(to right, var(--ink) 1px, transparent 1px);
+    background-size:
+      6px 5px,
+      60px 9px;
+    background-repeat: repeat-x;
+    background-position:
+      0 100%,
+      0 100%;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .link-underline {
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 150ms;
+  }
+  .link-underline:hover {
+    text-decoration-color: var(--ink);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
