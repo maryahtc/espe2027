@@ -1,5 +1,7 @@
 /**
- * Busca global sobre o PublicDataset (roda no servidor).
+ * Busca global.
+ *   buildSearchIndex (servidor) → índice só com campos PÚBLICOS já exibidos no portal;
+ *   runSearch (navegador) → consulta instantânea sobre esse índice.
  *
  * - Normaliza acentos, maiúsculas, pontuação e espaços ("mock-up" = "mock up").
  * - Todos os termos precisam aparecer (E lógico), como início de palavra
@@ -8,7 +10,7 @@
  */
 import { CLASS_TYPES } from '@/config/vocab'
 import { formatDayMonth } from '@/lib/dates'
-import { moduleHref, moduleLabel, moduleWhen, professorHref } from '@/lib/domain/selectors'
+import { moduleHref, moduleHrefByNumber, moduleLabel, moduleWhen, professorHref } from '@/lib/domain/selectors'
 import { normalizeText, padModuleNumber, tokenize } from '@/lib/text'
 import type { PublicDataset } from '@/schemas/public'
 
@@ -24,25 +26,23 @@ export const SEARCH_GROUP_LABELS: Record<SearchKind, string> = {
 
 const KIND_PRIORITY: SearchKind[] = ['professor', 'module', 'class', 'material', 'equipment']
 
-type Entry = {
+export type SearchEntry = {
   kind: SearchKind
   id: string
   title: string
   subtitle: string
   href: string
   primary: string
-  words: string[]
   text: string
   order: number
 }
+type Entry = SearchEntry
 
 export type SearchHit = Pick<Entry, 'kind' | 'id' | 'title' | 'subtitle' | 'href'> & { score: number }
 export type SearchGroup = { kind: SearchKind; label: string; hits: SearchHit[]; total: number }
 
-function entry(base: Omit<Entry, 'primary' | 'words' | 'text'>, primary: string, ...others: (string | null | undefined)[]): Entry {
-  const normalizedPrimary = normalizeText(primary)
-  const text = normalizeText([primary, ...others].filter(Boolean).join(' '))
-  return { ...base, primary: normalizedPrimary, words: text.split(' '), text }
+function entry(base: Omit<Entry, 'primary' | 'text'>, primary: string, ...others: (string | null | undefined)[]): Entry {
+  return { ...base, primary: normalizeText(primary), text: normalizeText([primary, ...others].filter(Boolean).join(' ')) }
 }
 
 export function buildSearchIndex(ds: PublicDataset): Entry[] {
@@ -76,7 +76,7 @@ export function buildSearchIndex(ds: PublicDataset): Entry[] {
         {
           kind: 'module',
           id: m.slug,
-          title: `${moduleLabel(m)}${m.title ? ` · ${m.title}` : ''}`,
+          title: `${moduleLabel(m)} · ${m.title ?? 'Tema a confirmar'}`,
           subtitle: moduleWhen(m),
           href: moduleHref(m),
           order: m.number,
@@ -104,7 +104,7 @@ export function buildSearchIndex(ds: PublicDataset): Entry[] {
           ]
             .filter(Boolean)
             .join(' · '),
-          href: `${moduleHref({ number: c.moduleNumber })}#${c.id}`,
+          href: `${moduleHref({ slug: c.moduleSlug })}#${c.id}`,
           order: c.moduleNumber * 1000 + ds.classes.indexOf(c),
         },
         c.title,
@@ -123,7 +123,7 @@ export function buildSearchIndex(ds: PublicDataset): Entry[] {
           id: item.id,
           title: item.name,
           subtitle: [`Módulo ${padModuleNumber(item.moduleNumber)}`, item.brandSpec].filter(Boolean).join(' · '),
-          href: `${moduleHref({ number: item.moduleNumber })}#materiais`,
+          href: `${moduleHrefByNumber(item.moduleNumber)}#materiais`,
           order: item.moduleNumber,
         },
         item.name,
@@ -158,7 +158,7 @@ export function buildSearchIndex(ds: PublicDataset): Entry[] {
 }
 
 function termMatches(entry: Entry, term: string): boolean {
-  if (entry.words.some((w) => w.startsWith(term))) return true
+  if (entry.text.split(' ').some((w) => w.startsWith(term))) return true
   return term.length >= 4 && entry.text.includes(term)
 }
 
@@ -170,12 +170,12 @@ function score(entry: Entry, query: string, terms: string[]): number {
   return 30
 }
 
-export function search(ds: PublicDataset, rawQuery: string, perGroup = 5): SearchGroup[] {
+export function runSearch(index: SearchEntry[], rawQuery: string, perGroup = 5): SearchGroup[] {
   const terms = tokenize(rawQuery)
   if (terms.length === 0) return []
   const query = terms.join(' ')
 
-  const hits = buildSearchIndex(ds)
+  const hits = index
     .filter((e) => terms.every((t) => termMatches(e, t)))
     .map((e) => ({ entry: e, score: score(e, query, terms) }))
     .sort((a, b) => b.score - a.score || a.entry.order - b.entry.order)
@@ -202,4 +202,9 @@ export function search(ds: PublicDataset, rawQuery: string, perGroup = 5): Searc
   return groups
     .sort((a, b) => b.best - a.best || KIND_PRIORITY.indexOf(a.kind) - KIND_PRIORITY.indexOf(b.kind))
     .map(({ best: _best, ...group }) => group)
+}
+
+/** Atalho para testes e uso no servidor. */
+export function search(ds: PublicDataset, rawQuery: string, perGroup = 5): SearchGroup[] {
+  return runSearch(buildSearchIndex(ds), rawQuery, perGroup)
 }

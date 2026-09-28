@@ -13,12 +13,16 @@ export type Column<T> = {
   mobile: 'primary' | 'status' | 'meta' | 'stat' | 'hidden'
 }
 
-export function DataList<T>({ rows, columns, rowKey, caption }: {
+export function DataList<T>({ rows, columns, rowKey, caption, filterAttrs }: {
   rows: T[]
   columns: Column<T>[]
   rowKey: (row: T) => string
   caption: string
+  /** Atributos de filtro (data-f-*, data-text) — torna as linhas filtráveis no navegador. */
+  filterAttrs?: (row: T) => Record<string, string>
 }) {
+  const itemProps = (row: T) =>
+    filterAttrs ? { 'data-item': '', 'data-key': rowKey(row), ...filterAttrs(row) } : {}
   const primary = columns.find((c) => c.mobile === 'primary')
   const status = columns.find((c) => c.mobile === 'status')
   const meta = columns.filter((c) => c.mobile === 'meta')
@@ -29,7 +33,7 @@ export function DataList<T>({ rows, columns, rowKey, caption }: {
       {/* Celular: cartões */}
       <ul className="divide-y divide-rule border-y border-rule md:hidden" aria-label={caption}>
         {rows.map((row) => (
-          <li key={rowKey(row)} className="py-4">
+          <li key={rowKey(row)} className="py-4" {...itemProps(row)}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 font-semibold text-ink">{primary?.cell(row)}</div>
               {status ? <div className="shrink-0 pt-0.5">{status.cell(row)}</div> : null}
@@ -75,7 +79,7 @@ export function DataList<T>({ rows, columns, rowKey, caption }: {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-rule transition-colors hover:bg-surface">
+              <tr key={rowKey(row)} className="border-b border-rule transition-colors hover:bg-surface" {...itemProps(row)}>
                 {columns.map((c) => (
                   <td
                     key={c.key}

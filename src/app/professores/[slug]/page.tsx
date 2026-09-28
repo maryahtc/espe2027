@@ -8,7 +8,7 @@ import { PendingTag } from '@/components/ui/StatusBadge'
 import { TypeTag } from '@/components/ui/TypeTag'
 import { ArrowLeft } from '@/components/ui/icons'
 import { PERIODS } from '@/config/vocab'
-import { ModuleRow } from '@/features/modules/ModuleRow'
+import { ModuleNotices, ModuleRow } from '@/features/modules/ModuleRow'
 import { formatDayMonth, formatTimeRange, todayISO, weekdayOf } from '@/lib/dates'
 import {
   getProfessorParticipations,
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function classWhen(c: PublicClass): string {
   const time = formatTimeRange(c.start, c.end) ?? (c.period ? PERIODS[c.period].label : null)
-  return time ?? 'Horário a definir'
+  return time ?? 'Horário a confirmar'
 }
 
 function ClassLine({ item }: { item: PublicClass }) {
@@ -47,7 +47,9 @@ function ClassLine({ item }: { item: PublicClass }) {
     <li className="grid grid-cols-[4.75rem_1fr] gap-x-4 border-t border-rule py-3 first:border-t-0 md:grid-cols-[7rem_1fr]">
       <div>
         <p className="data text-[15px] font-medium text-ink">{item.date ? formatDayMonth(item.date) : `Dia ${item.day ?? '—'}`}</p>
-        <p className="text-xs text-muted">{item.date ? weekdayOf(item.date) : 'data a definir'}</p>
+        <p className="text-xs text-muted">
+          {item.date ? (item.notices.length ? item.date.slice(0, 4) : weekdayOf(item.date)) : 'data a confirmar'}
+        </p>
       </div>
       <div className="min-w-0">
         <p className="data text-[15px] text-ink">{classWhen(item)}</p>
@@ -55,6 +57,7 @@ function ClassLine({ item }: { item: PublicClass }) {
         <div className="mt-1.5 flex flex-wrap gap-2">
           <TypeTag type={item.type} />
           {item.status === 'a-confirmar' ? <PendingTag /> : null}
+          {item.notices.includes('data-inconsistente') ? <PendingTag>Data a confirmar</PendingTag> : null}
         </div>
       </div>
     </li>
@@ -98,14 +101,15 @@ export default async function ProfessorPage({ params }: Props) {
               <p className="label">{moduleTiming(first.module, today) === 'current' ? 'Acontecendo agora' : 'Próxima participação'}</p>
               <div className="mt-3 flex items-baseline gap-4">
                 <span className="font-display text-6xl leading-none md:text-7xl" aria-hidden>
-                  {first.module.slug}
+                  {String(first.module.number).padStart(2, '0')}
                 </span>
                 <div>
                   <p className="label !text-ink">{moduleLabel(first.module)}</p>
                   <p className="data mt-1 font-medium tracking-wide uppercase">{moduleWhen(first.module)}</p>
+                  <div className="mt-1.5 empty:hidden"><ModuleNotices module={first.module} /></div>
                 </div>
               </div>
-              <p className="mt-3 font-display text-3xl leading-tight md:text-4xl">{first.module.title ?? 'Tema a definir'}</p>
+              <p className="mt-3 font-display text-3xl leading-tight md:text-4xl">{first.module.title ?? 'Tema a confirmar'}</p>
 
               <p className="label mt-7 mb-1 !text-ink">{first.classes.length > 1 ? 'Suas aulas' : 'Sua aula'}</p>
               <ol>
@@ -126,7 +130,7 @@ export default async function ProfessorPage({ params }: Props) {
           <div className="mt-10">
             <p className="label mb-1">Depois</p>
             {others.map((p) => (
-              <ModuleRow key={p.module.number} module={p.module} professors={professorNames(ds, p.module.professorSlugs)} href={fullModuleHref(p, slug)}>
+              <ModuleRow key={p.module.slug} module={p.module} professors={professorNames(ds, p.module.professorSlugs)} href={fullModuleHref(p, slug)}>
                 <ol className="rounded-md border border-rule bg-surface px-3">
                   {p.classes.map((c) => (
                     <ClassLine key={c.id} item={c} />
@@ -148,7 +152,7 @@ export default async function ProfessorPage({ params }: Props) {
           </summary>
           <div className="mt-2">
             {past.map((p) => (
-              <ModuleRow key={p.module.number} module={p.module} professors={[]} href={fullModuleHref(p, slug)}>
+              <ModuleRow key={p.module.slug} module={p.module} professors={[]} href={fullModuleHref(p, slug)}>
                 <p className="text-sm text-muted">{p.classes.map((c) => c.title).join(' · ')}</p>
               </ModuleRow>
             ))}

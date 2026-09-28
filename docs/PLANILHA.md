@@ -78,25 +78,47 @@ Regras de segurança:
 | MÓDULOS › Status | Confirmado, A confirmar, Rascunho |
 | MATERIAIS POR MÓDULO › Material | Intervalo `ESTOQUE!A2:A` |
 
+## Regra: a planilha é soberana
+
+O portal **nunca deduz, completa, corrige ou renumera** datas, números de módulo, professores ou temas.
+
+- Informação ausente → o portal mostra **“a confirmar”** (ex.: “Tema a confirmar”, “Datas a confirmar”, “Horário a confirmar”).
+- Possível inconsistência → o dado aparece **como está**, com um selo “a confirmar”, e o problema é listado no
+  diagnóstico (`/api/saude`) para a coordenação corrigir na planilha. Hoje o portal sinaliza:
+  - **data fora do período do curso** ou fora das datas do módulo (a data é exibida com o ano, como está);
+  - **número de módulo repetido** (os dois módulos são exibidos, com “Numeração a confirmar”).
+- Mês sem ano (ex.: “MAI”) é exibido só como mês; o ano não é suposto.
+- Nomes de professores aparecem exatamente como escritos na planilha até serem atualizados.
+
 ## Migração da grade atual (AULAS/PROFESSORES)
 
-A grade antiga foi convertida para o formato novo em [`docs/migracao/`](migracao/):
+A grade antiga foi convertida para o formato novo em [`docs/migracao/`](migracao/), **sem deduções**:
+textos copiados como estão, datas só onde a grade informa, nenhum tema criado.
+Essa conversão é também a base da prévia do portal.
 
 1. Crie as abas **MÓDULOS** e **AULAS** e importe `MODULOS.csv` e `AULAS.csv`
    (Arquivo → Importar → Upload → "Inserir nova(s) página(s)" e renomeie a aba).
-2. Na aba PROFESSORES, acrescente as colunas **Apelidos** e **Bio curta** e cole as linhas de `PROFESSORES_novas_colunas.csv`.
-   Depois troque a coluna **Professor** pelo nome completo — mantenha o nome curto em **Apelidos**.
-3. Revise a coluna **Observações internas** das AULAS: ela guarda o texto original da grade e aponta o que foi interpretado.
+2. Na aba PROFESSORES, acrescente as colunas **Apelidos** e **Bio curta** e cole as linhas de `PROFESSORES_novas_colunas.csv`
+   (nomes exatamente como aparecem na grade). Quando quiser, troque pelo nome completo e coloque o nome curto em **Apelidos**.
+3. Revise a coluna **Observações internas** das AULAS: ela explica cada ponto a confirmar.
 4. A aba antiga AULAS/PROFESSORES pode ser mantida como histórico; o portal não a lê.
 
-Pontos que precisam de confirmação (vieram assim da grade):
+Como a conversão trata a grade:
 
-- **Módulo 4**: a única data era `22/05/2026` → convertido para 20–22/05/**2027** (dias 1 e 2 inferidos).
-- **Módulo "9 / NOV"**: estava com o número 9 repetido → convertido para **módulo 10**.
-- **Módulo 9, dia 1**: tema incompleto ("Pino e ") → está como **Rascunho** (não aparece).
-- **Módulo 1, dia 1**: os professores estavam na linha do dia, sem indicar manhã/tarde → atribuídos às duas aulas.
-- Módulos 5 a 10 ainda não têm datas → aparecem com o mês previsto.
-- Nenhum módulo tem **Tema principal** ainda.
+- Um texto com “MANHÃ: … / TARDE: …” vira uma aula por período. Quando os professores são informados só para o dia
+  (sem indicar manhã ou tarde), eles aparecem nas aulas daquele dia com o status **A confirmar**.
+- Linhas que nomeiam o professor (ex.: “Thiago: smilecloud 2D”) vinculam aquele professor à aula.
+- Tipo de aula só é preenchido quando a grade diz explicitamente (ex.: “CLINICA”). “TEORIA E HANDS ON” fica na descrição.
+- A coluna **Módulo** das aulas do número 9 repetido traz o mês (“9 (OUT)”, “9 (NOV)”) para separar os dois blocos da grade.
+
+Pontos que a coordenação precisa confirmar (aparecem como “a confirmar” no portal):
+
+- **Módulo 4**: só o DIA 3 tem data, e ela é **22/05/2026** (ano diferente dos demais). O portal mostra essa data como está, sinalizada; os dias 1 e 2 aparecem “data a confirmar”.
+- **Módulo 9 repetido**: a grade tem dois blocos numerados 9 (OUT e NOV). O portal mostra os dois, com “Numeração a confirmar”.
+- **“Pino e”** (módulo 9 de outubro, dia 1): texto incompleto, exibido como está e marcado “A confirmar”.
+- **Módulo 1, dia 3 (tarde)**: texto incompleto (“… buscar sempre finalizar com”), marcado “A confirmar”.
+- **Módulos 4 a 9**: sem datas na grade → exibidos pelo mês (sem ano) com “Datas a confirmar”.
+- **Nenhum módulo tem Tema principal** → “Tema a confirmar”.
 
 ## Forçar atualização imediata
 

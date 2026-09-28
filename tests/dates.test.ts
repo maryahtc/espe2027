@@ -52,6 +52,12 @@ describe('parseMonth', () => {
     expect(parseMonth('março de 2028')).toBe('2028-03')
     expect(parseMonth('2027-06')).toBe('2027-06')
   })
+  it('só o nome do mês: não deduz o ano', () => {
+    expect(parseMonth('MAI')).toBe('--05')
+    expect(parseMonth('fev\n( 11.12.13)')).toBe('--02')
+    expect(parseMonth('Novembro')).toBe('--11')
+    expect(parseMonth('xyz')).toBeNull()
+  })
 })
 
 describe('formatação', () => {
@@ -66,6 +72,7 @@ describe('formatação', () => {
   })
   it('mês por extenso', () => {
     expect(formatMonthYear('2027-06')).toBe('Junho 2027')
+    expect(formatMonthYear('--05')).toBe('Maio')
   })
 })
 

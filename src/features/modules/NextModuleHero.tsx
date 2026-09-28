@@ -1,18 +1,16 @@
 import Link from 'next/link'
 import { ButtonLink } from '@/components/ui/ArrowLink'
-import { PendingTag } from '@/components/ui/StatusBadge'
+import { ModuleNotices } from '@/features/modules/ModuleRow'
 import { moduleHref, moduleWhen, professorHref } from '@/lib/domain/selectors'
 import type { PublicModule, PublicProfessor } from '@/schemas/public'
 
 export function NextModuleHero({
   module,
   professors,
-  topics,
   current,
 }: {
   module: PublicModule
   professors: PublicProfessor[]
-  topics: string[]
   current: boolean
 }) {
   return (
@@ -24,7 +22,7 @@ export function NextModuleHero({
             {current ? 'Acontecendo agora' : 'Próximo módulo'}
           </p>
           <p className="font-display text-[5.5rem] leading-[0.8] tracking-tight md:mt-4 md:text-[9rem]" aria-hidden>
-            {module.slug}
+            {String(module.number).padStart(2, '0')}
           </p>
         </div>
         <div className="flex flex-col">
@@ -32,15 +30,11 @@ export function NextModuleHero({
             <span className="sr-only">Módulo {module.slug}, </span>
             {moduleWhen(module)}
           </p>
-          {module.status === 'a-confirmar' ? <div className="mt-2"><PendingTag>Datas a confirmar</PendingTag></div> : null}
+          <div className="mt-2 empty:hidden"><ModuleNotices module={module} /></div>
           <h2 className="mt-3 font-display text-[2.4rem] leading-[1.02] text-balance md:text-6xl">
-            {module.title ?? 'Tema a definir'}
+            {module.title ?? <span className="text-muted">Tema a confirmar</span>}
           </h2>
-          {!module.title && topics.length ? (
-            <p className="mt-2 text-muted">{topics.join(' · ')}</p>
-          ) : module.description ? (
-            <p className="mt-3 max-w-xl text-[15px] text-muted">{module.description}</p>
-          ) : null}
+          {module.description ? <p className="mt-3 max-w-xl text-[15px] text-muted">{module.description}</p> : null}
           {professors.length ? (
             <div className="mt-6 border-t border-rule pt-4">
               <p className="label mb-2">Professores</p>

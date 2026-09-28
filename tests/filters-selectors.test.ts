@@ -1,23 +1,28 @@
 import { describe, expect, it } from 'vitest'
 import { demoWorkbook } from '@fixtures/workbook'
 import { buildFromWorkbook } from '@/server/data/pipeline/build'
-import { activeFilters, applyFilters, hrefWith, parseFilters, textMatches, type FilterDef } from '@/lib/filters'
+import { activeFilters, evaluate, filtersToParams, parseFilters } from '@/lib/filters'
+import { scheduleFilterDefs, scheduleItems } from '@/features/modules/scheduleFilters'
 import {
   getNextModule,
   getProfessorParticipations,
   getUpcomingModules,
   groupClassesByDay,
-  moduleYear,
 } from '@/lib/domain/selectors'
-import type { PublicClass } from '@/schemas/public'
 
 const { dataset } = buildFromWorkbook(demoWorkbook, 'mock', new Date('2026-09-26T12:00:00Z'))
 
-const defs: FilterDef[] = [
-  { param: 'ano', label: 'Ano', kind: 'select', options: [{ value: '2027', label: '2027' }, { value: '2028', label: '2028' }] },
-  { param: 'professor', label: 'Professor', kind: 'select', options: dataset.professors.map((p) => ({ value: p.slug, label: p.name })) },
-  { param: 'tema', label: 'Tema', kind: 'text' },
-]
+const defs = scheduleFilterDefs(dataset)
+const items = scheduleItems(dataset)
+const visibleModules = (state: Record<string, string>) =>
+  evaluate(items, defs, state)
+    .map((r, i) => (r.visible ? items[i]!.key : null))
+    .filter(Boolean)
+const listedClasses = (state: Record<string, string>) =>
+  evaluate(items, defs, state).flatMap((r, i) => {
+    const own = dataset.classes.filter((c) => c.moduleSlug === items[i]!.key)
+    return own.filter((_, j) => r.subs[j])
+  })
 
 describe('filtros combinados', () => {
   it('lê a URL e ignora valores inválidos', () => {
@@ -25,30 +30,39 @@ describe('filtros combinados', () => {
       ano: '2027',
       tema: 'cerâmica',
     })
+    expect(parseFilters(new URLSearchParams('ano=2027&tipo=hands-on'), defs)).toEqual({ ano: '2027', tipo: 'hands-on' })
+  })
+
+  it('sem filtros mostra todos os módulos e nenhuma aula listada', () => {
+    expect(visibleModules({})).toHaveLength(dataset.modules.length)
+    expect(listedClasses({})).toEqual([])
   })
 
   it('combina filtros com E lógico: 2027 + João', () => {
-    const state = parseFilters({ ano: '2027', professor: 'joao-silva' }, defs)
-    const moduleYearOf = (c: PublicClass) => moduleYear(dataset.modules.find((m) => m.number === c.moduleNumber)!)
-    const result = applyFilters(dataset.classes, state, {
-      ano: (c, v) => String(moduleYearOf(c)) === v,
-      professor: (c, v) => c.professorSlugs.includes(v),
-    })
-    expect(result.length).toBeGreaterThan(5)
-    expect(result.every((c) => c.professorSlugs.includes('joao-silva') && moduleYearOf(c) === 2027)).toBe(true)
+    const classes = listedClasses({ ano: '2027', professor: 'joao-silva' })
+    expect(classes.length).toBeGreaterThan(5)
+    expect(classes.every((c) => c.professorSlugs.includes('joao-silva') && c.moduleNumber <= 10)).toBe(true)
+    expect(visibleModules({ ano: '2027', professor: 'joao-silva' })).not.toContain('11')
   })
 
-  it('tema contém “cerâmica” (sem acento/maiúsculas)', () => {
-    const result = applyFilters(dataset.classes, { tema: 'CERAMICA' }, { tema: (c, v) => textMatches(v, c.title, c.description) })
-    expect(result.map((c) => c.title)).toContain('Seleção de cerâmicas')
+  it('tema “cerâmica” (sem acento/maiúsculas) acha aulas e o módulo pelo tema', () => {
+    expect(listedClasses({ tema: 'CERAMICA' }).map((c) => c.title)).toContain('Seleção de cerâmicas')
+    expect(visibleModules({ tema: 'ceramicas' })).toContain('10')
   })
 
-  it('gera links compartilháveis e chips removíveis', () => {
+  it('tema do módulo + professor lista as aulas do professor naquele módulo', () => {
+    const titles = listedClasses({ tema: 'reabilitação', professor: 'luisa-martins' }).map((c) => c.title)
+    expect(titles).toEqual(['Clínica', 'Provisórios e mock-up', 'Discussão de casos'])
+  })
+
+  it('tipo de aula', () => {
+    expect(listedClasses({ tipo: 'discussao-de-caso' }).map((c) => c.title)).toEqual(['Discussão de casos'])
+  })
+
+  it('gera parâmetros compartilháveis e rótulos dos chips', () => {
     const state = { ano: '2027', professor: 'joao-silva' }
-    expect(hrefWith('/cronograma', state)).toBe('/cronograma?ano=2027&professor=joao-silva')
-    const chips = activeFilters('/cronograma', defs, state)
-    expect(chips.map((c) => c.valueLabel)).toEqual(['2027', 'João Silva'])
-    expect(chips[1]!.removeHref).toBe('/cronograma?ano=2027')
+    expect(filtersToParams(state, defs).toString()).toBe('ano=2027&professor=joao-silva')
+    expect(activeFilters(defs, state).map((c) => c.valueLabel)).toEqual(['2027', 'João Silva'])
   })
 })
 
@@ -70,15 +84,15 @@ describe('seletores de datas', () => {
 
   it('participações do professor: futuras primeiro, passadas depois', () => {
     const { upcoming, past } = getProfessorParticipations(dataset, 'joao-silva', '2027-08-01')
-    expect(upcoming[0]?.module.number).toBe(7)
+    expect(upcoming[0]?.module.slug).toBe('07')
     expect(upcoming[0]?.classes.map((c) => c.title)).toContain('Preparos para restaurações indiretas')
-    expect(past[0]?.module.number).toBe(6)
+    expect(past[0]?.module.slug).toBe('06')
   })
 
   it('agrupa programação por dia, inclusive sem data', () => {
-    const days = groupClassesByDay(dataset.classes.filter((c) => c.moduleNumber === 7))
+    const days = groupClassesByDay(dataset.classes.filter((c) => c.moduleSlug === '07'))
     expect(days.map((d) => d.label)).toEqual(['Quarta · 18 AGO', 'Quinta · 19 AGO', 'Sexta · 20 AGO'])
-    const undated = groupClassesByDay(dataset.classes.filter((c) => c.moduleNumber === 11))
-    expect(undated[0]?.label).toBe('Dia 1 · data a definir')
+    const undated = groupClassesByDay(dataset.classes.filter((c) => c.moduleSlug === '11'))
+    expect(undated[0]?.label).toBe('Dia 1 · data a confirmar')
   })
 })

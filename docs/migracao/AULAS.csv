@@ -1,36 +1,36 @@
 Módulo,Dia do módulo,Data,Início,Fim,Período,Tema da aula,Descrição,Tipo,Professor(es),Observações públicas,Status,Observações internas
-1,1,11/02/2027,,,Manhã,Primeira consulta e inteligência clínica,,,Maryah; Victor; Elber,,,"Grade: ""MANHA: primeira consulta/inteligencia"". Professores vieram da linha do dia."
-1,1,11/02/2027,,,Tarde,Fotografia e organização no Smilecloud,Fotografia (teórica) e organização da documentação e do escaneamento no Smilecloud.,Teórica,Maryah; Victor; Elber; Thiago,,,"Grade: ""TARDE: fotografia teorica) e thiago mostra smilecloud de como organizar isso/escaneamento""."
-1,2,12/02/2027,,,Manhã,Documentação complementar (tomografia e Rx),,Clínica,Thiago; Victor,,,
-1,2,12/02/2027,,,Tarde,Fotografia e anamnese,,Clínica,Thiago; Victor,,,
-1,3,13/02/2027,,,Manhã,Continuação da prática,,,,,,"Grade: ""MANHA: continuação"". Sem professor na grade."
-1,3,13/02/2027,,,Tarde,Explicação da prática e finalização,,,,,,"Grade: ""TARDE: explicação da pratica e finalização (lu do atelie oral- entrevista) buscar sempre finalizar com"" (texto incompleto)."
-2,1,18/03/2027,,,Manhã,IA em exames de imagem,,,Caio,,,
-2,1,18/03/2027,,,Tarde,Smilecloud básico,,,Thiago,,,
-2,2,19/03/2027,,,,Smilecloud 2D,,,Thiago,,,
-2,2,19/03/2027,,,,Adesão e montagem em articulador,,,Clecila,,,
-2,3,20/03/2027,,,,Prática de JIG e articulador,,,Clecila,,,
-3,1,22/04/2027,,,Manhã,Aula teórica,,Teórica,Calamita,,,"Grade: ""Manha: aula teoria Calamita"" — tema da aula não informado."
-3,1,22/04/2027,,,Tarde,Ajuste de placa,,,Calamita,Cada aluno precisa trazer uma placa da dupla.,,
-3,2,23/04/2027,,,,Resina composta: composição e indicações,"Composição, tipos de resina, vantagens e desvantagens, indicação e contraindicação.",Teórica,Thiago,,,
-3,2,23/04/2027,,,,Manipulação de resina,,Hands-on,Thiago,,,
-3,3,24/04/2027,,,,Cerâmica: composição e indicações,"Composição, tipos, vantagens e desvantagens, indicação e contraindicação.",Teórica,Victor,,,
-4,1,20/05/2027,,,,Marketing e gestão,,,Gi Borelli; Maryah,,,Data inferida (grade sem data neste dia).
-4,2,21/05/2027,,,,Preparo de faceta,,Hands-on,Victor,,,"Data inferida. Grade: ""TEORIA E HANDS ON""."
-4,2,21/05/2027,,,,Faceta em resina,,Hands-on,Thiago,,,"Data inferida. Grade: ""TEORIA E HANDS ON""."
-4,3,22/05/2027,,,,Isolamento absoluto,,,Voigt,,,Grade tinha 22/05/2026.
-5,1,,,,,Classes I e II,,Hands-on,Joester; Raquel; Gabi,,,"Grade: ""TEORIA E HANDS ON""."
-5,2,,,,,Smilecloud 3D,,,,,,
-5,3,,,,,PT e PPR,,,Joester; Raquel,,,
-6,1,,,,,Impressão 3D,Teoria e hands-on.,Hands-on,Tchello; Denilson,,,
-6,2,,,,,Clínica,,Clínica,,,,
-6,3,,,,,Hands-on de resina anterior,,Hands-on,Thiago,,,
-7,1,,,,,Clareamento dental,,,Adriano Lima,,,
-7,2,,,,,Clínica,,Clínica,,,,
-7,3,,,,,Preparo para laminado e estratégia de escaneamento,,Hands-on,Victor,,,
+1,1,11/02/2027,,,Manhã,primeira consulta/inteligencia,,,Maryah e Victor e Elber,,A confirmar,"Professores informados para o dia inteiro, sem indicar manhã ou tarde."
+1,1,11/02/2027,,,Tarde,fotografia teorica) e thiago mostra smilecloud de como organizar isso/escaneamento,,,Maryah e Victor e Elber,,A confirmar,"Professores informados para o dia inteiro, sem indicar manhã ou tarde."
+1,2,12/02/2027,,,Manhã,documentação complementar (tomo Rx),,Clínica,Thiago e Victor,,A confirmar,"Grade: ""MANHA (CLINICA)"". Professores informados para o dia inteiro, sem indicar manhã ou tarde."
+1,2,12/02/2027,,,Tarde,fotografia e anamnese,,Clínica,Thiago e Victor,,A confirmar,"Grade: ""TARDE (clinica)"". Professores informados para o dia inteiro, sem indicar manhã ou tarde."
+1,3,13/02/2027,,,Manhã,continuação,,,,,,
+1,3,13/02/2027,,,Tarde,explicação da pratica e finalização (lu do atelie oral- entrevista) buscar sempre finalizar com,,,,,A confirmar,Texto incompleto na grade.
+2,1,18/03/2027,,,Manhã,IA em exames de imagem,,,Caio,,A confirmar,Linha de professores do dia cita só Caio; a tarde cita Thiago no texto.
+2,1,18/03/2027,,,Tarde,smilecloud basico,,,Thiago,,A confirmar,"Grade: ""tarde: smilecloud basico Thiago"". Linha de professores do dia cita só Caio."
+2,2,19/03/2027,,,,smilecloud 2D,,,Thiago,,,
+2,2,19/03/2027,,,,adesão e montagem em articulador,,,Clecila,,A confirmar,"Grade: ""Clecila: adesão..."". Linha de professores do dia cita só Thiago."
+2,3,20/03/2027,,,,Pratica de JIG e Articulador,,,Clecila,,,
+3,1,22/04/2027,,,Manhã,aula teoria,,,CALAMITA,,,"Grade: ""Manha: aula teoria Calamita""."
+3,1,22/04/2027,,,Tarde,ajuste de placa (aluno precisa trazer uma placa da dupla,,,CALAMITA,,,"Grade: ""Tarde: Calamita - ajuste de placa (...)""."
+3,2,23/04/2027,,,,resina composta,"- composição/tipos de resina/vatnagens e desvantagens/insicação e contra indicação
+- Hands on de manipulação de resina",,Thiago,,,
+3,3,24/04/2027,,,,cerâmica,- composição/tipos de/vatnagens e desvantagens/insicação e contra indicação,,Victor,,,
+4,1,,,,,Marketing + gestão,,,Gi Borelli e Maryah,,,
+4,2,,,,,Preparo de faceta,TEORIA E HANDS ON,,Victor,,,"Grade: ""Preparo de faceta - victor""."
+4,2,,,,,Faceta em resina,TEORIA E HANDS ON,,Thiago,,,"Grade: ""Faceta em resina- Thiago""."
+4,3,22/05/2026,,,,isolamento absoluto,,,VOIGT,,,Data exatamente como na grade (2026). Verificar.
+5,1,,,,,Cl l e ll,TEORIA E HANDS ON,,Joester e Raquel e Gabi,,,
+5,2,,,,,smilecloud 3D,,,,,,
+5,3,,,,,PT e PPR,,,Joester e Raquel,,,
+6,1,,,,,Impressão 3D - Teorica e hands on,,,Tchello e Denilson,,,
+6,2,,,,,CLINICA,,Clínica,,,,
+6,3,,,,,Hands on Resina Anterior,,,Thiago,,,
+7,1,,,,,Clareamento Dental,,,Adriano Lima,,,
+7,2,,,,,CLINICA,,Clínica,,,,
+7,3,,,,,Hands on Preparo Laminado e estrategia de escaneamento,,,Victor,,,
 8,1,,,,,Cirurgia guiada pelo design,,,Guto Giordani,,,
-8,2,,,,,Clínica,,Clínica,,,,
-8,3,,,,,Fluxo digital Sirona,,Hands-on,Joester,,,
-9,1,,,,,Pino e …,,,,,Rascunho,"Grade: ""Pino e "" (texto incompleto). Completar o tema e trocar o status."
-9,2,,,,,Clínica,,Clínica,,,,
-10,2,,,,,Clínica,,Clínica,,,,"Na grade estava sob o módulo ""9 / NOV""."
+8,2,,,,,CLINICA,,Clínica,,,,
+8,3,,,,,Hands on Fluxo digital Sirona,,,Joester,,,
+9 (OUT),1,,,,,Pino e,,,,,A confirmar,Texto incompleto na grade.
+9 (OUT),2,,,,,CLINICA,,Clínica,,,,
+9 (NOV),2,,,,,CLINICA,,Clínica,,,,"Módulo ""9"" de NOV (número repetido na grade)."

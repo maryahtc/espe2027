@@ -9,10 +9,18 @@ import { z } from 'zod'
 import { AVAILABILITY_STATUS, CLASS_TYPES, INVENTORY_STATUS, PERIODS } from '@/config/vocab'
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
-const month = z.string().regex(/^\d{4}-\d{2}$/)
+/** "2027-05" ou "--05" (mês sem ano informado na planilha) */
+const month = z.string().regex(/^(\d{4}-|--)\d{2}$/)
 const clock = z.string().regex(/^\d{2}:\d{2}$/)
 const availability = z.enum(Object.keys(AVAILABILITY_STATUS) as [keyof typeof AVAILABILITY_STATUS])
 const visibleStatus = z.enum(['confirmado', 'a-confirmar'])
+
+/**
+ * Sinais de inconsistência detectados na planilha. O dado é exibido como está,
+ * acompanhado de um aviso "a confirmar" — nunca corrigido automaticamente.
+ */
+export const MODULE_NOTICES = ['numero-repetido'] as const
+export const CLASS_NOTICES = ['data-inconsistente'] as const
 
 export const PublicModuleSchema = z.object({
   number: z.number().int().positive(),
@@ -23,12 +31,14 @@ export const PublicModuleSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   status: visibleStatus,
+  notices: z.array(z.enum(MODULE_NOTICES)),
   professorSlugs: z.array(z.string()),
 })
 
 export const PublicClassSchema = z.object({
   id: z.string(),
   moduleNumber: z.number().int().positive(),
+  moduleSlug: z.string(),
   day: z.number().int().nullable(),
   date: isoDate.nullable(),
   start: clock.nullable(),
@@ -40,6 +50,7 @@ export const PublicClassSchema = z.object({
   professorSlugs: z.array(z.string()),
   publicNotes: z.string().nullable(),
   status: visibleStatus,
+  notices: z.array(z.enum(CLASS_NOTICES)),
 })
 
 export const PublicProfessorSchema = z.object({
@@ -52,6 +63,7 @@ export const PublicProfessorSchema = z.object({
 export const PublicMaterialSchema = z.object({
   id: z.string(),
   moduleNumber: z.number().int().positive(),
+  moduleSlug: z.string().nullable(),
   classTitle: z.string().nullable(),
   professorSlug: z.string().nullable(),
   name: z.string(),
@@ -102,7 +114,7 @@ export const PublicContentItemSchema = z.object({
 export const PublicDatasetSchema = z.object({
   version: z.literal(1),
   generatedAt: z.string(),
-  source: z.enum(['mock', 'google-sheets']),
+  source: z.enum(['mock', 'preview', 'google-sheets']),
   modules: z.array(PublicModuleSchema),
   classes: z.array(PublicClassSchema),
   professors: z.array(PublicProfessorSchema),

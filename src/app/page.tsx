@@ -7,7 +7,6 @@ import { ModuleRow } from '@/features/modules/ModuleRow'
 import { NextModuleHero } from '@/features/modules/NextModuleHero'
 import { todayISO } from '@/lib/dates'
 import {
-  getModuleClasses,
   getNextModule,
   getUpcomingModules,
   moduleTiming,
@@ -23,23 +22,19 @@ export default async function HomePage() {
   const today = todayISO()
   const next = getNextModule(ds, today)
   const upcoming = getUpcomingModules(ds, today, siteConfig.upcomingModulesOnHome)
-  const topics = next
-    ? [...new Set(getModuleClasses(ds, next.number).map((c) => c.title))].filter((t) => t !== 'Clínica').slice(0, 3)
-    : []
 
   return (
     <>
       <h1 className="sr-only">{siteConfig.name}</h1>
       <section className="pt-8 pb-8 md:pt-16 md:pb-12">
         <p className="mb-3 font-display text-[1.9rem] leading-tight md:text-[2.6rem]">O que você procura?</p>
-        <SearchBox action="/busca" placeholder="Professor, módulo, tema, material…" label="Buscar no portal" size="lg" />
+        <SearchBox id="busca-home" mode="navigate" placeholder="Professor, módulo, tema, material…" label="Buscar no portal" size="lg" />
       </section>
 
       {next ? (
         <NextModuleHero
           module={next}
           professors={professorNames(ds, next.professorSlugs)}
-          topics={topics}
           current={moduleTiming(next, today) === 'current'}
         />
       ) : ds.modules.length ? (
@@ -57,7 +52,7 @@ export default async function HomePage() {
           <SectionHeader title="Próximos módulos" />
           <div className="-mt-4">
             {upcoming.map((m) => (
-              <ModuleRow key={m.number} module={m} professors={professorNames(ds, m.professorSlugs)} />
+              <ModuleRow key={m.slug} module={m} professors={professorNames(ds, m.professorSlugs)} />
             ))}
           </div>
           <div className="border-t border-rule pt-5">

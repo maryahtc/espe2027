@@ -53,6 +53,7 @@ export const moduleRowSchema = z.object({
 
 export const classRowSchema = z.object({
   module: requiredModule,
+  moduleLabel: optionalText,
   day: dayIndex,
   date: optionalDate,
   start: optionalTime,

@@ -3,7 +3,7 @@ import type { Column } from '@/components/data/DataList'
 import { Num } from '@/components/data/DataList'
 import { AvailabilityBadge, InventoryBadge } from '@/components/ui/StatusBadge'
 import { formatNumericDate } from '@/lib/dates'
-import { moduleHref } from '@/lib/domain/selectors'
+import { moduleHrefByNumber } from '@/lib/domain/selectors'
 import { padModuleNumber } from '@/lib/text'
 import type { PublicEquipment, PublicInventoryItem, PublicMaterial } from '@/schemas/public'
 
@@ -14,7 +14,7 @@ function ModuleLinks({ numbers }: { numbers: number[] }) {
       {numbers.map((n, i) => (
         <span key={n}>
           {i > 0 ? ', ' : ''}
-          <Link href={moduleHref({ number: n })} className="link-underline">
+          <Link href={moduleHrefByNumber(n)} className="link-underline">
             {padModuleNumber(n)}
           </Link>
         </span>

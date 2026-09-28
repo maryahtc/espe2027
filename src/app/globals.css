@@ -3,7 +3,7 @@
 /*
  * DESIGN SYSTEM — tokens
  * Direção: editorial + precisão clínica. Papel off-white, tinta grafite,
- * régua milimetrada como detalhe. Uma única cor de destaque (a definir) → --accent.
+ * régua milimetrada como detalhe. Uma única cor de destaque (ainda não escolhida) → --accent.
  */
 :root {
   --paper: #f7f6f2;
@@ -138,4 +138,12 @@
 }
 .animate-rise {
   animation: rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Módulos já realizados ficam discretos — exceto quando a pessoa está filtrando aulas. */
+[data-past] {
+  opacity: 0.6;
+}
+[data-filtering-level='sub'] [data-past] {
+  opacity: 1;
 }

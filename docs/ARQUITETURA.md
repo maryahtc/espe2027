@@ -504,3 +504,15 @@ Passos de Google (detalhados no README na Fase 5): criar projeto no Google Cloud
 - A página do módulo é estática; o destaque "Sua aula" (`?professor=slug`) é aplicado no navegador por um componente mínimo.
 - "Ver todos" da busca abre o grupo completo em `/busca?q=…&grupo=…`.
 - CSVs de migração da grade antiga em `docs/migracao/` (validados por teste automatizado).
+
+### Revisão após a validação (28/09/2026)
+
+- **A planilha é soberana.** Nada é deduzido, completado, corrigido ou renumerado. Ausências viram “a confirmar”;
+  inconsistências (data fora do período, número de módulo repetido) são exibidas como estão, com selo, e listadas em `/api/saude`.
+  - `Module.month` aceita mês sem ano (`--05`); ano nunca é suposto.
+  - Módulos com número repetido viram dois módulos (`/modulos/09` e `/modulos/09-2`) com `notices: ['numero-repetido']`.
+  - `Class.notices: ['data-inconsistente']`; datas sinalizadas não entram no cálculo das datas do módulo.
+- **Filtros e busca no navegador.** As páginas passaram a ser totalmente estáticas; `src/client` aplica os filtros e a busca
+  sobre os dados públicos que a página já contém (mesma lógica pura de `src/lib/filters.ts` e `src/lib/search.ts`).
+  O estado continua na URL. O índice de busca contém só campos públicos já exibidos no portal.
+- **Prévia**: `DATA_SOURCE=preview` usa a grade atual convertida sem deduções; `scripts/build-preview.mjs` gera um arquivo único navegável.

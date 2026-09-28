@@ -29,3 +29,12 @@ export function DemoBanner() {
     </div>
   )
 }
+
+export function PreviewBanner() {
+  return (
+    <div className="border-b border-rule-strong bg-surface px-4 py-2 text-center text-xs text-ink-2">
+      <strong className="font-semibold">Prévia.</strong> Dados da grade atual da planilha, sem complementos. O que está
+      incompleto aparece como “a confirmar”.
+    </div>
+  )
+}

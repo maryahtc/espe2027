@@ -85,8 +85,19 @@ export function parseTime(value: unknown): ClockTime | null {
   return `${pad(h)}:${pad(m)}`
 }
 
-/** "06/2027", "2027-06", "jun/2027", "Junho 2027", data completa → "2027-06". */
-export function parseMonth(value: unknown): string | null {
+export type MonthValue = string // "2027-06" (mês e ano) ou "--06" (só o mês, ano não informado)
+
+function monthFromName(word: string): number | null {
+  const key = word.normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 3).toUpperCase()
+  const index = MONTHS_SHORT.indexOf(key)
+  return index >= 0 ? index + 1 : null
+}
+
+/**
+ * "06/2027", "2027-06", "jun/2027", "Junho 2027", data completa → "2027-06".
+ * Só o nome do mês ("MAI", "fev (11.12.13)") → "--05": o ano NÃO é deduzido.
+ */
+export function parseMonth(value: unknown): MonthValue | null {
   if (typeof value === 'number') return parseDate(value)?.slice(0, 7) ?? null
   if (typeof value !== 'string') return null
   const text = value.trim()
@@ -106,11 +117,23 @@ export function parseMonth(value: unknown): string | null {
   }
   const named = /^([a-zA-ZçÇ]+)\.?\s*(?:\/|de|-)?\s*(\d{4})$/.exec(text)
   if (named) {
-    const key = named[1]!.normalize('NFD').replace(/[̀-ͯ]/g, '').slice(0, 3).toUpperCase()
-    const index = MONTHS_SHORT.indexOf(key)
-    return index >= 0 ? `${named[2]}-${pad(index + 1)}` : null
+    const m = monthFromName(named[1]!)
+    return m ? `${named[2]}-${pad(m)}` : null
+  }
+  const onlyName = /^([a-zA-ZçÇ]{3,})\.?(?:\s|\(|$)/.exec(text)
+  if (onlyName) {
+    const m = monthFromName(onlyName[1]!)
+    return m ? `--${pad(m)}` : null
   }
   return null
+}
+
+export function monthHasYear(month: MonthValue): boolean {
+  return /^\d{4}-\d{2}$/.test(month)
+}
+
+function monthNumber(month: MonthValue): number {
+  return Number(month.slice(-2))
 }
 
 function parts(date: ISODate): { y: number; m: number; d: number } {
@@ -171,16 +194,15 @@ export function formatDateRange(start: ISODate, end: ISODate | null): string {
   return `${a.d}–${b.d} ${MONTHS_SHORT[a.m - 1]} ${a.y}`
 }
 
-/** "2027-08" → "Agosto 2027" */
-export function formatMonthYear(month: string): string {
-  const [y, m] = month.split('-').map(Number) as [number, number]
-  return `${MONTHS_LONG[m - 1]} ${y}`
+/** "2027-08" → "Agosto 2027"; "--08" → "Agosto" (ano não informado) */
+export function formatMonthYear(month: MonthValue): string {
+  const name = MONTHS_LONG[monthNumber(month) - 1] ?? ''
+  return monthHasYear(month) ? `${name} ${month.slice(0, 4)}` : name
 }
 
-/** "2027-08" → "AGO" */
-export function formatMonthShort(month: string): string {
-  const m = Number(month.split('-')[1])
-  return MONTHS_SHORT[m - 1] ?? ''
+/** "2027-08" / "--08" → "AGO" */
+export function formatMonthShort(month: MonthValue): string {
+  return MONTHS_SHORT[monthNumber(month) - 1] ?? ''
 }
 
 /** "14:00–18:00" / "14:00" / null */

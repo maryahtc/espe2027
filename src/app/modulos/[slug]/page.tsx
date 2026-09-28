@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
-import { Suspense } from 'react'
+import { Activate } from '@/components/Enhancer'
 import { DataList } from '@/components/data/DataList'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SectionHeader } from '@/components/ui/PageHeader'
-import { PendingTag } from '@/components/ui/StatusBadge'
 import { ArrowLeft, ArrowRight } from '@/components/ui/icons'
-import { HighlightProfessor } from '@/features/modules/HighlightProfessor'
+import { ModuleNotices } from '@/features/modules/ModuleRow'
 import { ScheduleDay } from '@/features/modules/Schedule'
 import { equipmentColumns, materialColumns } from '@/features/inventory/columns'
 import { ProfessorCard } from '@/features/professors/ProfessorCard'
@@ -35,7 +34,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const mod = getModule(await getDataset(), (await params).slug)
-  return { title: mod ? `${moduleLabel(mod)}${mod.title ? ` · ${mod.title}` : ''}` : 'Módulo não encontrado' }
+  return { title: mod ? `${moduleLabel(mod)} · ${mod.title ?? 'tema a confirmar'}` : 'Módulo não encontrado' }
 }
 
 const CONTENT_KIND_LABEL = {
@@ -55,13 +54,13 @@ export default async function ModulePage({ params }: Props) {
   if (!mod) notFound()
   if (slug !== mod.slug) permanentRedirect(moduleHref(mod))
 
-  const classes = getModuleClasses(ds, mod.number)
+  const classes = getModuleClasses(ds, mod.slug)
   const days = groupClassesByDay(classes)
-  const team = getModuleProfessors(ds, mod.number)
+  const team = getModuleProfessors(ds, mod.slug)
   const materials = ds.materials.filter((m) => m.moduleNumber === mod.number)
   const equipment = ds.equipment.filter((e) => e.moduleNumbers.includes(mod.number))
   const content = ds.content.filter((c) => c.moduleNumber === mod.number)
-  const { previous, next } = getModuleNeighbors(ds, mod.number)
+  const { previous, next } = getModuleNeighbors(ds, mod.slug)
   const professors = professorIndex(ds)
 
   const sections = [
@@ -73,10 +72,7 @@ export default async function ModulePage({ params }: Props) {
   ]
 
   return (
-    <article>
-      <Suspense>
-        <HighlightProfessor />
-      </Suspense>
+    <article data-highlight-root="">
       <div className="pt-6">
         <Link href="/cronograma" className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted hover:text-ink">
           <ArrowLeft width={15} height={15} /> Cronograma
@@ -84,13 +80,13 @@ export default async function ModulePage({ params }: Props) {
       </div>
 
       <header className="animate-rise pt-2 pb-8 md:pt-6 md:pb-10">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <p className="label !text-ink">{moduleLabel(mod)}</p>
-          {mod.status === 'a-confirmar' ? <PendingTag /> : null}
+          <ModuleNotices module={mod} />
         </div>
         <p className="data mt-3 text-xl font-medium tracking-wide uppercase md:text-2xl">{moduleWhen(mod)}</p>
         <h1 className="mt-2 font-display text-[2.75rem] leading-[1.02] text-balance md:text-7xl">
-          {mod.title ?? 'Tema a definir'}
+          {mod.title ?? <span className="text-muted">Tema a confirmar</span>}
         </h1>
         {mod.description ? <p className="mt-4 max-w-2xl text-[15px] text-muted md:text-base">{mod.description}</p> : null}
         {team.length ? (
@@ -137,7 +133,7 @@ export default async function ModulePage({ params }: Props) {
             ))}
           </ul>
         ) : (
-          <EmptyState title="Professores a definir." />
+          <EmptyState title="Professores a confirmar." />
         )}
       </section>
 
@@ -186,7 +182,7 @@ export default async function ModulePage({ params }: Props) {
             <span className="label inline-flex items-center gap-1">
               <ArrowLeft width={13} height={13} /> {moduleLabel(previous)}
             </span>
-            <span className="font-display text-lg leading-tight group-hover:underline">{previous.title ?? 'Tema a definir'}</span>
+            <span className="font-display text-lg leading-tight group-hover:underline">{previous.title ?? 'Tema a confirmar'}</span>
           </Link>
         ) : (
           <span />
@@ -196,10 +192,11 @@ export default async function ModulePage({ params }: Props) {
             <span className="label inline-flex items-center gap-1">
               {moduleLabel(next)} <ArrowRight width={13} height={13} />
             </span>
-            <span className="font-display text-lg leading-tight group-hover:underline">{next.title ?? 'Tema a definir'}</span>
+            <span className="font-display text-lg leading-tight group-hover:underline">{next.title ?? 'Tema a confirmar'}</span>
           </Link>
         ) : null}
       </nav>
+      <Activate />
     </article>
   )
 }

@@ -16,7 +16,8 @@ function TimeCell({ item }: { item: PublicClass }) {
   }
   return (
     <div className="data text-[13px] leading-tight text-muted">
-      {item.period ? PERIODS[item.period].label : 'Horário a definir'}
+      {item.period ? PERIODS[item.period].label : 'Horário'}
+      {item.period ? null : <span className="block text-[11px]">a confirmar</span>}
     </div>
   )
 }
@@ -26,11 +27,13 @@ export function ScheduleItem({
   professors,
   highlightSlug,
   showModule,
+  filterProps,
 }: {
   item: PublicClass
   professors: Map<string, PublicProfessor>
   highlightSlug?: string
   showModule?: boolean
+  filterProps?: Record<string, string>
 }) {
   const people = item.professorSlugs.map((slug) => professors.get(slug)).filter((p): p is PublicProfessor => !!p)
   const highlighted = !!highlightSlug && item.professorSlugs.includes(highlightSlug)
@@ -39,6 +42,7 @@ export function ScheduleItem({
       id={item.id}
       data-prof={item.professorSlugs.join(' ')}
       data-highlight={highlighted || undefined}
+      {...filterProps}
       className="group grid scroll-mt-28 grid-cols-[4.25rem_1fr] gap-x-4 border-t border-rule py-4 first:border-t-0 data-[highlight]:-mx-3 data-[highlight]:rounded-md data-[highlight]:border-t-transparent data-[highlight]:bg-surface data-[highlight]:px-3 data-[highlight]:shadow-[inset_3px_0_0_var(--ink)] md:grid-cols-[6rem_1fr]"
     >
       <TimeCell item={item} />
@@ -64,6 +68,7 @@ export function ScheduleItem({
           ) : null}
           <TypeTag type={item.type} />
           {item.status === 'a-confirmar' ? <PendingTag /> : null}
+          {item.notices.includes('data-inconsistente') ? <PendingTag>Data a confirmar</PendingTag> : null}
         </div>
         {item.publicNotes ? (
           <p className="mt-2 border-l-2 border-rule-strong pl-3 text-sm whitespace-pre-line text-ink-2">{item.publicNotes}</p>

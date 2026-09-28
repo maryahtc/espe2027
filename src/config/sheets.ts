@@ -52,6 +52,8 @@ export const SHEET_TABS = {
     headerRow: 1,
     columns: {
       module: { headers: ['Módulo', 'Modulo'], required: true },
+      /** Mesmo texto da coluna Módulo, usado só para desempatar números repetidos (ex.: "9 (NOV)"). */
+      moduleLabel: { headers: ['Módulo', 'Modulo'] },
       day: { headers: ['Dia do módulo', 'Dia'] },
       date: { headers: ['Data'] },
       start: { headers: ['Início', 'Inicio', 'Hora início', 'Horário início'] },

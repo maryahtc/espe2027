@@ -17,6 +17,7 @@ export type IssueCode =
   | 'field_invalid'
   | 'duplicate_module'
   | 'module_implicit'
+  | 'module_ambiguous'
   | 'professor_unregistered'
   | 'professor_alias_ambiguous'
   | 'slug_collision'

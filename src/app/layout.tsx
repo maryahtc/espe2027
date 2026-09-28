@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Instrument_Serif, Schibsted_Grotesk } from 'next/font/google'
-import { DemoBanner, SiteFooter } from '@/components/layout/SiteFooter'
+import { ChromeEnhancer } from '@/components/Enhancer'
+import { DemoBanner, PreviewBanner, SiteFooter } from '@/components/layout/SiteFooter'
 import { SiteHeader } from '@/components/layout/SiteHeader'
 import { baseUrl, isIndexingEnabled } from '@/config/seo'
 import { siteConfig } from '@/config/site'
@@ -26,14 +27,14 @@ export const viewport: Viewport = { themeColor: '#f7f6f2', width: 'device-width'
 async function loadFooterInfo() {
   try {
     const { report } = await getPortalData()
-    return { updatedAt: report.generatedAt, isDemo: report.source === 'mock' }
+    return { updatedAt: report.generatedAt, source: report.source }
   } catch {
-    return { updatedAt: null, isDemo: false }
+    return { updatedAt: null, source: null }
   }
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { updatedAt, isDemo } = await loadFooterInfo()
+  const { updatedAt, source } = await loadFooterInfo()
   return (
     <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body className="min-h-dvh">
@@ -43,12 +44,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Pular para o conteúdo
         </a>
-        {isDemo ? <DemoBanner /> : null}
+        {source === 'mock' ? <DemoBanner /> : null}
+        {source === 'preview' ? <PreviewBanner /> : null}
         <SiteHeader />
         <main id="conteudo" className="mx-auto max-w-[1120px] px-4 md:px-8">
           {children}
         </main>
         <SiteFooter updatedAt={updatedAt} />
+        <ChromeEnhancer />
       </body>
     </html>
   )

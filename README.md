@@ -28,13 +28,30 @@ Requer Node 20+.
 
 ```bash
 npm install
-cp .env.example .env.local   # DATA_SOURCE=mock já vem configurado
+cp .env.example .env.local   # DATA_SOURCE=preview já vem configurado
 npm run dev                  # http://localhost:3000
 ```
 
-Com `DATA_SOURCE=mock`, o portal usa as fixtures de `fixtures/workbook.ts` (dados **fictícios**, com uma faixa
-"Dados de demonstração" no topo). Os mocks têm o mesmo formato bruto da API do Google, então todo o pipeline
-real é exercitado.
+Fontes de dados para desenvolvimento (mesmo formato bruto da API do Google, então todo o pipeline real é exercitado):
+
+- `DATA_SOURCE=preview` — a **grade atual da planilha**, convertida sem deduções (`docs/migracao/*.csv` +
+  `fixtures/preview/*.csv`). Faixa "Prévia" no topo.
+- `DATA_SOURCE=mock` — dados **fictícios** de `fixtures/workbook.ts`, usados nos testes (faixa "Dados de demonstração").
+
+Ambas são recusadas em produção.
+
+### Prévia navegável em um único arquivo
+
+Para avaliar o portal sem servidor (ex.: publicar como página privada):
+
+```bash
+DATA_SOURCE=preview npm run build
+DATA_SOURCE=preview PORT=3100 npm start &     # em outro terminal
+npm run preview:build                          # gera preview/portal-previa.html
+```
+
+O arquivo contém o HTML renderizado pelo próprio portal, o CSS, as fontes e o mesmo JavaScript de filtros e busca
+(`src/client`), com navegação por `#`.
 
 | Comando | O que faz |
 |---|---|
@@ -48,7 +65,7 @@ real é exercitado.
 
 | Variável | Obrigatória | Descrição |
 |---|---|---|
-| `DATA_SOURCE` | sim | `mock` (desenvolvimento) ou `sheets` (planilha real). `mock` é **recusado em produção**. |
+| `DATA_SOURCE` | sim | `preview` (grade atual, sem deduções), `mock` (fictícios) ou `sheets` (planilha real). `preview` e `mock` são **recusados em produção**. |
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | com `sheets` | ID da planilha (trecho da URL entre `/d/` e `/edit`). |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | com `sheets` | E-mail da Service Account. |
 | `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | com `sheets` | Chave privada (campo `private_key` do JSON). `\n` literais são aceitos. |
@@ -100,9 +117,10 @@ Observação: o plano gratuito (Hobby) da Vercel é para uso não comercial; par
 ## Atualização dos dados e cache
 
 - Os dados da planilha ficam em cache por **5 minutos** (`src/config/cache.ts` → `revalidateSeconds`).
-  Se mudar esse valor, altere também `export const revalidate = 300` nas páginas estáticas
-  (`src/app/page.tsx`, `src/app/modulos/[slug]/page.tsx`, `src/app/professores/[slug]/page.tsx`, `src/app/sitemap.ts`) —
+  Se mudar esse valor, altere também `export const revalidate = 300` nas páginas (`src/app/**/page.tsx` e `src/app/sitemap.ts`) —
   o Next exige um número literal ali.
+- Todas as páginas são estáticas (regeneradas a cada 5 minutos). Filtros e busca rodam no navegador sobre os dados
+  públicos já presentes na página, com o estado na URL (`?ano=2027&professor=…`).
 - **Forçar atualização agora:**
   ```bash
   curl -X POST https://SEU-DOMINIO/api/revalidar -H "Authorization: Bearer $REVALIDATE_SECRET"
@@ -153,11 +171,13 @@ src/
   app/                 rotas (páginas finas: buscam dados e compõem)
   components/          design system (ui/), layout, busca, filtros, lista de dados
   features/            componentes por domínio (módulos, professores, operação)
+  client/              JavaScript do navegador: filtros, busca, menu (sem framework; também usado pela prévia)
   lib/                 regras puras: texto, datas, filtros, busca, domínio (disponibilidade, seletores)
   schemas/             Zod: linhas da planilha e DTOs públicos
   server/data/         fonte (Google/mock), pipeline (ler → validar → montar), repositório com cache
   config/              site, cache, abas/colunas, vocabulários, navegação, SEO
-fixtures/              planilha fictícia (somente dev/teste)
+fixtures/              planilha fictícia (testes) e estado atual das abas existentes (prévia)
+scripts/               gerador da prévia navegável em arquivo único
 docs/                  arquitetura, guia da planilha, CSVs de migração
 tests/                 testes
 ```
