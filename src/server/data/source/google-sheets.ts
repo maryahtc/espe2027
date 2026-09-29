@@ -12,8 +12,10 @@ import { errorMessage, log } from '@/lib/log'
 import type { CellValue } from '@/lib/normalize'
 import type { RawWorkbook, SheetSource } from '../types'
 
-const API = 'https://sheets.googleapis.com/v4/spreadsheets'
-const SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly'
+export const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
+const API = SHEETS_API
+export const READ_SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly'
+export const WRITE_SCOPE = 'https://www.googleapis.com/auth/spreadsheets'
 
 export type GoogleSheetsConfig = {
   spreadsheetId: string
@@ -42,8 +44,8 @@ export function readGoogleConfigFromEnv(): GoogleSheetsConfig {
   }
 }
 
-function serviceAccountToken(config: GoogleSheetsConfig): TokenProvider {
-  const client = new JWT({ email: config.clientEmail, key: config.privateKey, scopes: [SCOPE] })
+export function serviceAccountToken(config: GoogleSheetsConfig, scope = READ_SCOPE): TokenProvider {
+  const client = new JWT({ email: config.clientEmail, key: config.privateKey, scopes: [scope] })
   return async () => {
     const { token } = await client.getAccessToken()
     if (!token) throw new Error('Não foi possível obter token da Service Account')
@@ -51,7 +53,7 @@ function serviceAccountToken(config: GoogleSheetsConfig): TokenProvider {
   }
 }
 
-function quoteSheetName(name: string): string {
+export function quoteSheetName(name: string): string {
   return `'${name.replace(/'/g, "''")}'`
 }
 

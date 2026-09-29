@@ -516,3 +516,18 @@ Passos de Google (detalhados no README na Fase 5): criar projeto no Google Cloud
   sobre os dados públicos que a página já contém (mesma lógica pura de `src/lib/filters.ts` e `src/lib/search.ts`).
   O estado continua na URL. O índice de busca contém só campos públicos já exibidos no portal.
 - **Prévia**: `DATA_SOURCE=preview` usa a grade atual convertida sem deduções; `scripts/build-preview.mjs` gera um arquivo único navegável.
+
+### Área de edição (aprovada em 29/09/2026)
+
+Decisão: opção A — todos os professores e a coordenação editam tudo, pelo portal, gravando na planilha.
+
+```
+Pessoa → /coordenacao (login Google) → Server Action → validação (só campos editáveis, só o que mudou)
+       → Sheets API (Service Account com papel Editor) → aba + HISTÓRICO → updateTag → portal atualizado
+```
+
+- Autorização: `ADMIN_EMAILS` + coluna E-mail da aba PROFESSORES (lida só no servidor, conferida a cada gravação).
+- Sessão: cookie httpOnly assinado (HMAC), 12 h.
+- Concorrência: versão da linha (hash dos campos editáveis + ID) conferida antes de gravar.
+- Planilha soberana mantida: nada é completado; campos intocados não são regravados.
+- `SheetWriter` com duas implementações: Google (produção) e memória (prévia/testes).

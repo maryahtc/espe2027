@@ -120,6 +120,18 @@ Pontos que a coordenação precisa confirmar (aparecem como “a confirmar” no
 - **Módulos 4 a 9**: sem datas na grade → exibidos pelo mês (sem ano) com “Datas a confirmar”.
 - **Nenhum módulo tem Tema principal** → “Tema a confirmar”.
 
+## Editar pelo portal (área de edição)
+
+Em `/coordenacao` (link “Área de edição” no rodapé do portal), professores e coordenação editam tudo pelo celular ou
+computador. O que é salvo lá é gravado **nesta planilha**.
+
+- Para um professor conseguir entrar, preencha o **E-mail** (conta Google) dele na aba PROFESSORES.
+- O portal cria e usa uma coluna **ID** nas abas editadas. Não apague nem altere os IDs.
+- Toda alteração feita pelo portal fica registrada na aba **HISTÓRICO** (criada automaticamente).
+- Se alguém editar a mesma linha direto na planilha enquanto outra pessoa edita pelo portal, o portal não sobrescreve:
+  pede para recarregar.
+- Editar direto na planilha continua valendo normalmente.
+
 ## Forçar atualização imediata
 
 Normalmente basta esperar até 5 minutos. Para atualizar na hora, peça a quem administra o portal

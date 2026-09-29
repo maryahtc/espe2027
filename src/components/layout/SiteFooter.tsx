@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { siteConfig } from '@/config/site'
 
 export function SiteFooter({ updatedAt }: { updatedAt: string | null }) {
@@ -15,7 +16,12 @@ export function SiteFooter({ updatedAt }: { updatedAt: string | null }) {
     <footer className="mt-20 border-t border-rule">
       <div className="ruler opacity-60" aria-hidden />
       <div className="mx-auto flex max-w-[1120px] flex-col gap-2 px-4 py-8 text-xs text-muted md:flex-row md:justify-between md:px-8">
-        <p>{siteConfig.name}</p>
+        <p>
+          {siteConfig.name} ·{' '}
+          <Link href="/coordenacao" className="link-underline">
+            Área de edição
+          </Link>
+        </p>
         {formatted ? <p className="data">Dados atualizados em {formatted}</p> : null}
       </div>
     </footer>

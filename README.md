@@ -75,17 +75,41 @@ O arquivo contém o HTML renderizado pelo próprio portal, o CSS, as fontes e o 
 
 Nenhuma dessas variáveis usa o prefixo `NEXT_PUBLIC_` — **nada disso chega ao navegador**.
 
+## Área de edição (`/coordenacao`)
+
+Professores e coordenação atualizam módulos, aulas, professores, materiais, estoque e equipamentos pelo portal;
+cada alteração é **gravada direto na planilha** e aparece no portal público na hora.
+
+- **Quem entra:** e-mails em `ADMIN_EMAILS` (coordenação) e os e-mails da coluna **E-mail** da aba PROFESSORES.
+  Ninguém é cadastrado duas vezes. A coluna E-mail continua privada: é lida só no servidor para conferir o login.
+- **Quem edita o quê:** hoje todos editam tudo (`canEdit` em `src/config/editing.ts`).
+- **Garantias:**
+  - só colunas declaradas em `src/config/editing.ts` são gravadas; colunas internas nunca são lidas nem alteradas;
+  - só os campos que a pessoa alterou são gravados;
+  - se a linha mudou na planilha depois que o formulário foi aberto, nada é gravado (aviso de conflito);
+  - cada alteração vai para a aba **HISTÓRICO** (data, pessoa, ação, aba, ID, antes → depois);
+  - linhas ganham uma coluna **ID** para serem encontradas mesmo se a planilha for reordenada;
+  - aulas e módulos "removidos" viram Status **Rascunho** (somem do portal, continuam na planilha);
+    materiais, estoque, equipamentos e professores são apagados, com os dados guardados no HISTÓRICO;
+  - acesso conferido de novo a cada gravação: quem sai da aba PROFESSORES perde o acesso na hora.
+- **Teste local sem Google:** `AUTH_DEV_EMAIL=teste@exemplo.com` + `DATA_SOURCE=preview`. As alterações ficam só na
+  memória do servidor (somem ao reiniciar). Desligado em produção.
+
 ## Configurando o Google Sheets
 
 1. Em [console.cloud.google.com](https://console.cloud.google.com), crie um projeto (gratuito).
 2. **APIs e serviços → Biblioteca → Google Sheets API → Ativar.**
 3. **IAM e administrador → Contas de serviço → Criar conta de serviço.** Não precisa de papel no projeto.
 4. Na conta criada: **Chaves → Adicionar chave → JSON.** Guarde o arquivo em local seguro (nunca no repositório).
-5. Na planilha: **Compartilhar** com o e-mail da conta de serviço (`...@...iam.gserviceaccount.com`) como **Leitor**.
-   A planilha continua privada para o resto do mundo.
+5. Na planilha: **Compartilhar** com o e-mail da conta de serviço (`...@...iam.gserviceaccount.com`) como **Editor**
+   (necessário para a área de edição). A planilha continua privada para o resto do mundo.
 6. Preencha as variáveis `GOOGLE_*` e `DATA_SOURCE=sheets`.
+7. Login da área de edição: **APIs e serviços → Tela de permissão OAuth** (tipo Externo, escopos `openid` e `email`) e
+   **Credenciais → Criar ID do cliente OAuth → Aplicativo da Web**, com o URI de redirecionamento
+   `https://SEU-DOMINIO/api/auth/retorno`. Preencha `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`,
+   `SESSION_SECRET` e `ADMIN_EMAILS`.
 
-O portal pede só a permissão `spreadsheets.readonly` e só as 6 abas que usa.
+A leitura do portal público usa só `spreadsheets.readonly`; a gravação (área de edição) usa `spreadsheets`.
 
 ## Estrutura esperada da planilha
 
