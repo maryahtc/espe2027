@@ -1,7 +1,9 @@
-# Portal do Aluno — Proposta de Arquitetura (v0, para aprovação)
+# Portal do Aluno — Arquitetura (v1, decisões incorporadas)
 
-> Status: **proposta — nada implementado.** Nenhum código será escrito antes da aprovação explícita.
-> Data: 06/10/2026. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
+> Status: **arquitetura conceitual aprovada com ajustes (v1).** Nada implementado. A implementação da Etapa 1 só
+> começa após autorização explícita.
+> v0: 06/10/2026 · v1: 06/10/2026 — decisões da coordenação incorporadas (ver seção P, "Alterações v0 → v1").
+> Data de referência: primeira turma em **fevereiro de 2027**. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
 > (portal público de cronograma, `docs/ARQUITETURA.md`).
 
 ---
@@ -9,7 +11,7 @@
 ## 0. Leitura crítica — inconsistências e riscos encontrados
 
 Antes da proposta, os pontos da especificação que **conflitam entre si, com o sistema que já existe, ou que
-escondem complexidade**. Cada um tem uma recomendação; os que precisam da sua decisão estão repetidos na seção N.
+escondem complexidade**. Cada um tem uma recomendação; as decisões tomadas e as ainda abertas estão na seção N.
 
 ### 0.1 Já existe um portal — e ele tem outra "fonte da verdade"
 
@@ -27,13 +29,37 @@ anterior foi desenhado para evitar.
 | B. Planilha continua soberana, banco espelha | Job sincroniza planilha → banco a cada X min (só leitura). | Nenhuma mudança de hábito. | Duas cópias; vínculos quebram quando alguém renomeia/reordena na planilha; multi‑turma na planilha fica frágil. |
 | C. Dois sistemas separados | Portal do aluno com cronograma próprio. | Isolamento total. | Cadastro duplo. **Não recomendo.** |
 
-**Recomendação:** A, executada na etapa 3 do plano (seção M), com a planilha atual servindo de carga inicial.
+**✅ Decidido: opção A.** O banco é a fonte acadêmica oficial (módulos, aulas, docentes, cronograma). A planilha
+permanece para logística, materiais, estoque, equipamentos, cachês e controles operacionais. Executada na Etapa 3,
+com a planilha atual servindo de carga inicial (migração única). A área `/coordenacao` do portal público deixa de
+editar módulos/aulas/professores na planilha; continua editando só as abas de logística.
+
+### 0.1b Portal público mantido, separado, lendo a mesma fonte
+
+**✅ Decidido:** o portal público continua existindo, atendendo professores e logística, **separado** do Portal do
+Aluno, mas lendo as informações acadêmicas **do mesmo banco**. Arquitetura:
+
+```
+                    ┌──────────────────────── mesmo repositório (npm workspaces) ───────────────────────┐
+                    │                                                                                  │
+ Supabase (SP) ◄────┤  apps/aluno    Portal do Aluno — login obrigatório, RLS, painel admin/coordenação │
+  fonte acadêmica   │  apps/publico  Portal público atual — sem login; lê do banco só uma VIEW pública  │
+                    │                (módulos/aulas/docentes publicados) + planilha (logística)        │
+ Google Sheets ◄────┤  packages/ui   design system Conexo (tokens, fontes, componentes)                │
+  logística         │  packages/db   migrações, tipos gerados, clientes Supabase, consultas            │
+                    └──────────────────────────────────────────────────────────────────────────────────┘
+```
+- Dois projetos na Vercel (domínios/subdomínios próprios), um código de design compartilhado.
+- O portal público acessa o banco com uma credencial **somente leitura** restrita a views públicas
+  (`public_modules`, `public_schedule`, `public_teachers`) — nunca a tabelas de alunos. O mesmo princípio de
+  "whitelist" que hoje protege as colunas privadas da planilha.
 
 ### 0.2 Dois logins diferentes
 
 O portal atual usa **login Google** (sessão própria). A especificação pede **e-mail e senha** com Supabase Auth.
 Recomendação: **unificar em Supabase Auth**, que oferece e-mail+senha **e** "Entrar com Google" no mesmo cadastro.
-Professores que já entram com Google continuam entrando com Google.
+Professores que já entram com Google continuam entrando com Google. (A área de edição de logística do portal
+público pode migrar para o mesmo login numa etapa posterior; não bloqueia nada.)
 
 ### 0.3 "Professor" é duas coisas diferentes
 
@@ -52,6 +78,10 @@ pacientes e dificuldades dos alunos** — o que contradiz a minimização de dad
   - `professor` (MVP): vê conteúdos e cronograma; **não vê casos**. Futuramente: vê só casos em que foi marcado
     como supervisor.
 
+**✅ Decidido:** docente (`teachers`) é entidade de conteúdo, separada de usuário com permissões. Professor
+convidado **não vê casos** no MVP. **Admin e coordenação** acompanham casos e produção. Acesso adicional a casos
+só por autorização explícita (concedida pelo admin, registrada e revogável — estrutura prevista, interface no MVP 2).
+
 ### 0.4 "Privada" não significa "invisível para a coordenação"
 
 A seção 16 diz "produção privada por padrão", e a 18 diz que a coordenação vê alunos com pouca produção. As duas
@@ -66,15 +96,22 @@ ranking com poucos participantes expõe quem não aparece. Recomendações:
 - ordenar por **diversidade** (categorias distintas) e não por volume; nenhum "1º lugar";
 - **fica para o MVP 2** — não é necessário para colocar alunos usando.
 
-### 0.6 IA para classificar procedimento pode deixar o registro mais lento, não mais rápido
+### 0.6 IA no registro: camada opcional, nunca dependência
 
 A meta é registrar um caso em **< 1 minuto**. Digitar "Preparo e cimentação de dois onlays nos dentes 36 e 37",
 esperar a IA e conferir a classificação leva mais tempo do que tocar em **[Onlay] [×2] [36] [37]** numa lista de
 procedimentos frequentes. E o princípio 12 diz: "não implementar IA onde regras simples bastam".
 
-**Recomendação:** MVP 1 com **seleção estruturada rápida** (procedimentos recentes/frequentes no topo, busca com
-sinônimos, odontograma compacto opcional). IA de classificação entra no MVP 2 como **atalho opcional** ("descreva
-em texto livre e eu preencho para você conferir"), sempre preservando o texto original.
+~~Recomendação v0: IA só no MVP 2.~~ **✅ Decidido (v1): IA já no MVP 1, como camada opcional.**
+- **Caminho principal:** seleção estruturada rápida (procedimentos recentes/frequentes no topo, busca com
+  sinônimos, dentes opcionais).
+- **Caminho alternativo:** botão **"Descrever o que fiz"** → texto livre → a IA **sugere** procedimento,
+  quantidade, dentes e temas → o formulário estruturado aparece **pré‑preenchido** → o aluno **confirma ou
+  corrige** antes de salvar. Nada é consolidado sem confirmação. O texto original é sempre preservado.
+- **Dificuldade clínica:** a IA também sugere temas (`topics`) a partir do texto; o aluno confirma.
+- **IA indisponível** (falha, lentidão, desligada por configuração): o botão some ou avisa "sugestão
+  indisponível", e todo o resto funciona igual — registro, produção, recomendações (que usam só os temas
+  confirmados). Detalhes em H.
 
 ### 0.7 "Dificuldade" precisa de um vocabulário para virar dado
 
@@ -95,8 +132,8 @@ dificuldade relatada ──(aluno escolhe / IA sugere)──► tema "substrato-
      ("Conteúdos que podem ajudar")        ("Explorar no Workflow")         ("Dificuldades mais relatadas")
 ```
 
-No MVP 1, o aluno pode **marcar 1–3 temas** na dificuldade (chips sugeridos por palavra‑chave, sem IA); no MVP 2,
-a IA sugere os temas a partir do texto. Em ambos os casos a recomendação **é uma consulta ao banco** — a IA nunca
+No MVP 1, o aluno **marca 1–3 temas** na dificuldade; as sugestões vêm da IA (quando disponível) e, sempre, da
+correspondência por palavra‑chave/sinônimo. Em ambos os casos a recomendação **é uma consulta ao banco** — a IA nunca
 gera títulos, logo **é impossível recomendar algo inexistente**.
 
 ### 0.8 O que conta como "1 procedimento"?
@@ -104,7 +141,11 @@ gera títulos, logo **é impossível recomendar algo inexistente**.
 "Resina anterior 8": 8 dentes? 8 sessões? 8 pacientes? "Clareamento 3": 3 pacientes ou 3 arcadas? Sem essa
 regra, os números de produção não são comparáveis entre alunos. **Recomendação:** cada procedimento cadastrado
 tem uma **unidade de contagem** definida pelo admin (`por dente` | `por elemento/peça` | `por arcada` |
-`por paciente/caso`), e a tela de registro pede a quantidade nessa unidade. Decisão sua na seção N.
+`por paciente/caso`), e a tela de registro pede a quantidade nessa unidade.
+
+**✅ Decidido:** unidade configurável por procedimento. **A taxonomia de procedimentos (lista, categorias,
+unidades) será definida separadamente com a coordenação clínica antes da etapa de produção** — o sistema nasce
+com o cadastro vazio e o admin preenche. Os testes usam uma lista fictícia.
 
 ### 0.9 Caso × consulta × data
 
@@ -113,7 +154,9 @@ Um caso de laminados tem 4–6 consultas em meses diferentes. Quando a produçã
 quando a consulta é marcada REALIZADA?
 
 **Recomendação:**
-- **Caso** = paciente + plano de tratamento (agrupador).
+**✅ Decidido.**
+- **Caso** = paciente + plano de tratamento (agrupador). Uma mesma pessoa/caso tem várias consultas e vários
+  procedimentos realizados.
 - **Procedimento realizado** = linha com data, procedimento, quantidade, dentes — é **isso** que alimenta a produção.
 - Registro rápido: criar caso + 1º procedimento realizado numa só tela (< 1 min).
 - Mapa de tratamento: consultas planejadas; ao marcar uma como REALIZADA, o app oferece "registrar o que foi
@@ -278,6 +321,9 @@ Faria diferente?   [ opcional ]
                                    [ Salvar ]
 ```
 Obrigatórios: paciente, data, procedimento. O resto pode ser completado depois.
+Alternativa: **[Descrever o que fiz]** → "Preparo e cimentação de dois onlays nos dentes 36 e 37" → o formulário
+acima aparece preenchido (Onlay · 2 · 36, 37 · temas: preparo, cimentação) → o aluno confere e salva. Sem IA
+disponível, o botão avisa e o formulário estruturado segue normal.
 
 **8. Atualização da produção.** Ao salvar, "Minha produção" já reflete (cálculo direto no banco, sem fila).
 
@@ -309,6 +355,20 @@ oportunidades nas próximas clínicas."
 | **Vincular conteúdo** | Em três lugares, sempre por busca no catálogo (nunca texto livre): módulo (antes/durante), nó de workflow, e via **temas** (automático: conteúdos com o tema aparecem nas recomendações). |
 | **Acompanhar produção** | Produção → escolhe turma: totais, distribuição, evolução, lacunas, dificuldades por tema, alunos abaixo da referência. Clica num aluno para ver detalhes. |
 | **Avisos** | Avisos → Novo: texto curto, turma, de/até. |
+
+### D.1 Painel admin para uma pessoa não técnica (requisito do MVP 1)
+
+A principal operadora no início é a coordenadora, sozinha. Regras de interface do painel:
+- **Linguagem do dia a dia**, nunca termos técnicos ("Publicar para os alunos", não "status = publicado"); nenhum
+  ID, slug ou JSON visível.
+- **Vínculos sempre por busca** ("comece a digitar o nome da aula…"), nunca por códigos.
+- **Rascunho salvo automaticamente**; nada se perde ao fechar a aba.
+- **"Ver como aluno"** em módulo, conteúdo e workflow, antes de publicar.
+- **Nada some de verdade por engano:** conteúdos e workflows são arquivados (com "restaurar"), e exclusões pedem
+  confirmação dizendo o que será afetado ("esta aula está em 2 módulos e 1 workflow").
+- **Avisos claros antes de publicar** (workflow incompleto, módulo sem data, aula sem vídeo) apontando onde corrigir.
+- Ajuda curta em cada campo e estados vazios que explicam o próximo passo.
+- Desktop/notebook como alvo principal do painel; leitura e pequenas edições funcionam no celular.
 
 ---
 
@@ -367,6 +427,7 @@ content_progress          user_id · content_id · status (iniciado|concluido) �
 procedure_categories      id · name                      (Restauração direta, Restauração indireta, …)
 procedures                id · category_id · name · slug · count_unit (dente|peca|arcada|caso)
                           · synonyms text[] · active
+procedure_topics          procedure_id · topic_id        (ex.: Laminado → preparo minimamente invasivo, cimentação)
 exposure_references       cohort_id · procedure_id · reference_count · note     (MVP 2)
 ```
 
@@ -381,6 +442,12 @@ performed_procedures      id · case_id · owner_id · procedure_id · performed
                           · session_id? · original_text? · classified_by (manual|ia) · ai_confidence?
 treatment_sessions        id · case_id · owner_id · position · title · planned_on · plan_text
                           · notes · status (planejada|realizada)
+```
+```
+ai_suggestions            id · owner_id · kind (procedimento|temas) · input_text · output jsonb · model
+                          · latency_ms · status (aceita|corrigida|descartada|falhou) · created_at
+case_access_grants        case_id|cohort_id · grantee_id · granted_by · reason · expires_at   (estrutura no MVP 1; tela no MVP 2)
+audit_log                 actor_id · action · entity · entity_id · at          (ações admin + leituras de caso pela coordenação)
 ```
 `owner_id` repetido em `performed_procedures` e `treatment_sessions` é proposital: torna as políticas RLS
 triviais e rápidas (sem joins).
@@ -516,8 +583,11 @@ apontando o nó.
 - Abaixo, **visualização automática do grafo** (somente leitura, com layout automático), clicável para abrir o nó.
 - Pré‑visualizar como aluno. Publicar com validação.
 - Vantagem: funciona bem no notebook e é ~1/3 do esforço do canvas.
+- **✅ Requisito confirmado:** já no MVP 1 o admin **cria, edita, publica, despublica e arquiva** workflows
+  completos (todos os 7 tipos de nó, ramificações, textos, imagens, referências, alertas, conteúdos, temas) **sem
+  alterar código**. A camada 2 muda só a forma de editar, não o que é possível editar.
 
-**Camada 2 (MVP 2): canvas de arrastar e soltar** com **React Flow (`@xyflow/react`)**, biblioteca madura, MIT,
+**Camada 2 (MVP 2, ✅ aprovado): canvas de arrastar e soltar** com **React Flow (`@xyflow/react`)**, biblioteca madura, MIT,
 usada exatamente para editores de nós:
 - paleta com os 7 tipos de nó; arrastar para o canvas; ligar saídas de respostas a entradas de nós;
 - painel lateral com o mesmo formulário da camada 1 (reaproveitado);
@@ -544,11 +614,11 @@ recomendar uma aula inexistente.
 
 ### H.2 O que precisa de LLM e o que não precisa
 
-| Função | MVP 1 (sem LLM) | MVP 2 (com LLM) | Precisa de RAG/embeddings? |
+| Função | Sempre disponível (regras) | Camada de IA — **MVP 1, opcional** | Precisa de RAG/embeddings? |
 |---|---|---|---|
-| **Classificar procedimento** | Seleção estruturada com busca por nome + sinônimos (`synonyms[]`), recentes primeiro. | Texto livre → LLM com **saída estruturada** (`procedure_id` restrito ao enum de IDs cadastrados, `quantity`, `teeth[]`, `confidence`). Extração de dentes por regex (notação FDI 11–48) antes do LLM. Aluno confere e corrige; texto original salvo. | Não. Catálogo de ~50–150 procedimentos cabe inteiro no prompt. |
+| **Classificar procedimento** | Seleção estruturada com busca por nome + sinônimos (`synonyms[]`), recentes primeiro. | "Descrever o que fiz": texto livre → LLM com **saída estruturada** (`procedure_id` restrito ao enum de IDs cadastrados, `quantity`, `teeth[]`, `confidence`). Extração de dentes por regex (notação FDI 11–48) antes do LLM. Aluno confere e corrige; texto original salvo. | Não. Catálogo de ~50–150 procedimentos cabe inteiro no prompt. |
 | **Interpretar dificuldade** | Correspondência de palavras‑chave/sinônimos do texto com `topics.synonyms` → sugere chips; aluno confirma. | LLM recebe texto + lista de temas (id, nome, descrição) → devolve até 3 `topic_id` do enum + justificativa curta. Aluno confirma. | Não. Lista de temas (~50–200) cabe no prompt. |
-| **Recomendar conteúdo** | SQL: conteúdos publicados com os temas confirmados ∪ ligados ao procedimento, ordenados por peso do tema, obrigatórios do módulo atual, não concluídos pelo aluno. | Mesmo SQL. Opcional: LLM reordena os ~10 candidatos e escreve a frase "por que isto ajuda" — só com IDs da lista recebida (validado no servidor; ID fora da lista é descartado). | Só no futuro, se o acervo passar de centenas de itens e os temas ficarem insuficientes: `pgvector` no próprio Supabase sobre título+descrição+transcrição. |
+| **Recomendar conteúdo** | SQL: conteúdos publicados com os temas confirmados ∪ ligados ao procedimento, ordenados por peso do tema, obrigatórios do módulo atual, não concluídos pelo aluno. | **Mesmo SQL — a IA não participa no MVP 1.** (MVP 2, opcional: LLM reordena os ~10 candidatos e escreve a frase "por que isto ajuda" — só com IDs da lista recebida (validado no servidor; ID fora da lista é descartado).) | Só no futuro, se o acervo passar de centenas de itens e os temas ficarem insuficientes: `pgvector` no próprio Supabase sobre título+descrição+transcrição. |
 | **Busca da biblioteca** | Busca textual do Postgres (`tsvector` com dicionário português + `unaccent`). | — | Futuro: busca semântica nas transcrições. |
 | **Dificuldades da turma** | Contagem de `case_difficulty_topics` confirmados. | — | Não. |
 
@@ -556,14 +626,21 @@ recomendar uma aula inexistente.
 do "retrieval" com mais controle pedagógico (o admin decide o que é relevante para "substrato escurecido").
 Embeddings entram só se o acervo crescer muito ou se quisermos buscar dentro das transcrições das aulas.
 
-### H.3 Implementação técnica (MVP 2)
-- Uma interface `ProcedureClassifier` / `TopicSuggester` com duas implementações: `RuleBased` (MVP 1) e `LLM`
-  (MVP 2). Trocar = configuração; se a API falhar, cai na de regras — o registro **nunca depende da IA**.
-- Chamada no servidor (Server Action), com timeout curto (~5 s); a tela de registro não espera: salva o caso e a
-  sugestão aparece na confirmação.
+### H.3 Implementação técnica (MVP 1)
+- Interfaces `ProcedureSuggester` / `TopicSuggester` com duas implementações: `RuleBased` (sempre ligada) e `LLM`
+  (opcional). A de IA é ligada por variável de ambiente (`AI_SUGGESTIONS=on|off`), por turma (admin) e tem
+  disjuntor: após falhas seguidas, desliga sozinha por alguns minutos. **O registro nunca depende da IA.**
+- Fluxo "Descrever o que fiz": Server Action com timeout curto (~6 s) → resposta validada no servidor (Zod):
+  todo `procedure_id`/`topic_id` precisa existir e estar ativo; dente fora da notação FDI é descartado; quantidade
+  limitada a um intervalo plausível. Sugestão inválida = sem sugestão (nunca erro para o aluno).
+- O resultado só **pré‑preenche** o formulário estruturado; salvar continua sendo um ato do aluno.
+- Tabela `ai_suggestions` (texto enviado, sugestão, modelo, latência, se o aluno aceitou/corrigiu) → mede a
+  qualidade e alimenta um conjunto de avaliação antes de trocar modelo ou prompt.
 - Provedor: API da Anthropic (Claude), com saída estruturada (schema JSON com enums dos IDs) — o modelo fica
-  configurável por variável de ambiente. Para uma tarefa curta de classificação um modelo menor (ex.: Haiku 4.5)
-  provavelmente basta; validaremos com um conjunto de ~50 exemplos reais antes de escolher.
+  configurável por variável de ambiente. Escolheremos o modelo medindo acerto em ~50 descrições de exemplo
+  (escritas com a coordenação clínica, junto com a taxonomia); o custo é baixo em qualquer modelo (seção K).
+- **LGPD:** como a base legal ainda será revisada (J.4), a IA pode ir para produção **desligada** e ser ligada
+  depois da revisão, sem nenhuma mudança de código.
 - **Minimização:** o texto enviado ao provedor **não** inclui identificador do paciente, link do Smile Cloud,
   nome do aluno nem data — só o texto do procedimento/dificuldade. Orientação na tela: "não escreva o nome do
   paciente nos campos de texto"; filtro simples remove padrões de nome/CPF/telefone antes do envio.
@@ -574,7 +651,10 @@ Embeddings entram só se o acervo crescer muito ou se quisermos buscar dentro da
 
 ## I. Vídeos
 
-**Recomendação: hospedagem externa com player incorporado. Primeira opção: Bunny Stream. Alternativa mais
+**✅ Decidido: Bunny Stream**, atrás da abstração `<VideoPlayer>` / `VideoProvider` (troca futura de provedor =
+nova implementação, sem mexer nas páginas). Análise original abaixo.
+
+**Recomendação v0: hospedagem externa com player incorporado. Primeira opção: Bunny Stream. Alternativa mais
 familiar: Vimeo.** Nenhum vídeo passa pelo servidor da aplicação (upload direto do navegador do admin para o
 serviço).
 
@@ -614,17 +694,18 @@ implementação do componente.
 | Link do Smile Cloud | Paciente | Pode dar acesso a fotos se for link público. |
 
 ### J.2 Recomendações de minimização (desde a arquitetura)
-1. **Não armazenar nome completo do paciente.** Campo "Identificação do paciente" com **iniciais ou código**
-   (ex.: o código que o aluno já usa no Smile Cloud). Validação que desencoraja nomes completos (ex.: alerta se
-   houver mais de 2 palavras com mais de 3 letras). **Recomendado** — decisão sua.
+1. **✅ Decidido: não armazenar nome completo do paciente.** Campo "Identificação do paciente" com **iniciais ou
+   código** (ex.: o código que o aluno já usa no Smile Cloud), limite de tamanho e validação que bloqueia
+   formato de nome completo.
 2. Nenhum campo de CPF, telefone, data de nascimento, fotos, anamnese ou diagnóstico.
 3. Link do Smile Cloud: aceitar só o domínio do Smile Cloud; orientar a usar link que exige login.
 4. Textos livres: aviso "não inclua dados que identifiquem o paciente".
 5. IA: enviar só o texto clínico, sem identificadores (seção H.3); usar provedor com contrato de tratamento de
    dados e retenção mínima.
 6. Ranking e dashboards da turma: **só agregados**, nunca caso individual; limiar mínimo de participantes.
-7. Coordenação vê o identificador do paciente? Recomendo **não** — o painel mostra procedimento, data e reflexões;
-   o identificador fica só para o próprio aluno. (Decisão sua.)
+7. **✅ Decidido:** a coordenação **vê o identificador** (iniciais/código) para localizar e discutir um caso, dentro
+   das regras de acesso (RLS por turma). Cada abertura de caso individual pela coordenação fica no `audit_log`.
+   Dashboards agregados continuam sem identificador.
 
 ### J.3 Segurança
 - RLS em todas as tabelas + testes automatizados de isolamento (seção F).
@@ -664,7 +745,7 @@ Valores aproximados em US$ (convertidos ~R$ 5,5/US$); **conferir preços vigente
 | **Autenticação** | incluída no Supabase | incluída | — |
 | **E-mail transacional** (convites, senha) — Resend ou similar | grátis (~3 mil e-mails/mês) | grátis | Só se passar do limite (improvável). |
 | **Vídeo** | Bunny: ~US$ 1–5 durante testes | **~US$ 10–30/mês** (Bunny) ou ~US$ 20–75/mês (Vimeo) | Cresce com o acervo e o número de turmas. |
-| **IA** (MVP 2) | — | **< US$ 5/mês.** Ex.: ~400 registros/mês × ~2 mil tokens de entrada + 300 de saída: com Claude Haiku 4.5 (US$ 1/US$ 5 por milhão) ≈ US$ 1,4; com Claude Sonnet 5.5 (US$ 2/US$ 10) ≈ US$ 2,8 | Só muda de ordem de grandeza se usarmos IA em leitura de transcrições. |
+| **IA** (MVP 1, opcional) | ~US$ 0 (desligada ou poucos testes) | **< US$ 5/mês.** Ex.: ~400 registros/mês × ~2 mil tokens de entrada + 300 de saída: com Claude Haiku 4.5 (US$ 1/US$ 5 por milhão) ≈ US$ 1,4; com Claude Sonnet 5.5 (US$ 2/US$ 10) ≈ US$ 2,8 | Só muda de ordem de grandeza se usarmos IA em leitura de transcrições. |
 | **Domínio** | `.com.br` no Registro.br: ~R$ 40/ano | idem | Se já houver domínio da especialização, usar subdomínio (`portal.…`) — custo zero. |
 | **Monitoramento de erros** (Sentry) | grátis | grátis (plano Developer) | Volume alto de erros/equipe maior. |
 | **Outros** | — | Eventual assessoria LGPD (não recorrente) | — |
@@ -678,35 +759,40 @@ mas transfere para vocês backup, atualização de segurança e disponibilidade 
 
 ## L. MVP
 
-### MVP 1 — alunos usando (núcleo do ciclo)
+### MVP 1 — alunos usando (meta: turma de fevereiro de 2027)
 - Login (convite, senha, recuperação), papéis, RLS, termo de aceite, privacidade.
-- Turmas, matrículas, docentes (admin).
+- Turmas, matrículas, docentes (admin). Estrutura multi‑turma desde o início.
 - Módulos + cronograma + conteúdos antes/durante, com obrigatoriedade (admin + aluno). Migração da planilha.
-- Biblioteca: conteúdos (vídeo via serviço externo, artigo, PDF, link), categorias, **temas**, busca textual,
-  filtros, relacionados, progresso "iniciado/concluído".
+  Portal público passa a ler a parte acadêmica do banco.
+- **Taxonomia de temas (`topics`)** administrável — peça central que liga conteúdo, workflow, procedimento,
+  dificuldade, recomendação e dashboard da coordenação.
+- Biblioteca: conteúdos (vídeo no Bunny Stream, artigo, PDF, link), categorias, temas, busca textual, filtros,
+  relacionados, progresso "iniciado/concluído".
 - Início do aluno com próximo módulo, pendências, timeline, avisos, atalhos.
-- **Meus casos**: registro rápido estruturado, procedimentos realizados, reflexões, temas de dificuldade (chips por
-  palavra‑chave), botão Smile Cloud.
-- **Mapa de tratamento** (kanban horizontal; reordenar com arrastar no desktop e botões ↑↓/arrastar no celular;
-  "realizada" oferece registrar procedimento).
+- **Meus casos**: registro rápido estruturado (caminho principal), procedimentos realizados, reflexões, temas de
+  dificuldade, botão Smile Cloud.
+- **IA opcional no registro**: "Descrever o que fiz" (sugere procedimento, quantidade, dentes, temas) e sugestão
+  de temas para a dificuldade — sempre confirmada pelo aluno, com o sistema 100% funcional sem ela.
+- **Mapa de tratamento** (kanban horizontal; reordenar; "realizada" oferece registrar procedimento).
 - **Minha produção**: totais, distribuição por procedimento/categoria, evolução mensal, filtros, "pouca exposição"
   (comparação com a mediana da turma ou com referência do admin, se houver).
-- **Recomendações por regras** (temas + procedimento → biblioteca) após o registro e na Início.
-- **Workflows**: motor + player + editor estruturado com mapa do grafo + publicação/versões; "explorar no workflow"
-  a partir de temas.
-- Painel da coordenação **básico**: totais da turma, distribuição, evolução, dificuldades por tema, alunos com
-  pouca produção.
-- Avisos.
+- **Recomendações** por consulta ao banco (temas confirmados + procedimento → biblioteca) após o registro e na Início.
+- **Workflows**: motor + player + editor estruturado com mapa automático do grafo + publicação/versões;
+  "explorar no workflow" a partir de temas. Admin cria e edita workflows completos sem código.
+- Painel da coordenação: totais da turma, distribuição, evolução, dificuldades por tema, alunos com pouca
+  produção, acesso a casos individuais (com identificador do paciente e registro de auditoria).
+- Avisos. Painel admin simples para pessoa não técnica (D.1).
 
-### MVP 2 — refinamento e inteligência
-- IA: classificação do texto livre e sugestão de temas para dificuldades (com correção pelo aluno).
-- **Canvas visual (React Flow)** para workflows.
+### MVP 2 — refinamento
+- **Canvas visual drag‑and‑drop (React Flow)** para workflows.
 - Produção da turma / ranking opcional com foco em diversidade (com limiar de participantes).
 - Referências de exposição por procedimento configuradas pelo admin e visualização de lacunas mais rica.
-- Papel professor com visão de casos que supervisionou.
+- Tela de autorização explícita de acesso a casos (ex.: professor supervisor).
+- IA reordenando recomendações e explicando "por que isto ajuda" (só com IDs vindos do banco).
 - Histórico de trajetos no workflow (`workflow_runs`) e analytics de uso dos workflows.
 - Exportação da própria produção (PDF/CSV) pelo aluno.
 - Notificações por e‑mail (lembrete de pré‑módulo, avisos).
+- Área de edição de logística do portal público usando o mesmo login (Supabase Auth).
 
 ### Versão futura
 - Busca semântica / RAG sobre transcrições das aulas (`pgvector`).
@@ -717,40 +803,93 @@ mas transfere para vocês backup, atualização de segurança e disponibilidade 
 - Feedback do supervisor sobre o caso; portfólio do aluno ao final da especialização.
 - Multi‑instituição (white‑label).
 
-**Cortes deliberados do MVP 1** (parecem bons, mas custam caro agora): IA de classificação, canvas de arrastar,
-ranking, gamificação, notificações push, comentários/fórum, app nativo, DRM.
+**Fora do MVP 1 de propósito:** canvas de arrastar, ranking, gamificação, notificações push, comentários/fórum,
+app nativo, DRM, RAG.
 
 ---
 
 ## M. Plano de desenvolvimento (etapas pequenas e testáveis)
 
-Cada etapa termina com algo que você **testa no navegador** (ambiente de prévia na Vercel com dados fictícios) e
-aprova antes da próxima.
+Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima.
 
-| # | Etapa | Você testa |
-|---|---|---|
-| 0 | **Decisões** (seção N) + marca/identidade visual + contratos (Supabase Pro, Vercel Pro, vídeo) | — |
-| 1 | **Fundação**: projeto Supabase (São Paulo), migrações versionadas, design system com a marca, layout com navegação mobile/desktop, ambientes (dev/prévia/produção), CI com lint/tipos/testes | Navegar no esqueleto vazio no celular e no desktop |
-| 2 | **Login e papéis**: convite, senha, recuperação, MFA admin, `profiles`, `cohorts`, `enrollments`, RLS base + **testes de isolamento**, painel admin de pessoas/turmas | Convidar um aluno de teste, entrar, trocar senha; tentar abrir `/admin` como aluno |
-| 3 | **Cronograma e módulos**: tabelas, migração da planilha atual, admin de módulos/programação, páginas de cronograma e módulo do aluno; decidir o destino do portal público | Ver a grade real; editar um módulo no painel e ver a mudança |
-| 4 | **Biblioteca**: conteúdos, categorias, temas, integração com serviço de vídeo (upload direto + player assinado), busca, filtros, progresso, vínculo com módulos (antes/durante + obrigatoriedade) | Subir uma aula, vinculá‑la a um módulo, assisti‑la como aluno no celular |
-| 5 | **Início do aluno**: próximo módulo, pendências, timeline, avisos | "Teste dos 5 segundos" com um aluno real |
-| 6 | **Meus casos**: procedimentos (admin), registro rápido, lista, detalhe, reflexões, temas de dificuldade por palavra‑chave | **Cronometrar o registro no celular (< 1 min)** |
-| 7 | **Mapa de tratamento** | Montar um plano de 5 consultas, reordenar, marcar realizada |
-| 8 | **Produção + recomendações por regras** | Ver a produção mudar após registrar; ver recomendações coerentes |
-| 9 | **Workflows**: motor, player, editor estruturado, validação, versões, "explorar no workflow" | Montar o workflow "Alteração estética anterior" sozinho e usá‑lo como aluno |
-| 10 | **Painel da coordenação** | Ver a turma de teste; conferir que nenhum dado de paciente aparece onde não deve |
-| 11 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas | Uso real |
-| 12 | **Lançamento MVP 1** → depois MVP 2 em etapas do mesmo tamanho (IA, canvas, ranking…) | — |
+| # | Etapa | Você testa | Depende de |
+|---|---|---|---|
+| 1 | **Fundação** (detalhada em M.1) | Navegar no esqueleto do Portal do Aluno com a identidade Conexo, no celular e no desktop | — |
+| 2 | **Login e papéis**: convite, senha, recuperação, MFA admin/coordenação, `profiles`, `cohorts`, `enrollments`, RLS base + **testes de isolamento**, telas admin de pessoas/turmas | Convidar um aluno de teste, entrar, trocar senha; tentar abrir `/admin` como aluno | Conta Supabase (institucional) |
+| 3 | **Cronograma e módulos**: tabelas, migração da planilha, admin de módulos/programação, telas do aluno; **portal público passa a ler o banco** (views públicas) | Ver a grade real nos dois portais; editar um módulo no painel e ver a mudança nos dois | — |
+| 4 | **Temas + Biblioteca**: `topics`, categorias, conteúdos, Bunny Stream (upload direto + player assinado), busca, filtros, progresso, vínculo com módulos | Subir uma aula, vinculá‑la a um módulo e a temas, assisti‑la como aluno no celular | Conta Bunny; **lista inicial de temas** |
+| 5 | **Início do aluno** | "Teste dos 5 segundos" | — |
+| 6 | **Meus casos** (estruturado): procedimentos (admin), registro rápido, lista, detalhe, reflexões, temas de dificuldade | **Cronometrar o registro no celular (< 1 min)** | **Taxonomia de procedimentos** (reunião com a coordenação clínica) |
+| 7 | **IA opcional no registro**: "Descrever o que fiz" + sugestão de temas, disjuntor, `ai_suggestions`, conjunto de avaliação | Descrever casos reais em texto e conferir sugestões; desligar a IA e ver que tudo continua funcionando | Conta Anthropic (institucional); ~50 descrições de exemplo |
+| 8 | **Mapa de tratamento** | Montar um plano de 5 consultas, reordenar, marcar realizada | — |
+| 9 | **Produção + recomendações** | Ver a produção mudar após registrar; ver recomendações coerentes | — |
+| 10 | **Workflows**: motor, player, editor estruturado + mapa, validação, versões, "explorar no workflow" | Montar sozinha o workflow "Alteração estética anterior" e usá‑lo como aluno | — |
+| 11 | **Painel da coordenação** | Ver a turma de teste; conferir o que aparece em agregados × casos individuais; ver o registro de auditoria | — |
+| 12 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas | Uso real | Domínio; termo revisado (LGPD) |
+| 13 | **Lançamento MVP 1** → MVP 2 em etapas do mesmo tamanho | — | — |
 
-Estimativa grosseira: cada etapa de 1 a 2 semanas de desenvolvimento; MVP 1 em torno de 3–4 meses incluindo
-ciclos de revisão. As etapas 6–8 podem vir antes da 9 (workflows) porque são o coração do uso diário.
+**Prazo:** hoje é outubro de 2026 e a turma começa em fevereiro de 2027 (~4 meses). A estimativa de 3–4 meses
+para o MVP 1 cabe, mas **sem folga**. Se apertar, a ordem acima já prioriza o que o aluno usa na primeira semana
+(login, cronograma, biblioteca, Início, casos); workflows e painel da coordenação podem entrar nas primeiras
+semanas de aula sem prejuízo, porque a produção ainda será pequena. Ver decisão aberta 9.
+
+### M.1 Escopo da ETAPA 1 — Fundação
+
+**Objetivo:** deixar pronta a base sobre a qual todas as outras etapas são construídas — estrutura do código, banco
+versionado, identidade visual e navegação — **sem login e sem dados reais ainda**.
+
+**Inclui:**
+1. **Reorganização do repositório** em workspaces (npm):
+   - `apps/publico` — o portal público atual, **movido sem mudança de comportamento** (todos os testes atuais
+     continuam passando; nenhuma mudança visual nesta etapa);
+   - `apps/aluno` — novo app Next.js do Portal do Aluno (TypeScript estrito);
+   - `packages/ui` — design system Conexo;
+   - `packages/db` — estrutura do Supabase: pasta de migrações versionadas, primeira migração (extensões
+     `unaccent`/`pg_trgm`, configurações base), geração de tipos, clientes de servidor/navegador;
+   - configuração compartilhada de TypeScript/ESLint.
+2. **Design system Conexo** (`packages/ui`): tokens de cor (#CA2C2C, #141414, neutros), modo claro (modo escuro
+   preparado, ajustado depois), Raleway via `next/font`, fonte de números (substituta gratuita até a licença da
+   Gilroy), espaçamentos, raios, filete vermelho e numeração de seção do manual. Componentes base: botão, cartão,
+   cabeçalho de página, etiqueta (Obrigatório/Recomendado/Complementar), número/indicador, timeline de módulos,
+   estado vazio, campo de formulário, navegação.
+3. **Esqueleto do Portal do Aluno**: navegação definitiva (barra inferior no celular, lateral no desktop) e
+   **todas as rotas do sitemap (B)** criadas como páginas com estado vazio desenhado ("Em breve: …"); layout do
+   painel `/admin` e `/coordenacao` com seus menus.
+4. **Protótipo visual da Início** com dados fictícios (próximo módulo, timeline 01 ✓ → 02 ✓ → 03 PRÓXIMO, pendências,
+   atalhos) — para validar a direção visual antes de construir as telas reais.
+5. **Página `/design`**: catálogo vivo do design system (cores, tipografia, componentes).
+6. **Qualidade e segurança base**: CI no GitHub (lint, tipos, testes e build dos dois apps a cada push),
+   `noindex` em todo o Portal do Aluno, cabeçalhos de segurança, `.env.example`, README atualizado, rota
+   `/api/saude` que confirma a conexão com o banco.
+
+**Não inclui:** login, tabelas de domínio (turmas, casos, conteúdos…), dados reais, IA, vídeo.
+
+**Infraestrutura na Etapa 1:** o banco roda localmente (Supabase CLI) e no CI; **não é preciso nenhuma conta
+paga**. Para você ver no celular:
+- se as contas institucionais da Vercel/Supabase já existirem → link de prévia na Vercel, protegido;
+- se ainda não → publico uma **prévia navegável privada** (como foi feito com o portal público) e as contas
+  entram na Etapa 2.
+
+### M.2 O que você conseguirá ver e testar ao final da Etapa 1
+1. **Portal do Aluno (esqueleto)** no celular e no desktop, com a identidade Conexo: navegar por Início,
+   Especialização, Aprender, Pensar, Clínica e Perfil; todas as telas existem, vazias e bem acabadas.
+2. **A Início com dados fictícios**: próximo módulo, timeline, pendências e atalhos — para aprovar o visual
+   (espaçamento, tipografia, uso do vermelho) antes das telas reais.
+3. **O painel `/admin`** com o menu definitivo (Turmas, Pessoas, Módulos, Biblioteca, Temas, Procedimentos,
+   Workflows, Avisos, Produção) — para validar a organização do painel que você vai operar.
+4. **A página `/design`** com cores, fontes e componentes lado a lado.
+5. **O portal público funcionando exatamente como hoje**, agora dentro da nova estrutura.
+6. **(Técnico)** CI verde no GitHub; banco local subindo com a primeira migração; `/api/saude` respondendo.
+
+Critério de aprovação da Etapa 1: você aprova navegação, organização dos menus e direção visual. Mudanças nessas
+três coisas são baratas agora e caras depois.
 
 ---
 
 ## O. Identidade visual — marca Conexo (Clavijo & Ottoboni)
 
-Fonte: manual "ID Conexo", páginas de logo, cores (03) e tipografia (04).
+Fonte: manual "ID Conexo" — páginas de logo, cores (03) e tipografia (04) enviadas em imagem. **Preliminar:** o guia
+completo será enviado separadamente; esta seção será revisada quando chegar.
 
 ### O.1 Cores
 | Token | Valor | Uso no portal |
@@ -800,40 +939,64 @@ tipográfica `lnum` (algarismos alinhados), que resolve a altura mas mantém o d
 
 ---
 
-## N. Decisões que preciso de você antes de começar
+## N. Decisões
 
-**Produto**
-1. **Fonte do cronograma:** o banco passa a ser a fonte de módulos/aulas/professores e a planilha fica só para
-   logística (opção A, recomendada)? Ou a planilha continua mandando (opção B)? (0.1)
-2. **O portal público atual** (cronograma sem login para professores) continua existindo? Se sim, no mesmo
-   domínio (`/publico`) ou em subdomínio próprio?
-3. **Papel do professor convidado:** confirma que, no MVP, professor **não vê casos** e só a coordenação vê? (0.3)
-4. **A coordenação vê o identificador do paciente** nos casos, ou só procedimento/data/reflexões? (J.2.7)
-5. **Identificação do paciente:** iniciais/código (recomendado) ou nome completo? (J.2.1)
-6. **Unidade de contagem da produção:** por procedimento (dente/peça/arcada/caso) definida pelo admin — confirma?
-   E quais procedimentos e categorias iniciais? (uma lista sua de ~20–40 já basta para começar) (0.8)
-7. **MVP 1 sem IA** (registro estruturado + temas por palavra‑chave), com IA no MVP 2 — de acordo? (0.6)
-8. **Editor de workflow em duas camadas** (estruturado no MVP 1, canvas no MVP 2) — de acordo? Ou o canvas é
-   imprescindível já no lançamento? (G.4)
-9. **Ranking no MVP 2**, com limiar mínimo de participantes e foco em diversidade — de acordo? (0.5)
-10. **Número de alunos** por turma e **data em que a primeira turma precisa usar** o portal.
-11. Quem vai **alimentar a biblioteca e os workflows** (você, equipe, professores)? Define o quanto o painel admin
-    precisa ser polido no início.
+### N.1 Tomadas (v1)
+| # | Tema | Decisão |
+|---|---|---|
+| 1 | Fonte do cronograma | **Opção A.** Banco = fonte acadêmica (módulos, aulas, docentes, cronograma). Planilha = logística, materiais, estoque, equipamentos, cachês. |
+| 2 | Portal público | **Mantido e separado**, lendo do banco as informações acadêmicas (views públicas). Sem cadastro duplicado. |
+| 3 | Professor | Docente = entidade de conteúdo; usuário = permissões. Professor convidado **não vê casos** no MVP. Admin e coordenação acompanham casos e produção; outros só por autorização explícita. |
+| 4 | Coordenação × paciente | Coordenação **vê o identificador** (iniciais/código) para localizar/discutir casos, dentro das regras de acesso, com auditoria. |
+| 5 | Paciente | **Iniciais ou código.** Nome completo nunca é armazenado. |
+| 6 | Produção | Unidade de contagem **configurável por procedimento** (dente, peça, arcada, caso/paciente). Taxonomia definida depois, com a coordenação clínica, antes da etapa de casos. |
+| 7 | IA | **No MVP 1, opcional e nunca dependência.** Estruturado é o caminho principal; "Descrever o que fiz" sugere procedimento/quantidade/dentes/temas; IA sugere temas da dificuldade; aluno sempre confirma; sem IA tudo funciona; recomendação só do banco. |
+| 8 | Workflow | Duas camadas: MVP 1 editor estruturado + grafo automático (edição completa sem código); MVP 2 canvas. |
+| 9 | Ranking | MVP 2. |
+| 10 | Primeira turma | **Fevereiro de 2027.** Arquitetura multi‑turma. |
+| 11 | Administração | Coordenadora é a principal operadora inicial; painel simples para pessoa não técnica (D.1). Outros admins no futuro. |
+| 12 | Stack | **Next.js + Supabase (São Paulo) + Vercel.** |
+| 13 | Vídeo | **Bunny Stream**, atrás da abstração `VideoPlayer`. |
+| 14 | Contas | Infraestrutura em nome da empresa/instituição, não pessoal. |
+| — | Conceitos | **Topics** como taxonomia central (conteúdo, workflow, procedimento, dificuldade, recomendação, dashboard). **Caso** = paciente + plano; **procedimento realizado** = evento que alimenta a produção. |
 
-**Técnicas e contratos**
-12. **Stack** Next.js + Supabase (região São Paulo) + Vercel Pro — aprovada? (Mantém o que já existe no repositório.)
-13. **Vídeo:** Bunny Stream (recomendado: mais barato, token por aluno) ou Vimeo (mais familiar)? Vocês já têm
-    conta/acervo em algum serviço? Quantas horas de aula existem hoje?
-14. **Domínio:** qual será (ex.: `portal.<dominio>.com.br`) e quem administra o DNS?
-15. **Quem é o titular das contas** (Supabase, Vercel, vídeo, IA) — em nome da instituição, de preferência.
-16. **LGPD:** quem na instituição responde por privacidade e vai revisar o termo de uso e a base legal? (J.4)
-
-**Identidade visual** (marca recebida — ver seção O)
-17. **Arquivos da marca:** logo em **SVG** (versões horizontal, reduzida/só o símbolo "co", positiva e negativa)
-    e os **arquivos da fonte Gilroy com licença para web** — ou aprovação para usar uma alternativa gratuita
-    (O.2).
-18. **Portal com o nome "Conexo"** (ex.: "Conexo · Portal do Aluno") ou com o nome da especialização?
+### N.2 Ainda abertas (nenhuma bloqueia a Etapa 1)
+| # | Decisão | Bloqueia a partir de |
+|---|---|---|
+| 1 | **Quem cria as contas institucionais** (Supabase, Vercel, Bunny, Anthropic, e-mail) e em nome de qual CNPJ. Alternativa se atrasar: criar em conta pessoal e **transferir** depois (Supabase e Vercel permitem transferir projetos entre organizações). | Etapa 2 (Supabase) · 4 (Bunny) · 7 (Anthropic) |
+| 2 | **Lista inicial de temas (`topics`)** — ~30–60 temas para começar (ex.: isolamento, preparo, cimentação, substrato escurecido, seleção de material, ajuste oclusal…). Sugestão: definir na mesma conversa da taxonomia de procedimentos. | Etapa 4 |
+| 3 | **Taxonomia de procedimentos** (lista, categorias, unidade de cada um) com a coordenação clínica, + ~50 descrições de exemplo para avaliar a IA. | Etapas 6 e 7 |
+| 4 | **Número de alunos** da primeira turma. | Ajuste de custos e do limiar do ranking (não bloqueia código) |
+| 5 | **Domínio** (ex.: `portal.<dominio>.com.br`) e quem administra o DNS. | Etapa 12 (piloto) |
+| 6 | **Responsável institucional por LGPD**; termo de uso, aviso de privacidade, base legal, contratos com fornecedores e transferência internacional. A IA pode ir para produção **desligada** até essa revisão. | Lançamento real |
+| 7 | **Política de retenção** dos casos após o fim da turma (exportar e anonimizar/excluir depois de X meses?). | Lançamento real |
+| 8 | **Guia de marca completo**, logo em **SVG** e **licença web da Gilroy** (ou aprovação de uma alternativa gratuita para números). A Etapa 1 usa substituta e é trocada sem retrabalho. | Polimento visual |
+| 9 | **O que é indispensável no primeiro dia de aula** se o prazo apertar (sugestão em M: login, cronograma, biblioteca, Início e casos no dia 1; workflows e painel da coordenação nas primeiras semanas). | Planejamento a partir da Etapa 5 |
+| 10 | **Nome do portal** na interface (ex.: "Conexo · Portal do Aluno"). | Polimento visual |
 
 ---
 
-*Fim da proposta. Aguardando aprovação explícita antes de qualquer implementação.*
+## P. Alterações v0 → v1
+
+| Seção | Mudança |
+|---|---|
+| 0.1 / 0.1b | Opção A decidida. Novo desenho: **repositório com dois apps** (`apps/aluno`, `apps/publico`) e pacotes compartilhados (`ui`, `db`); portal público lê o banco por **views públicas somente leitura** + planilha para logística. |
+| 0.2 | Área de edição de logística do portal público migra para o mesmo login depois (MVP 2). |
+| 0.3 / F | Professor sem acesso a casos confirmado; acesso extra só por autorização explícita (`case_access_grants`, tela no MVP 2). |
+| 0.6 / H / L | **IA movida para o MVP 1** como camada opcional: "Descrever o que fiz", sugestão de temas da dificuldade, validação no servidor contra o banco, disjuntor, liga/desliga por configuração e por turma, tabela `ai_suggestions`. Recomendação de conteúdo continua 100% por consulta ao banco. |
+| 0.8 | Unidade de contagem confirmada; taxonomia de procedimentos adiada para reunião com a coordenação clínica (sistema nasce com cadastro vazio). |
+| 0.9 | Caso × procedimento realizado confirmado. |
+| D.1 | Novo: requisitos do **painel admin para pessoa não técnica**. |
+| E | Novas tabelas: `procedure_topics` (procedimento ↔ tema), `ai_suggestions`, `case_access_grants`, `audit_log`. |
+| G.4 | Requisito explícito: no MVP 1 o admin cria/edita/publica workflows completos sem código. |
+| I | Bunny Stream decidido, com abstração `VideoPlayer`. |
+| J.2 | Paciente por iniciais/código (decidido); coordenação vê identificador com auditoria (decidido — v0 recomendava não). |
+| K | Custo de IA passa a valer desde o MVP 1 (continua < US$ 5/mês). |
+| L | MVP 1 inclui IA opcional e acesso da coordenação a casos; MVP 2 ganha tela de autorizações e login unificado no portal público. |
+| M | Plano refeito em 13 etapas (IA ganhou etapa própria, a 7); dependências por etapa; nota de prazo para fevereiro/2027; **escopo detalhado da Etapa 1** (M.1) e o que será visível ao final (M.2). |
+| N | Separado em decisões tomadas (N.1) e abertas (N.2), com a etapa que cada aberta bloqueia. |
+| O | Nova seção de identidade visual Conexo (preliminar, a partir das páginas enviadas). |
+
+---
+
+*Arquitetura v1. Aguardando autorização explícita para iniciar a Etapa 1.*
