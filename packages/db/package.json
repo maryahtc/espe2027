@@ -1,0 +1,30 @@
+{
+  "name": "@portal/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./env": "./src/env.ts",
+    "./server": "./src/server.ts",
+    "./browser": "./src/browser.ts",
+    "./health": "./src/health.ts",
+    "./types": "./src/database.types.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:migrations": "node scripts/test-migrations.mjs",
+    "types": "supabase gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > src/database.types.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "server-only": "^0.0.1"
+  },
+  "peerDependencies": {
+    "next": "^16.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "typescript": "^6.0.3"
+  }
+}

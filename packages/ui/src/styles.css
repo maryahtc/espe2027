@@ -1,0 +1,127 @@
+/*
+ * DESIGN SYSTEM CONEXO — tokens compartilhados pelos portais.
+ *
+ * Fonte: manual "ID Conexo" (cores 03, tipografia 04).
+ *   Vermelho #CA2C2C · Preto #141414 · Raleway (texto) · Gilroy (números).
+ * Gilroy é comercial: até a licença web, os números usam Outfit (gratuita, desenho geométrico próximo).
+ *
+ * Regras de uso:
+ *   - vermelho é destaque pontual (item ativo, "próximo", filetes, numeração de seção) — nunca grandes áreas;
+ *   - vermelho NÃO significa erro nem "abaixo do esperado". Erros usam --danger (tom separado) + ícone + texto;
+ *   - status e obrigatoriedade usam forma e texto, não cores novas.
+ *
+ * As fontes são carregadas pelo app (next/font) e expostas nas variáveis --font-raleway e --font-numerals.
+ */
+
+:root {
+  --brand: #ca2c2c;
+  --brand-strong: #a82222;
+  --brand-tint: #faeceb;
+
+  --ink: #141414;
+  --ink-2: #2e2d2d;
+  --muted: #5e5c5a;
+  --faint: #8d8a86;
+  --rule: #e8e5e1;
+  --rule-strong: #d2cec8;
+
+  --paper: #fbfaf8;
+  --surface: #ffffff;
+  --sunken: #f3f1ee;
+
+  --danger: #8e2a1f;
+  --danger-bg: #f7e9e6;
+  --ok: #2f5d47;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-tint: var(--brand-tint);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-ok: var(--ok);
+
+  --font-sans: var(--font-raleway), ui-sans-serif, system-ui, sans-serif;
+  --font-num: var(--font-numerals), var(--font-raleway), ui-sans-serif, sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* Raleway desenha algarismos de estilo antigo por padrão; no portal, números sempre alinhados. */
+    font-variant-numeric: lining-nums;
+    font-feature-settings: 'lnum' 1;
+  }
+  ::selection {
+    background: var(--brand-tint);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* Números de destaque (datas, módulos, contadores) — papel da Gilroy no manual. */
+  .num {
+    font-family: var(--font-num);
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  /* Rótulo pequeno em caixa alta. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Filete vermelho do manual, sob títulos de seção. */
+  .rule-brand {
+    height: 1px;
+    background: var(--brand);
+  }
+  .hairline {
+    border-color: var(--rule);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation: reveal 0.6s var(--ease-out-soft) both;
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

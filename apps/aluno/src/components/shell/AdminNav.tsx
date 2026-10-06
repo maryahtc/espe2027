@@ -1,0 +1,100 @@
+'use client'
+
+import { cn } from '@portal/ui/cn'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { adminGroups } from '@/config/nav'
+import { Logo } from './Logo'
+import { NavIcon } from './NavIcon'
+
+function useActive() {
+  const pathname = usePathname()
+  return (href: string) => (href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(`${href}/`))
+}
+
+function NavList({ onDark = false }: { onDark?: boolean }) {
+  const active = useActive()
+  return (
+    <>
+      <Link
+        href="/admin"
+        className={cn(
+          'flex min-h-10 items-center gap-3 rounded-md px-3 text-sm',
+          active('/admin') ? 'bg-sunken font-semibold text-ink' : 'text-ink-2 hover:bg-sunken',
+        )}
+      >
+        <NavIcon name="home" size={18} /> Início do painel
+      </Link>
+      {adminGroups.map((group) => (
+        <div key={group.label} className="mt-5">
+          <p className={cn('eyebrow px-3 text-[10px]', onDark && 'text-faint')}>{group.label}</p>
+          <ul className="mt-1.5 space-y-0.5">
+            {group.sections.map((s) => {
+              const href = `/admin/${s.slug}`
+              const on = active(href)
+              return (
+                <li key={s.slug}>
+                  <Link
+                    href={href}
+                    aria-current={on ? 'page' : undefined}
+                    className={cn(
+                      'relative flex min-h-10 items-center gap-3 rounded-md px-3 text-sm',
+                      on ? 'bg-sunken font-semibold text-ink' : 'text-ink-2 hover:bg-sunken',
+                    )}
+                  >
+                    {on ? <span className="absolute top-2 bottom-2 left-0 w-[3px] bg-brand" /> : null}
+                    <NavIcon name={s.icon} size={18} />
+                    {s.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
+    </>
+  )
+}
+
+export function AdminSidebar() {
+  return (
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-rule bg-surface lg:flex">
+      <div className="px-6 pt-7 pb-6">
+        <Logo href="/admin" />
+        <p className="eyebrow mt-4 text-brand">Administração</p>
+      </div>
+      <nav aria-label="Administração" className="flex-1 overflow-y-auto px-3 pb-6">
+        <NavList />
+      </nav>
+      <Link href="/" className="m-3 rounded-md border border-rule p-3 text-center text-sm font-semibold hover:border-ink">
+        Ver portal como aluno →
+      </Link>
+    </aside>
+  )
+}
+
+/** Celular: cabeçalho com menu recolhível (sem JavaScript: <details>). */
+export function AdminTopBar() {
+  return (
+    <header className="sticky top-0 z-30 border-b border-rule bg-surface lg:hidden">
+      <details className="group">
+        <summary className="flex h-14 cursor-pointer list-none items-center justify-between px-4 [&::-webkit-details-marker]:hidden">
+          <span className="flex items-center gap-3">
+            <Logo variant="short" href="/admin" />
+            <span className="eyebrow text-brand">Admin</span>
+          </span>
+          <span className="rounded-md border border-rule-strong px-3 py-1.5 text-sm font-semibold">
+            <span className="group-open:hidden">Menu</span>
+            <span className="hidden group-open:inline">Fechar</span>
+          </span>
+        </summary>
+        <nav aria-label="Administração" className="max-h-[75dvh] overflow-y-auto border-t border-rule px-3 pt-3 pb-5">
+          <NavList />
+          <Link href="/" className="mt-5 block rounded-md border border-rule p-3 text-center text-sm font-semibold">
+            Ver portal como aluno →
+          </Link>
+        </nav>
+      </details>
+    </header>
+  )
+}

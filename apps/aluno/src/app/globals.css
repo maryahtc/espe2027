@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+@import '@portal/ui/styles.css';
+
+/* Classes usadas nos componentes compartilhados. */
+@source '../../../../packages/ui/src';
