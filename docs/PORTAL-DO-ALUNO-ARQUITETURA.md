@@ -1,7 +1,6 @@
 # Portal do Aluno — Arquitetura (v1, decisões incorporadas)
 
-> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass.** Nada implementado. A implementação da Etapa 1 só
-> começa após autorização explícita.
+> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass.** Etapa 2 aguardando autorização.
 > v0: 06/10/2026 · v1: 06/10/2026 — decisões da coordenação incorporadas (ver seção P, "Alterações v0 → v1").
 > Data de referência: primeira turma em **fevereiro de 2027**. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
 > (portal público de cronograma, `docs/ARQUITETURA.md`).
@@ -1020,7 +1019,7 @@ foto de capa do caso (armazenamento privado, E.5.1) · atalho para o Smile Cloud
 aluno → Publicar → Arquivar (Q) · calendário mensal · materiais necessários no módulo · biblioteca de aulas ·
 workflow clínico · mapa horizontal de tratamento · produção clínica do aluno.
 
-Checkpoint no repositório: commit "ETAPA 1 APROVADA — CONEXO DARK GLASS" e tag `etapa-1-aprovada`.
+Checkpoint no repositório: commit "ETAPA 1 APROVADA — CONEXO DARK GLASS" (0a722a2).
 
 ---
 
