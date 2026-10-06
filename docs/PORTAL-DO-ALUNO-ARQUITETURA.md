@@ -748,6 +748,58 @@ ciclos de revisão. As etapas 6–8 podem vir antes da 9 (workflows) porque são
 
 ---
 
+## O. Identidade visual — marca Conexo (Clavijo & Ottoboni)
+
+Fonte: manual "ID Conexo", páginas de logo, cores (03) e tipografia (04).
+
+### O.1 Cores
+| Token | Valor | Uso no portal |
+|---|---|---|
+| `--brand` | **#CA2C2C** (RGB 202 44 44 · CMYK 14 93 85 4) | Destaques pontuais: item ativo da navegação, botão principal, marcador "próximo módulo" na timeline, filetes como os do manual. **Nunca em grandes áreas.** |
+| `--ink` | **#141414** (RGB 20 19 20 · CMYK 78 69 61 87) | Texto, títulos, ícones, fundo do modo escuro. |
+| neutros | branco, off-white e 4–5 cinzas derivados de `#141414` | Fundos, cartões, bordas finas — é o que dá o "espaço visual" pedido na seção 24. |
+
+O manual já aponta para o visual que a especificação pede: fundo branco, preto, vermelho em filetes finos e
+números de seção, muito respiro. O portal segue a mesma gramática.
+
+**Cuidados técnicos:**
+- **Contraste:** #CA2C2C sobre branco tem contraste ≈ 5,3:1 → passa em AA para texto normal. Sobre #141414 fica
+  ≈ 3,5:1 → no modo escuro o vermelho só em elementos grandes, ou um tom ajustado (mais claro) só para essa
+  versão. Validaremos cada combinação no design system.
+- **Vermelho não pode significar "erro"** aqui. Como é a cor da marca e a especificação pede linguagem **não
+  punitiva** nas lacunas de experiência, a produção e as lacunas **não usam vermelho** (barras em preto/cinza,
+  destaque em vermelho só para "você está aqui"). Erros de formulário usam ícone + texto, e o tom do vermelho de
+  erro é separado do vermelho de marca.
+- Os status (planejada/realizada, obrigatório/recomendado) usam **forma e texto** (ponto cheio/vazado, rótulo), não
+  novas cores — sem excesso de cores, como pede a especificação.
+
+### O.2 Tipografia
+| Papel | Fonte (manual) | Observação |
+|---|---|---|
+| Títulos e texto | **Raleway** | Gratuita (Google Fonts), auto‑hospedada via `next/font`. Usar pesos 300–700; títulos em peso médio/leve, como no manual ("tipografia", "cores"). |
+| Números | **Gilroy** | **Fonte comercial** — precisa de licença web. Ótima para o portal: datas, horários, contadores de produção, número do módulo. |
+
+Detalhe importante: a Raleway desenha os números com **algarismos de estilo antigo** (alturas desiguais,
+"123456789" que descem da linha). O manual resolve isso usando Gilroy para números — e nós faremos o mesmo em
+todo número do portal (datas, totais, gráficos). Se não houver licença da Gilroy, alternativas gratuitas com
+desenho geométrico parecido: **Plus Jakarta Sans** ou **Outfit** só para números, ou Raleway com a opção
+tipográfica `lnum` (algarismos alinhados), que resolve a altura mas mantém o desenho da Raleway.
+
+### O.3 Logo
+- Cabeçalho: versão horizontal **"conexo. CLAVIJO & OTTOBONI"** no desktop; no celular, a versão reduzida
+  ("conexo." ou só o bloco vermelho "co"), respeitando a redução máxima indicada no manual (página 10).
+- Ícone do navegador/aplicativo: o bloco vermelho com "co" branco.
+- Preciso do logo em **SVG** — PNG/JPG perdem qualidade em telas de alta resolução.
+
+### O.4 Linguagem visual aplicada
+- Filete vermelho fino sob títulos de seção e numeração "01, 02, 03…" em vermelho, como no manual — combina com
+  a numeração dos módulos ("MÓDULO 07") e a timeline.
+- Cartões brancos com borda cinza fina, sem sombras pesadas; ícones de traço fino.
+- Os tokens atuais do portal público (`src/app/globals.css`, com destaque "a definir") serão substituídos por
+  estes, para os dois portais terem a mesma identidade.
+
+---
+
 ## N. Decisões que preciso de você antes de começar
 
 **Produto**
@@ -776,10 +828,11 @@ ciclos de revisão. As etapas 6–8 podem vir antes da 9 (workflows) porque são
 15. **Quem é o titular das contas** (Supabase, Vercel, vídeo, IA) — em nome da instituição, de preferência.
 16. **LGPD:** quem na instituição responde por privacidade e vai revisar o termo de uso e a base legal? (J.4)
 
-**Identidade visual**
-17. **Arquivo da marca:** você mencionou que pode enviar — sim, por favor (link do Drive/Canva ou o PDF do guia).
-    A especialização usa marca própria, ou a identidade da Accolità ou do Zero | 1? O design system atual do
-    portal público tem a cor de destaque ainda como "a definir".
+**Identidade visual** (marca recebida — ver seção O)
+17. **Arquivos da marca:** logo em **SVG** (versões horizontal, reduzida/só o símbolo "co", positiva e negativa)
+    e os **arquivos da fonte Gilroy com licença para web** — ou aprovação para usar uma alternativa gratuita
+    (O.2).
+18. **Portal com o nome "Conexo"** (ex.: "Conexo · Portal do Aluno") ou com o nome da especialização?
 
 ---
 
