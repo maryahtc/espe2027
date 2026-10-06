@@ -16,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/materiais',
     '/estoque',
     '/equipamentos',
+    '/playbook',
     ...ds.modules.map(moduleHref),
     ...ds.professors.map((p) => professorHref(p.slug)),
   ]

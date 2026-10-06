@@ -4,6 +4,7 @@ export const primaryNav: NavItem[] = [
   { href: '/', label: 'Início' },
   { href: '/cronograma', label: 'Cronograma' },
   { href: '/professores', label: 'Professores' },
+  { href: '/playbook', label: 'Playbook' },
 ]
 
 /** Páginas operacionais — agrupadas separadamente no menu. */

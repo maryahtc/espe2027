@@ -45,6 +45,14 @@
   --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, 'SFMono-Regular', monospace;
 
+  /* Playbook (/playbook) — identidade própria, escura */
+  --color-pb-bg: var(--pb-bg);
+  --color-pb-red: var(--pb-red);
+  --color-pb-red-strong: var(--pb-red-strong);
+  --color-pb-text: var(--pb-text);
+  --color-pb-muted: var(--pb-muted);
+  --color-pb-line: var(--pb-line);
+
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -146,4 +154,34 @@
 }
 [data-filtering-level='sub'] [data-past] {
   opacity: 1;
+}
+
+/*
+ * PLAYBOOK — mesma paleta do material impresso: lousa preta texturizada,
+ * vermelho das etapas, pílulas brancas de SIM/NÃO e traço cinza.
+ */
+[data-playbook] {
+  --pb-bg: #0c0c0c;
+  --pb-red: #d3302f;
+  --pb-red-strong: #e8423f;
+  --pb-text: #f3f3f3;
+  --pb-muted: #a6a6a6;
+  --pb-line: #8c8c8c;
+  color: var(--pb-text);
+  font-family: var(--font-urbanist), 'Century Gothic', ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--pb-bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgb(255 255 255 / 0.06), transparent 60%),
+    radial-gradient(ellipse at 50% 120%, rgb(0 0 0 / 0.8), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-playbook] ::selection {
+  background: var(--pb-red);
+  color: #fff;
+}
+[data-playbook] :focus-visible {
+  outline-color: #fff;
+}
+body:has([data-playbook]) {
+  background: #0c0c0c;
 }

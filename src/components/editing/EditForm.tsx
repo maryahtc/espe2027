@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import type { FieldDef } from '@/config/editing'
-import { removeRecordAction, saveRecordAction, type FormState } from '@/app/coordenacao/actions'
+import { removeRecordAction, saveRecordAction, type FormState } from '@/app/(portal)/coordenacao/actions'
 
 type Option = { value: string; label: string }
 
