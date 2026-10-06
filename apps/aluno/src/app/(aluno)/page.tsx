@@ -11,17 +11,17 @@ import {
   DEMO_TODAY,
   followingModule,
   modules,
-  nextAppointment,
   nextModule,
   nextModuleDetail,
   nextModuleSchedule,
   preparation,
   previousModule,
   productionSnapshot,
-  recentCases,
   recommendation,
   student,
 } from '@/demo/data'
+import { cases, nextSession, sortedCases } from '@/demo/cases'
+import { library } from '@/demo/library'
 import { formatDayMonth, formatLongDay, monthShort, relativeDays, year } from '@/lib/dates'
 
 function capitalize(text: string) {
@@ -34,6 +34,14 @@ export default function HomePage() {
   const requiredDone = required.filter((p) => p.status === 'concluido').length
   const pendingRequired = required.length - requiredDone
   const done = modules.filter((m) => m.state === 'done').length
+  // Próxima consulta planejada entre os casos em andamento.
+  const upcoming = cases
+    .filter((c) => c.status === 'andamento')
+    .map((c) => ({ c, s: nextSession(c) }))
+    .filter((x): x is { c: (typeof cases)[number]; s: NonNullable<ReturnType<typeof nextSession>> } => x.s !== null && x.s.date >= today)
+    .sort((a, b) => a.s.date.localeCompare(b.s.date))[0]
+  const recent = sortedCases().filter((c) => c.performed.some((p) => p.date <= today)).slice(0, 2)
+  const recLesson = library.find((l) => l.title === recommendation.title)
 
   return (
     <div className="space-y-10 lg:space-y-14">
@@ -142,7 +150,7 @@ export default function HomePage() {
       <HomeSection id="para-voce" index="03" title="Para você" note="Escolhido a partir do que você registrou na clínica.">
         <article className="grid gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8">
           <Link
-            href="/biblioteca"
+            href={recLesson ? `/biblioteca/${recLesson.slug}` : '/biblioteca'}
             aria-label={`Assistir: ${recommendation.title}`}
             className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-md bg-ink"
           >
@@ -164,7 +172,7 @@ export default function HomePage() {
             </p>
             <p className="mt-4 border-l-2 border-brand pl-3 text-sm leading-relaxed text-ink-2">{recommendation.reason}</p>
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
-              <ButtonLink href="/biblioteca">Assistir</ButtonLink>
+              <ButtonLink href={recLesson ? `/biblioteca/${recLesson.slug}` : '/biblioteca'}>Assistir</ButtonLink>
               <ButtonLink href={recommendation.workflow.href} variant="quiet">
                 <IconBranch size={16} /> Explorar no Workflow: {recommendation.workflow.title}
               </ButtonLink>
@@ -172,19 +180,21 @@ export default function HomePage() {
           </div>
         </article>
         <div className="mt-8">
-          <p className="eyebrow">Também sobre {recommendation.topic.toLowerCase()}</p>
+          <p className="eyebrow">Também pode ajudar</p>
           <ul className="mt-2 divide-y divide-rule">
-            {recommendation.more.map((c) => (
-              <li key={c.title}>
-                <Link href="/biblioteca" className="flex items-center justify-between gap-4 py-3 text-sm hover:underline">
-                  <span>
-                    <span className="font-semibold">{c.title}</span>
-                    <span className="text-muted"> · {c.author}</span>
-                  </span>
-                  <span className="num shrink-0 text-xs text-muted">{c.minutes} min</span>
-                </Link>
-              </li>
-            ))}
+            {recommendation.more
+              .map((slug) => library.find((l) => l.slug === slug)!)
+              .map((c) => (
+                <li key={c.slug}>
+                  <Link href={`/biblioteca/${c.slug}`} className="flex items-center justify-between gap-4 py-3 text-sm hover:underline">
+                    <span>
+                      <span className="font-semibold">{c.title}</span>
+                      <span className="text-muted"> · {c.teacher}</span>
+                    </span>
+                    <span className="num shrink-0 text-xs text-muted">{c.minutes} min</span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </div>
       </HomeSection>
@@ -204,35 +214,52 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div>
-              <p className="eyebrow">Próxima consulta planejada</p>
-              <Link href="/casos" className="mt-2 flex items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-rule-strong">
-                <span className="w-12 shrink-0 text-center">
-                  <span className="num block text-2xl leading-none font-light">{formatDayMonth(nextAppointment.date).slice(0, 2)}</span>
-                  <span className="eyebrow block text-[10px]">{monthShort(nextAppointment.date)}</span>
-                </span>
-                <span className="min-w-0 border-l border-rule pl-4">
-                  <span className="block text-[15px] font-semibold">{nextAppointment.title}</span>
-                  <span className="block text-xs text-muted">
-                    Paciente <span className="num">{nextAppointment.patient}</span> · {nextAppointment.session} ·{' '}
-                    {relativeDays(today, nextAppointment.date)}
+            {upcoming ? (
+              <div>
+                <p className="eyebrow">Próxima consulta planejada</p>
+                <Link
+                  href={`/casos/${upcoming.c.id}#mapa`}
+                  className="mt-2 flex items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-rule-strong"
+                >
+                  <span className="w-12 shrink-0 text-center">
+                    <span className="num block text-2xl leading-none font-light">{formatDayMonth(upcoming.s.date).slice(0, 2)}</span>
+                    <span className="eyebrow block text-[10px]">{monthShort(upcoming.s.date)}</span>
                   </span>
-                </span>
-              </Link>
-            </div>
+                  <span className="min-w-0 border-l border-rule pl-4">
+                    <span className="block text-[15px] font-semibold">
+                      {upcoming.s.title} · {upcoming.c.procedure.toLowerCase()}
+                    </span>
+                    <span className="block text-xs text-muted">
+                      Paciente <span className="num">{upcoming.c.patient}</span> · Consulta{' '}
+                      <span className="num">{String(upcoming.s.number).padStart(2, '0')}</span> de{' '}
+                      <span className="num">{String(upcoming.c.sessions.length).padStart(2, '0')}</span> ·{' '}
+                      {relativeDays(today, upcoming.s.date)}
+                    </span>
+                  </span>
+                </Link>
+              </div>
+            ) : null}
 
             <div>
               <p className="eyebrow">Registrados recentemente</p>
               <ul className="mt-1 divide-y divide-rule">
-                {recentCases.map((c) => (
-                  <li key={c.patient} className="flex items-baseline justify-between gap-4 py-3 text-sm">
-                    <span>
-                      <span className="num font-semibold">{c.patient}</span>
-                      <span className="text-ink-2"> · {c.what}</span>
-                    </span>
-                    <span className="num shrink-0 text-xs text-muted">{formatDayMonth(c.date)}</span>
-                  </li>
-                ))}
+                {recent.map((c) => {
+                  const last = c.performed.filter((p) => p.date <= today).at(-1)!
+                  return (
+                    <li key={c.id}>
+                      <Link href={`/casos/${c.id}`} className="flex items-baseline justify-between gap-4 py-3 text-sm hover:underline">
+                        <span>
+                          <span className="num font-semibold">{c.patient}</span>
+                          <span className="text-ink-2">
+                            {' '}
+                            · {last.procedure} · {last.quantity} {last.unit}
+                          </span>
+                        </span>
+                        <span className="num shrink-0 text-xs text-muted">{formatDayMonth(last.date)}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           </div>

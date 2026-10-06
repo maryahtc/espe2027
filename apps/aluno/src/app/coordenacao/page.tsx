@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { Planned } from '@/components/Planned'
+import { EmptyState } from '@portal/ui/empty-state'
+import { PageTitle } from '@portal/ui/section'
 import { Logo } from '@/components/shell/Logo'
 import { PreviewBanner } from '@/components/shell/PreviewBanner'
 
@@ -14,19 +15,16 @@ export default function CoordinationPage() {
         <span className="eyebrow ml-4 text-brand">Coordenação</span>
       </header>
       <main id="conteudo" className="mx-auto max-w-[1120px] px-4 py-10 sm:px-8">
-        <Planned
-          eyebrow="Turma 2027"
-          title="Visão da turma"
-          lead="Para a coordenação acompanhar a formação e identificar lacunas."
-          stage="Etapa 11"
-          items={[
-            'Casos registrados, procedimentos e evolução mensal',
-            'Procedimentos pouco realizados pela turma',
-            'Dificuldades mais relatadas, por tema',
-            'Alunos com pouca exposição clínica',
-            'Caso individual com identificador do paciente (iniciais/código), com registro de acesso',
-          ]}
-        />
+        <PageTitle eyebrow="Turma 2027" title="Visão da turma" lead="Para a coordenação acompanhar a formação e identificar lacunas." />
+        <EmptyState stage="Etapa 11" title="O que vai existir aqui">
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Casos registrados, procedimentos e evolução mensal</li>
+            <li>Procedimentos pouco realizados pela turma</li>
+            <li>Dificuldades mais relatadas, por tema</li>
+            <li>Alunos com pouca exposição clínica</li>
+            <li>Caso individual com identificador do paciente (iniciais/código), com registro de acesso</li>
+          </ul>
+        </EmptyState>
       </main>
     </>
   )

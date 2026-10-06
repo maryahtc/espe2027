@@ -1,6 +1,7 @@
 import { cn } from '@portal/ui/cn'
 import { IconCheck, IconDoc, IconPlay } from '@portal/ui/icons'
 import { RequirementTag } from '@portal/ui/tag'
+import Link from 'next/link'
 import type { PrepItem } from '@/demo/data'
 
 const KIND_LABEL: Record<PrepItem['kind'], string> = {
@@ -25,9 +26,12 @@ export function ContentRow({ item }: { item: PrepItem }) {
         {done ? <IconCheck size={18} /> : <Icon size={18} />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className={cn('text-[15px] leading-snug font-semibold', done && 'line-through decoration-rule-strong')}>
+        <Link
+          href={`/biblioteca/${item.slug}`}
+          className={cn('block text-[15px] leading-snug font-semibold hover:underline', done && 'line-through decoration-rule-strong')}
+        >
           {item.title}
-        </p>
+        </Link>
         <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
           <RequirementTag level={item.requirement} />
           <span>{item.author}</span>
@@ -39,18 +43,18 @@ export function ContentRow({ item }: { item: PrepItem }) {
       <div className="shrink-0 pt-0.5 text-right">
         {item.status === 'concluido' ? <span className="text-xs font-semibold text-muted">Concluído</span> : null}
         {item.status === 'em-andamento' ? (
-          <a href="/biblioteca" className="block text-sm font-semibold text-ink hover:underline">
+          <Link href={`/biblioteca/${item.slug}`} className="block text-sm font-semibold text-ink hover:underline">
             Continuar
             <span className="mt-1.5 block h-[2px] w-16 bg-rule">
               <span className="block h-full bg-ink" style={{ width: `${item.progress ?? 0}%` }} />
             </span>
             <span className="num mt-1 block text-[11px] font-normal text-muted">{item.progress}% assistido</span>
-          </a>
+          </Link>
         ) : null}
         {item.status === 'pendente' ? (
-          <a href="/biblioteca" className="text-sm font-semibold text-ink hover:underline">
+          <Link href={`/biblioteca/${item.slug}`} className="text-sm font-semibold text-ink hover:underline">
             {item.kind === 'video' ? 'Assistir' : 'Ler'}
-          </a>
+          </Link>
         ) : null}
       </div>
     </li>

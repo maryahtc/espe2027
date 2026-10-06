@@ -17,7 +17,7 @@ export default function AdminHome() {
         {shortcuts.map((s) => (
           <li key={s.slug}>
             <Link
-              href={s.slug === 'modulos' ? '/admin/modulos/novo' : `/admin/${s.slug}`}
+              href={s.slug === 'modulos' || s.slug === 'workflows' ? `/admin/${s.slug}/novo` : `/admin/${s.slug}`}
               className="group flex h-full gap-4 rounded-lg border border-rule bg-surface p-5 transition-colors hover:border-ink"
             >
               <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-sunken text-ink">

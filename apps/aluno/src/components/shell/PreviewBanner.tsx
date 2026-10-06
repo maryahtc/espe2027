@@ -5,7 +5,7 @@ export function PreviewBanner() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-b border-rule bg-sunken px-4 py-1.5 text-[11px] font-medium tracking-wide text-muted">
       <span>
-        <span className="font-semibold text-ink">Prévia</span> · dados fictícios · sem login — Etapa 1
+        <span className="font-semibold text-ink">Prévia</span> · dados fictícios · sem login
       </span>
       <span className="flex gap-3">
         <Link href="/" className="underline-offset-2 hover:text-ink hover:underline">

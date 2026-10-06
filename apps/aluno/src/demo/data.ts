@@ -148,6 +148,8 @@ export type ContentKind = 'video' | 'artigo' | 'pdf' | 'capitulo'
 
 export type PrepItem = {
   id: string
+  /** Conteúdo da biblioteca. */
+  slug: string
   kind: ContentKind
   title: string
   author: string
@@ -160,6 +162,7 @@ export type PrepItem = {
 export const preparation: PrepItem[] = [
   {
     id: 'p1',
+    slug: 'preparos-minimamente-invasivos',
     kind: 'video',
     title: 'Preparos minimamente invasivos para laminados',
     author: 'Prof. Rafael Mendes',
@@ -169,6 +172,7 @@ export const preparation: PrepItem[] = [
   },
   {
     id: 'p2',
+    slug: 'selecao-de-cor-e-substrato',
     kind: 'video',
     title: 'Seleção de cor e leitura do substrato',
     author: 'Profa. Carolina Duarte',
@@ -179,6 +183,7 @@ export const preparation: PrepItem[] = [
   },
   {
     id: 'p3',
+    slug: 'espessura-de-preparo-revisao',
     kind: 'artigo',
     title: 'Espessura de preparo e longevidade de laminados — revisão',
     author: 'Leitura indicada pela coordenação',
@@ -188,6 +193,7 @@ export const preparation: PrepItem[] = [
   },
   {
     id: 'p4',
+    slug: 'mock-up-do-enceramento-a-boca',
     kind: 'video',
     title: 'Mock-up: do enceramento à boca',
     author: 'Prof. Rafael Mendes',
@@ -197,6 +203,7 @@ export const preparation: PrepItem[] = [
   },
   {
     id: 'p5',
+    slug: 'protocolo-de-cimentacao-adesiva',
     kind: 'pdf',
     title: 'Protocolo de cimentação adesiva (checklist de bancada)',
     author: 'Prof. Bruno Saldanha',
@@ -214,11 +221,8 @@ export const recommendation = {
   minutes: 18,
   topic: 'Término cervical',
   reason: 'Você relatou dificuldade com o término cervical no caso B.R.S., registrado em 02/03.',
-  workflow: { title: 'Laminados: definição do término', href: '/workflows' },
-  more: [
-    { title: 'Acabamento cervical com pontas multilaminadas', author: 'Prof. Bruno Saldanha', minutes: 12 },
-    { title: 'Afastamento gengival para preparo e moldagem', author: 'Profa. Helena Prado', minutes: 21 },
-  ],
+  workflow: { title: 'Abordagem estética anterior', href: '/workflows/abordagem-anterior/forma/acrescimo' },
+  more: ['preparos-minimamente-invasivos', 'espessura-de-preparo-revisao'],
 }
 
 /* ── Clínica ────────────────────────────────────────────────────────────── */
@@ -230,16 +234,92 @@ export const clinicNotice = {
   date: '2028-03-09' as CivilDate,
 }
 
-export const nextAppointment = {
-  patient: 'M.A.S.',
-  session: 'Consulta 03 de 04',
-  title: 'Cimentação dos laminados 12 a 22',
-  date: '2028-03-14' as CivilDate,
+export const productionSnapshot = { procedures: 31, cases: 12, categories: 7 }
+
+/* ── Programação genérica dos demais módulos (prévia) ───────────────────── */
+
+export function scheduleFor(m: DemoModule): Array<{ date: CivilDate; items: ScheduleItem[] }> {
+  if (m.number === nextModule.number) return nextModuleSchedule
+  const [a, b] = [m.teachers[0]!, m.teachers[1] ?? m.teachers[0]!]
+  return [
+    {
+      date: m.start,
+      items: [
+        { start: '08:30', end: '12:30', title: `${m.title}: fundamentos e indicações`, teacher: a, type: 'Teórica' },
+        { start: '14:00', end: '18:00', title: 'Demonstração clínica comentada', teacher: b, type: 'Demonstração' },
+      ],
+    },
+    {
+      date: addDays(m.start, 1),
+      items: [
+        { start: '08:30', end: '12:30', title: 'Hands-on em manequim', teacher: b, type: 'Hands-on' },
+        { start: '14:00', end: '18:00', title: 'Planejamento dos casos da clínica', teacher: a, type: 'Discussão de caso' },
+      ],
+    },
+    {
+      date: m.end,
+      items: [{ start: '07:30', end: '13:00', title: 'Clínica supervisionada', teacher: a, type: 'Clínica' }],
+    },
+  ]
 }
 
-export const recentCases = [
-  { patient: 'B.R.S.', date: '2028-03-02' as CivilDate, what: 'Preparo para laminados · 4 peças' },
-  { patient: 'J.P.C.', date: '2028-02-24' as CivilDate, what: 'Resina posterior · dentes 36 e 37' },
+/* ── Materiais necessários (no futuro: cadastro do admin por módulo) ────── */
+
+export type MaterialGroup = { title: string; items: string[] }
+
+const BASE_MATERIALS: MaterialGroup[] = [
+  { title: 'Clínica', items: ['Kit de isolamento absoluto (dique, grampos, arco, perfurador)', 'Jaleco, gorro, máscara e óculos'] },
+  { title: 'Estudo', items: ['Notebook ou tablet', 'Caderno de anotações'] },
 ]
 
-export const productionSnapshot = { procedures: 31, cases: 12, categories: 7 }
+const MODULE_MATERIALS: Record<number, { groups: MaterialGroup[]; notes: string[] }> = {
+  14: {
+    groups: [
+      {
+        title: 'Hands-on de preparo (sexta)',
+        items: [
+          'Kit de pontas diamantadas para laminados',
+          'Pontas de profundidade (0,3 e 0,5 mm)',
+          'Guias de silicone do mock-up',
+          'Instrumentais para acabamento de preparo',
+        ],
+      },
+      {
+        title: 'Clínica (sábado)',
+        items: ['Kit de isolamento absoluto completo', 'Fio afastador #000 e #00', 'Espátulas de resina', 'Fotopolimerizador'],
+      },
+      { title: 'Estudo', items: ['Notebook com acesso ao Smile Cloud', 'Fotos dos seus casos de laminado'] },
+    ],
+    notes: [
+      'Trazer os modelos impressos com os dentes preparados para o hands-on.',
+      'O fotopolimerizador deve estar com a bateria carregada; a clínica não empresta aparelhos.',
+    ],
+  },
+}
+
+export function materialsFor(m: DemoModule) {
+  return MODULE_MATERIALS[m.number] ?? {
+    groups: [
+      { title: 'Hands-on', items: ['Manequim e dentes de estoque', 'Instrumentais de acabamento e polimento', 'Espátulas de resina'] },
+      ...BASE_MATERIALS,
+    ],
+    notes: ['A lista final é confirmada pela coordenação uma semana antes do módulo.'],
+  }
+}
+
+/* ── Outros eventos acadêmicos no calendário ────────────────────────────── */
+
+export type AcademicEvent = { date: CivilDate; title: string; kind: 'online' | 'clinica' | 'prazo'; time?: string }
+
+export const academicEvents: AcademicEvent[] = [
+  { date: '2028-03-01', title: 'Discussão de casos online', kind: 'online', time: '19:30' },
+  { date: '2028-03-25', title: 'Clínica extra', kind: 'clinica', time: '08:00' },
+  { date: '2028-03-29', title: 'Entrega: planejamento do caso de laminados', kind: 'prazo' },
+  { date: '2028-04-05', title: 'Discussão de casos online', kind: 'online', time: '19:30' },
+  { date: '2028-02-02', title: 'Discussão de casos online', kind: 'online', time: '19:30' },
+  { date: '2028-02-26', title: 'Clínica extra', kind: 'clinica', time: '08:00' },
+  { date: '2027-02-27', title: 'Aula inaugural online', kind: 'online', time: '19:00' },
+]
+
+export const COURSE_FIRST_MONTH = '2027-02'
+export const COURSE_LAST_MONTH = '2029-07'
