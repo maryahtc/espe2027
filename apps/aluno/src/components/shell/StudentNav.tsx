@@ -12,7 +12,7 @@ import { NavIcon } from './NavIcon'
 export function StudentSidebar() {
   const pathname = usePathname()
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-rule bg-surface lg:flex">
+    <aside className="glass-strong sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r lg:flex">
       <div className="px-7 pt-8 pb-10">
         <Logo />
         <p className="eyebrow mt-4">Portal do Aluno</p>
@@ -28,10 +28,10 @@ export function StudentSidebar() {
                   aria-current={active && !area.children ? 'page' : undefined}
                   className={cn(
                     'relative flex min-h-11 items-center gap-3 rounded-md px-3 text-[15px] transition-colors',
-                    active ? 'font-semibold text-ink' : 'text-ink-2 hover:bg-sunken',
+                    active ? 'bg-white/[0.06] font-semibold text-ink' : 'text-muted hover:bg-white/[0.04] hover:text-ink',
                   )}
                 >
-                  {active ? <span className="absolute top-2.5 bottom-2.5 -left-4 w-[3px] bg-brand" /> : null}
+                  {active ? <span className="absolute top-1/2 -left-4 h-5 w-[3px] -translate-y-1/2 rounded-r bg-brand shadow-[0_0_12px_var(--brand-glow)]" /> : null}
                   <NavIcon name={area.icon} />
                   {area.label}
                 </Link>
@@ -46,7 +46,7 @@ export function StudentSidebar() {
                             aria-current={childActive ? 'page' : undefined}
                             className={cn(
                               '-ml-px block border-l py-1.5 pl-3 text-[13px] transition-colors',
-                              childActive ? 'border-ink font-semibold text-ink' : 'border-transparent text-muted hover:text-ink',
+                              childActive ? 'border-signal font-semibold text-ink' : 'border-transparent text-muted hover:text-ink',
                             )}
                           >
                             {child.label}
@@ -64,11 +64,11 @@ export function StudentSidebar() {
       <Link
         href={profileNav.href}
         className={cn(
-          'm-4 flex items-center gap-3 rounded-md border border-rule p-3 transition-colors hover:border-rule-strong',
-          isActive(pathname, profileNav.match) && 'border-ink',
+          'glass glass-interactive m-4 flex items-center gap-3 rounded-2xl p-3',
+          isActive(pathname, profileNav.match) && 'is-selected',
         )}
       >
-        <span className="num flex size-9 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white">
+        <span className="num flex size-9 items-center justify-center rounded-full bg-ink text-xs font-semibold text-on-ink">
           {student.initials}
         </span>
         <span className="min-w-0">
@@ -84,13 +84,13 @@ export function StudentSidebar() {
 export function StudentTopBar() {
   const pathname = usePathname()
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-rule bg-surface/95 px-4 backdrop-blur lg:hidden">
+    <header className="glass-strong sticky top-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
       <Logo variant="short" />
       <Link
         href={profileNav.href}
         aria-label="Perfil"
         aria-current={isActive(pathname, profileNav.match) ? 'page' : undefined}
-        className="num flex size-9 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white"
+        className="num flex size-9 items-center justify-center rounded-full bg-ink text-xs font-semibold text-on-ink"
       >
         {student.initials}
       </Link>
@@ -104,9 +104,9 @@ export function StudentBottomNav() {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden"
     >
-      <ul className="mx-auto grid max-w-lg grid-cols-5">
+      <ul className="glass glass-strong mx-auto grid max-w-lg grid-cols-5 rounded-[22px] px-1">
         {studentNav.map((area) => {
           const active = isActive(pathname, area.match)
           return (
@@ -115,11 +115,11 @@ export function StudentBottomNav() {
                 href={area.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative flex h-16 flex-col items-center justify-center gap-1 text-[10.5px] tracking-wide',
-                  active ? 'font-semibold text-ink' : 'text-muted',
+                  'relative flex h-16 flex-col items-center justify-center gap-1 text-[10.5px] tracking-wide transition-colors',
+                  active ? 'font-semibold text-ink' : 'text-faint hover:text-ink-2',
                 )}
               >
-                {active ? <span className="absolute top-0 h-[2px] w-8 bg-brand" /> : null}
+                {active ? <span className="glow-dot absolute bottom-1.5 !size-1" /> : null}
                 <NavIcon name={area.icon} size={22} />
                 {area.label}
               </Link>

@@ -436,6 +436,7 @@ exposure_references       cohort_id · procedure_id · reference_count · note  
 clinical_cases            id · owner_id · cohort_id · patient_label (iniciais/código)
                           · module_id? · supervisor_teacher_id? · smile_cloud_url
                           · summary · difficulty_text · ease_text · do_differently_text
+                          · cover_path? · cover_updated_at?      (foto de capa opcional — ver E.5.1)
                           · created_at · updated_at
 case_difficulty_topics    case_id · topic_id · source (aluno|ia|palavra-chave) · confirmed bool
 performed_procedures      id · case_id · owner_id · procedure_id · performed_on · quantity · teeth smallint[]
@@ -443,6 +444,22 @@ performed_procedures      id · case_id · owner_id · procedure_id · performed
 treatment_sessions        id · case_id · owner_id · position · title · planned_on · plan_text
                           · notes · status (planejada|realizada)
 ```
+
+#### E.5.1 Foto de capa do caso (aprovada em 06/10/2026)
+Uma foto **opcional** por caso, só para identidade visual e reconhecimento rápido (card em Meus casos, topo da página do
+caso, miniaturas no Início). **Não é galeria nem documentação clínica** — isso continua no Smile Cloud.
+- **Armazenamento:** Supabase Storage, bucket **privado** `case-covers` (nunca público), caminho
+  `{owner_id}/{case_id}/cover.jpg`. A coluna `cover_path` guarda só o caminho.
+- **Acesso:** políticas RLS em `storage.objects` espelham as do caso: lê quem pode ler o caso (o próprio aluno, a
+  coordenação da turma, admin, e quem tiver `case_access_grants`); grava/substitui/remove só o dono do caso.
+- **Entrega:** URL assinada de curta duração (ex.: 10 min) gerada no servidor a cada exibição; nada de URL
+  permanente ou indexável.
+- **Upload:** aceito só JPEG/PNG/HEIC/WebP até ~10 MB; o servidor converte para JPEG/WebP, **remove metadados
+  (EXIF, GPS)**, redimensiona (ex.: 1600 px) e gera miniatura. Substituir apaga o arquivo anterior.
+- **Remover / excluir caso:** apaga o arquivo; entra na mesma política de retenção dos casos (J.4).
+- **Consentimento:** a instituição já colhe termo para uso de imagem; mesmo assim a imagem é tratada como dado do
+  caso, com as mesmas proteções. O registro de auditoria cobre a abertura do caso pela coordenação.
+
 ```
 ai_suggestions            id · owner_id · kind (procedimento|temas) · input_text · output jsonb · model
                           · latency_ms · status (aceita|corrigida|descartada|falhou) · created_at
@@ -930,12 +947,56 @@ tipográfica `lnum` (algarismos alinhados), que resolve a altura mas mantém o d
 - Ícone do navegador/aplicativo: o bloco vermelho com "co" branco.
 - Preciso do logo em **SVG** — PNG/JPG perdem qualidade em telas de alta resolução.
 
-### O.4 Linguagem visual aplicada
-- Filete vermelho fino sob títulos de seção e numeração "01, 02, 03…" em vermelho, como no manual — combina com
-  a numeração dos módulos ("MÓDULO 07") e a timeline.
-- Cartões brancos com borda cinza fina, sem sombras pesadas; ícones de traço fino.
-- Os tokens atuais do portal público (`src/app/globals.css`, com destaque "a definir") serão substituídos por
-  estes, para os dois portais terem a mesma identidade.
+### O.4 Linguagem visual aplicada — "Conexo / Dark Glass" (aprovada em 06/10/2026; substitui a versão clara)
+- **Interface escura**: fundo #090909, superfícies #121212/#181818, texto quase branco, cinzas para hierarquia.
+  Vermelho Conexo como assinatura: estado ativo, seleção, progresso, ponto de luz, ação primária (uma por área),
+  caminho percorrido no workflow. Texto vermelho usa `--signal` (#F0625E), que passa AA sobre o fundo escuro.
+- **Vidro com função**: `.glass` (cards principais, casos, nós do workflow, painéis, player), `.glass-strong`
+  (navegação, barras fixas, diálogos), `.is-selected` (selecionado/atual). Leitura longa, formulários e tabelas
+  ficam opacos. Com "reduzir transparência" no sistema ou sem suporte a blur, tudo vira superfície opaca.
+- **Escala**: números e títulos grandes e leves; informação secundária pequena; muito espaço negativo.
+- **Microinterações** silenciosas (140–220 ms): hover, seleção, expansão; respeita "reduzir movimento".
+- Tokens em `packages/ui/src/styles.css`; catálogo vivo em `/design`. O portal público adota os mesmos tokens numa
+  etapa posterior.
+
+---
+
+## Q. Ciclo de vida do conteúdo institucional (aprovado em 06/10/2026)
+
+Regra geral do painel: **a coordenação altera livremente antes de o aluno ver**, e nada é apagado por padrão.
+
+| Estado | Para o aluno | Para o admin |
+|---|---|---|
+| **Rascunho** | invisível | editável; pode pré-visualizar como aluno |
+| **Publicado** | visível | continua editável; mudanças com impacto pedem confirmação |
+| **Arquivado** | invisível (sai de listas, recomendações e vínculos) | histórico preservado; pode restaurar como rascunho |
+
+**Onde se aplica:** workflows, módulos (e sua programação), aulas/videoaulas, conteúdos da biblioteca (artigos, livros,
+PDFs, links), materiais necessários do módulo e avisos.
+
+**Modelo de dados.** Cada tabela institucional ganha `status (rascunho|publicado|arquivado)`, `published_at`,
+`archived_at`, `updated_by`. Toda política RLS de leitura do aluno exige `status = 'publicado'` (e, para avisos,
+estar dentro do período). Exclusão definitiva não existe na interface; só o admin, por rotina específica, e
+registrada em `audit_log`.
+- **Workflows:** versão publicada imutável + rascunho de edição (`workflow_versions`, G.5). "Publicar alterações"
+  cria nova versão; quem está no meio continua na anterior.
+- **Módulos, aulas, conteúdos, materiais, avisos:** edição direta do registro publicado, com
+  **rascunho de alterações** quando a mudança tem impacto: a edição fica em `pending_changes jsonb` até ser publicada,
+  para o aluno não ver uma alteração pela metade.
+
+**Pré-visualizar como aluno.** Renderiza **o mesmo componente** da tela do aluno (ex.: `ModuleView`, `LessonView`,
+player do workflow) com os dados do rascunho, dentro de uma moldura de pré-visualização no admin. Não existe uma
+"versão parecida" para pré-visualização.
+
+**Confirmação de impacto.** Antes de aplicar, o sistema lista o que muda para quem, por exemplo:
+- datas de módulo publicado → "o cronograma de N alunos muda"; oferece publicar um aviso para a turma;
+- conteúdo que passa a obrigatório → "entra nas pendências de preparação";
+- arquivar conteúdo vinculado a módulos/workflows → lista onde ele aparece;
+- nova versão de workflow → alunos em andamento terminam na versão anterior.
+
+**Na prévia da Etapa 1** isso já aparece em: Admin › Módulos (lista por estado, editor, pré-visualização de rascunho,
+confirmação), Admin › Aulas e conteúdos (lista por estado, pré-visualização de rascunho), Admin › Avisos (lista por
+estado com "como o aluno vê") e Admin › Workflows (barra de publicação e confirmação de nova versão).
 
 ---
 
@@ -996,6 +1057,7 @@ tipográfica `lnum` (algarismos alinhados), que resolve a altura mas mantém o d
 | M | Plano refeito em 13 etapas (IA ganhou etapa própria, a 7); dependências por etapa; nota de prazo para fevereiro/2027; **escopo detalhado da Etapa 1** (M.1) e o que será visível ao final (M.2). |
 | N | Separado em decisões tomadas (N.1) e abertas (N.2), com a etapa que cada aberta bloqueia. |
 | O | Nova seção de identidade visual Conexo (preliminar, a partir das páginas enviadas). |
+| E.5.1, Q, O.4 (rodada de 06/10) | Foto de capa do caso (privada, RLS do caso, URL assinada, sem EXIF); ciclo Rascunho → Pré-visualização → Publicado → Arquivado com confirmação de impacto; direção visual Dark Glass. |
 
 ---
 

@@ -24,7 +24,7 @@ export default function ProductionPage() {
         {FILTERS.map((f, i) => (
           <span
             key={f}
-            className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-sm ${i === 0 ? 'border-ink bg-ink text-white' : 'border-rule-strong text-ink-2'}`}
+            className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-sm ${i === 0 ? 'border-ink bg-ink text-on-ink' : 'border-rule-strong text-ink-2'}`}
           >
             {f}
           </span>

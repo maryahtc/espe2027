@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation'
 import { adminGroups, adminSections } from '@/config/nav'
 
 export function generateStaticParams() {
-  return adminSections.filter((s) => s.slug !== 'modulos' && s.slug !== 'workflows').map((s) => ({ secao: s.slug }))
+  return adminSections.filter((s) => !['modulos', 'workflows', 'conteudos', 'avisos'].includes(s.slug)).map((s) => ({ secao: s.slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ secao: string }> }): Promise<Metadata> {

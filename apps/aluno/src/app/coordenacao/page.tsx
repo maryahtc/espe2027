@@ -12,7 +12,7 @@ export default function CoordinationPage() {
       <PreviewBanner />
       <header className="flex h-16 items-center border-b border-rule bg-surface px-4 sm:px-8">
         <Logo href="/coordenacao" />
-        <span className="eyebrow ml-4 text-brand">Coordenação</span>
+        <span className="eyebrow ml-4 text-signal">Coordenação</span>
       </header>
       <main id="conteudo" className="mx-auto max-w-[1120px] px-4 py-10 sm:px-8">
         <PageTitle eyebrow="Turma 2027" title="Visão da turma" lead="Para a coordenação acompanhar a formação e identificar lacunas." />

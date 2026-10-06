@@ -21,7 +21,7 @@ export function ModuleRuler({ modules, className }: { modules: RulerModule[]; cl
               className={cn(
                 'block w-full rounded-[1px] transition-[height] duration-200',
                 m.state === 'done' && 'h-5 bg-ink group-hover:h-6',
-                m.state === 'next' && 'h-9 bg-brand',
+                m.state === 'next' && 'h-9 bg-brand shadow-[0_0_18px_var(--brand-glow)]',
                 m.state === 'upcoming' && (m.number % 5 === 0 ? 'h-4' : 'h-3'),
                 m.state === 'upcoming' && 'bg-rule-strong group-hover:h-5',
               )}
@@ -29,7 +29,7 @@ export function ModuleRuler({ modules, className }: { modules: RulerModule[]; cl
             <span
               className={cn(
                 'num absolute bottom-0 left-1/2 -translate-x-1/2 text-[10px] leading-none',
-                m.state === 'next' ? 'font-semibold text-brand' : 'text-faint',
+                m.state === 'next' ? 'font-semibold text-signal' : 'text-faint',
                 labelVisibility(m, modules.length),
               )}
             >

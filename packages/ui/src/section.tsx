@@ -20,7 +20,7 @@ export function SectionHeader({
   return (
     <div className={cn('flex items-end justify-between gap-4', className)}>
       <div>
-        {index ? <span className="num block text-sm font-semibold text-brand">{index}</span> : null}
+        {index ? <span className="num block text-sm font-semibold text-signal">{index}</span> : null}
         <h2 className="text-xl leading-tight font-light tracking-tight text-ink md:text-2xl">{title}</h2>
         <div className="rule-brand mt-2 w-16" />
       </div>

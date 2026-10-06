@@ -1,8 +1,8 @@
-import { Button, ButtonLink } from '@portal/ui/button'
 import { IconCheck, IconPlus } from '@portal/ui/icons'
 import Link from 'next/link'
 import { categories, library, librarySlug } from '@/demo/library'
 import { stepOrder, validateGraph, type WorkflowGraph, type WorkflowNode } from '@/lib/workflow'
+import { ConfirmDialog, LifecycleBar } from './Lifecycle'
 import { WorkflowMap } from './WorkflowMap'
 
 const TYPES: Array<[WorkflowNode['type'] | 'referencia' | 'decisao', string, string]> = [
@@ -87,12 +87,12 @@ function StepForm({ k, graph, order, num }: { k: string; graph: WorkflowGraph; o
   const n = graph.nodes[k]!
   const id = `etapa-${num.get(k)}`
   return (
-    <section id={id} aria-labelledby={`${id}-t`} className="scroll-mt-24 rounded-lg border border-rule bg-surface">
+    <section id={id} aria-labelledby={`${id}-t`} className="scroll-mt-24 glass rounded-2xl">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-rule px-5 py-4">
         <h3 id={`${id}-t`} className="flex items-baseline gap-3">
-          <span className="num text-2xl font-light text-brand">{num.get(k)}</span>
+          <span className="num text-2xl font-light text-signal">{num.get(k)}</span>
           <span className="text-sm font-semibold">{TYPE_LABEL[n.type]}</span>
-          {k === graph.start ? <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white">INÍCIO</span> : null}
+          {k === graph.start ? <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold tracking-wider text-on-ink">INÍCIO</span> : null}
         </h3>
         <span className="flex items-center gap-3 text-xs text-muted">
           <label htmlFor={`${id}-tipo`} className="sr-only">
@@ -106,7 +106,7 @@ function StepForm({ k, graph, order, num }: { k: string; graph: WorkflowGraph; o
             ))}
           </select>
           <span className="underline underline-offset-2">Duplicar</span>
-          <span className="underline underline-offset-2">Excluir</span>
+          <span className="underline underline-offset-2">Remover etapa</span>
         </span>
       </header>
       <div className="space-y-5 p-5">
@@ -233,23 +233,34 @@ export function WorkflowEditor({ graph, meta }: { graph: WorkflowGraph; meta: Me
       <Link href="/admin/workflows" className="text-sm text-muted hover:text-ink">
         ← Workflows clínicos
       </Link>
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-4 border-b border-rule pb-6">
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4 pb-6">
         <div>
           <p className="eyebrow">Workflow clínico</p>
           <h1 className="mt-1 text-3xl font-light tracking-tight sm:text-4xl">{meta.name}</h1>
-          <p className="mt-2 inline-flex items-center gap-2 text-sm">
-            <span className={`size-2 rounded-full ${meta.status === 'Publicado' ? 'bg-ink' : 'border border-ink'}`} />
-            {meta.status}
-            <span className="text-muted">· rascunho salvo automaticamente</span>
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <ButtonLink href={meta.previewHref} variant="secondary">
-            Pré-visualizar como aluno
-          </ButtonLink>
-          <Button type="button">{meta.status === 'Publicado' ? 'Publicar alterações' : 'Publicar'}</Button>
+
         </div>
       </div>
+
+      <div className="sticky top-14 z-20 lg:top-4">
+        <LifecycleBar
+          status={meta.status === 'Publicado' ? 'publicado' : 'rascunho'}
+          previewHref={meta.previewHref}
+          edited={meta.status === 'Publicado' ? 'você tem alterações ainda não publicadas' : 'rascunho salvo automaticamente'}
+          confirmId={meta.status === 'Publicado' ? 'confirmar-workflow' : undefined}
+        />
+      </div>
+      {meta.status === 'Publicado' ? (
+        <ConfirmDialog
+          id="confirmar-workflow"
+          title="Publicar a nova versão deste workflow?"
+          impact={[
+            'Alunos que estão no meio do workflow terminam na versão atual; a nova vale a partir do próximo início.',
+            'Links de aulas e casos que apontam para etapas deste workflow continuam funcionando.',
+            'A versão atual fica guardada no histórico e pode ser restaurada.',
+          ]}
+          confirmLabel="Publicar nova versão"
+        />
+      ) : null}
 
       {/* Informações gerais */}
       <section aria-labelledby="info" className="grid gap-6 border-b border-rule py-8 lg:grid-cols-12">
@@ -364,7 +375,7 @@ export function WorkflowEditor({ graph, meta }: { graph: WorkflowGraph; meta: Me
               <p className="text-sm font-semibold">Que tipo de etapa?</p>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {TYPES.map(([v, l, d]) => (
-                  <li key={v} className="rounded-md border border-rule bg-surface p-3 hover:border-ink">
+                  <li key={v} className="glass rounded-2xl p-3 hover:border-rule-strong">
                     <span className="block text-sm font-semibold">{l}</span>
                     <span className="block text-xs text-muted">{d}</span>
                   </li>

@@ -7,7 +7,7 @@ export function Logo({ variant = 'full', href = '/' }: { variant?: 'full' | 'sho
   return (
     <Link href={href} aria-label="Conexo — Clavijo & Ottoboni · início" className="inline-flex shrink-0">
       <Image
-        src={full ? '/logo-conexo.png' : '/logo-conexo-curto.png'}
+        src={full ? '/logo-conexo-escuro.png' : '/logo-conexo-curto-escuro.png'}
         alt=""
         width={full ? 640 : 352}
         height={95}

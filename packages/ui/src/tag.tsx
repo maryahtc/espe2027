@@ -43,3 +43,28 @@ export function Chip({ children, className }: { children: React.ReactNode; class
     </span>
   )
 }
+
+export type Lifecycle = 'rascunho' | 'publicado' | 'arquivado'
+
+const LIFECYCLE: Record<Lifecycle, { label: string; mark: string }> = {
+  rascunho: { label: 'Rascunho', mark: 'border border-dashed border-ink' },
+  publicado: { label: 'Publicado', mark: 'bg-ink' },
+  arquivado: { label: 'Arquivado', mark: 'border border-faint' },
+}
+
+/** Estado de conteúdo institucional: Rascunho (tracejado) · Publicado (cheio) · Arquivado (vazado, apagado). */
+export function StatusPill({ status, className }: { status: Lifecycle; className?: string }) {
+  const s = LIFECYCLE[status]
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border border-rule px-2.5 py-0.5 text-xs font-semibold',
+        status === 'arquivado' ? 'text-muted' : 'text-ink',
+        className,
+      )}
+    >
+      <span className={cn('size-2 rounded-full', s.mark)} />
+      {s.label}
+    </span>
+  )
+}

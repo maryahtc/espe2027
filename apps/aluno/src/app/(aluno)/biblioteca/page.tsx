@@ -28,7 +28,7 @@ export default function LibraryPage() {
       <PageTitle eyebrow="Aprender" title="Biblioteca" lead="Aulas gravadas, artigos e materiais da especialização." />
 
       <div className="relative">
-        <IconSearch size={18} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" />
+        <IconSearch size={18} className="pointer-events-none absolute top-1/2 left-5 z-10 -translate-y-1/2 text-muted" />
         <label htmlFor="busca" className="sr-only">
           Buscar por aula, professor ou tema
         </label>
@@ -36,7 +36,7 @@ export default function LibraryPage() {
           id="busca"
           type="search"
           placeholder="Buscar por aula, professor ou tema…"
-          className="block min-h-12 w-full rounded-md border border-rule-strong bg-surface pr-4 pl-11 text-base placeholder:text-faint focus:border-ink focus:outline-none"
+          className="glass block min-h-13 w-full rounded-full pr-5 pl-12 text-base text-ink placeholder:text-faint focus:border-ink focus:outline-none"
         />
       </div>
 
@@ -50,7 +50,7 @@ export default function LibraryPage() {
                 <input type="radio" name="categoria" id={id} defaultChecked={i === 0} className="peer sr-only" />
                 <label
                   htmlFor={id}
-                  className="inline-flex min-h-9 cursor-pointer items-center rounded-full border border-rule-strong px-3.5 text-sm text-ink-2 peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-ink"
+                  className="glass inline-flex min-h-10 cursor-pointer items-center rounded-full px-4 text-sm text-muted hover:text-ink peer-checked:border-ink peer-checked:bg-ink peer-checked:text-on-ink peer-focus-visible:outline-2 peer-focus-visible:outline-ink"
                 >
                   {f}
                 </label>
@@ -69,7 +69,7 @@ export default function LibraryPage() {
             <Link
               key={l.slug}
               href={`/biblioteca/${l.slug}`}
-              className="group mt-3 grid gap-5 rounded-lg border border-rule bg-surface p-4 sm:grid-cols-[minmax(0,16rem)_1fr] sm:items-center sm:p-5"
+              className="glass glass-interactive group mt-3 grid gap-6 rounded-[22px] p-4 sm:grid-cols-[minmax(0,20rem)_1fr] sm:items-center sm:p-5"
             >
               <Poster item={l} />
               <span className="min-w-0">
@@ -77,8 +77,8 @@ export default function LibraryPage() {
                 <span className="mt-1 block text-xl leading-tight font-light tracking-tight group-hover:underline">{l.title}</span>
                 <span className="mt-1 block text-sm text-muted">{l.teacher}</span>
                 <span className="mt-4 flex items-center gap-3 text-xs text-muted">
-                  <span className="h-[3px] w-32 bg-rule">
-                    <span className="block h-full bg-ink" style={{ width: `${l.progress}%` }} />
+                  <span className="h-[3px] w-32 overflow-hidden rounded-full bg-white/10">
+                    <span className="block h-full bg-brand" style={{ width: `${l.progress}%` }} />
                   </span>
                   <span className="num">{l.progress}% · faltam {Math.round((l.minutes * (100 - (l.progress ?? 0))) / 100)} min</span>
                 </span>
@@ -112,7 +112,7 @@ export default function LibraryPage() {
                 </span>
                 <span className="mt-2 flex flex-wrap gap-1.5">
                   {l.topics.map((t) => (
-                    <span key={t} className="rounded-full bg-sunken px-2 py-0.5 text-[11px] text-ink-2">
+                    <span key={t} className="rounded-full border border-rule px-2 py-0.5 text-[11px] text-muted">
                       {t}
                     </span>
                   ))}

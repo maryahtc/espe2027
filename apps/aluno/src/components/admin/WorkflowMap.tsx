@@ -53,7 +53,7 @@ export function WorkflowMap({ graph }: { graph: WorkflowGraph }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-rule bg-surface p-3">
+    <div className="overflow-x-auto glass rounded-2xl p-3">
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Mapa do workflow" className="block">
         {edges.map((e, i) => {
           const a = pos.get(e.from)
@@ -89,16 +89,16 @@ export function WorkflowMap({ graph }: { graph: WorkflowGraph }) {
                 width={W}
                 height={H}
                 rx="6"
-                fill={start ? 'var(--ink)' : 'var(--surface)'}
-                stroke={orphan ? 'var(--danger)' : start ? 'var(--ink)' : n.type === 'resultado' ? 'var(--ink)' : 'var(--rule-strong)'}
+                fill={start ? 'rgba(202,44,44,0.16)' : 'var(--surface)'}
+                stroke={orphan ? 'var(--danger)' : start ? 'var(--brand)' : n.type === 'resultado' ? 'rgba(255,255,255,0.45)' : 'var(--rule-strong)'}
                 strokeDasharray={orphan ? '4 3' : undefined}
                 strokeWidth={n.type === 'resultado' ? 1.5 : 1}
               />
-              <text x={p.x + 10} y={p.y + 19} fontSize="10" fontWeight="600" fill={start ? '#fff' : 'var(--muted)'} style={{ fontFamily: 'var(--font-num)', letterSpacing: '0.04em' }}>
+              <text x={p.x + 10} y={p.y + 19} fontSize="10" fontWeight="600" fill={start ? 'var(--signal)' : 'var(--muted)'} style={{ fontFamily: 'var(--font-num)', letterSpacing: '0.04em' }}>
                 {num.get(k)} · {TYPE_LABEL[n.type].toUpperCase()}
                 {orphan ? ' · SOLTA' : ''}
               </text>
-              <text x={p.x + 10} y={p.y + 39} fontSize="12" fontWeight="600" fill={start ? '#fff' : 'var(--ink)'} style={{ fontFamily: 'var(--font-sans)' }}>
+              <text x={p.x + 10} y={p.y + 39} fontSize="12" fontWeight="600" fill="var(--ink)" style={{ fontFamily: 'var(--font-sans)' }}>
                 {n.title.length > 23 ? `${n.title.slice(0, 22)}…` : n.title}
               </text>
             </a>

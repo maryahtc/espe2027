@@ -1,5 +1,4 @@
 import { Button } from '@portal/ui/button'
-import { PageTitle } from '@portal/ui/section'
 import type { Metadata } from 'next'
 import { student } from '@/demo/data'
 
@@ -7,23 +6,25 @@ export const metadata: Metadata = { title: 'Meu perfil' }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="grid gap-4 border-t border-rule py-8 md:grid-cols-12 md:gap-10">
-      <h2 className="eyebrow md:col-span-3 md:pt-1">{title}</h2>
-      <div className="md:col-span-9">{children}</div>
+    <section className="glass rounded-[22px] p-6 sm:p-7">
+      <h2 className="eyebrow">{title}</h2>
+      <div className="mt-5">{children}</div>
     </section>
   )
 }
 
 export default function ProfilePage() {
   return (
-    <div className="max-w-4xl">
-      <PageTitle eyebrow="Perfil" title="Meu perfil" />
-      <div className="mb-10 flex items-center gap-5">
-        <span className="num flex size-20 items-center justify-center rounded-full bg-ink text-2xl font-light text-white">{student.initials}</span>
-        <div>
-          <p className="text-2xl font-light tracking-tight">{student.name}</p>
-          <p className="text-sm text-muted">{student.cohort} · aluna</p>
-        </div>
+    <div className="mx-auto max-w-2xl space-y-4">
+      <h1 className="sr-only">Meu perfil</h1>
+      <div className="flex flex-col items-center pb-6 text-center">
+        <span className="num relative flex size-28 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_25%,#2a2a2a,#0f0f0f)] text-4xl font-extralight ring-1 ring-white/15">
+          {student.initials}
+          <span className="absolute right-1.5 bottom-1.5 glow-dot" />
+        </span>
+        <p className="mt-5 text-3xl font-light tracking-tight">{student.name}</p>
+        <p className="mt-1 text-sm text-muted">{student.cohort} · mês {student.monthOfCourse} de {student.totalMonths}</p>
+        <span className="mt-4 text-xs text-muted underline underline-offset-2">Trocar foto</span>
       </div>
 
       <Group title="Dados">
@@ -61,15 +62,15 @@ export default function ProfilePage() {
         <fieldset>
           <legend className="text-[15px] font-semibold">Quem vê a minha produção</legend>
           <div className="mt-3 space-y-2">
-            <label htmlFor="priv-privada" className="flex cursor-pointer gap-3 rounded-md border border-rule bg-surface p-4 has-[:checked]:border-ink">
-              <input id="priv-privada" type="radio" name="privacidade" defaultChecked className="mt-1 accent-[var(--ink)]" />
+            <label htmlFor="priv-privada" className="flex cursor-pointer gap-3 glass rounded-2xl p-4 has-[:checked]:border-[rgba(202,44,44,0.7)] has-[:checked]:bg-brand-tint">
+              <input id="priv-privada" type="radio" name="privacidade" defaultChecked className="mt-1 accent-[var(--brand)]" />
               <span>
                 <span className="block text-[15px] font-semibold">Minha produção é privada</span>
                 <span className="mt-0.5 block text-sm text-muted">Colegas não veem seus números. Esta é a opção padrão.</span>
               </span>
             </label>
-            <label htmlFor="priv-turma" className="flex cursor-pointer gap-3 rounded-md border border-rule bg-surface p-4 has-[:checked]:border-ink">
-              <input id="priv-turma" type="radio" name="privacidade" className="mt-1 accent-[var(--ink)]" />
+            <label htmlFor="priv-turma" className="flex cursor-pointer gap-3 glass rounded-2xl p-4 has-[:checked]:border-[rgba(202,44,44,0.7)] has-[:checked]:bg-brand-tint">
+              <input id="priv-turma" type="radio" name="privacidade" className="mt-1 accent-[var(--brand)]" />
               <span>
                 <span className="block text-[15px] font-semibold">Quero participar da visualização da turma</span>
                 <span className="mt-0.5 block text-sm text-muted">

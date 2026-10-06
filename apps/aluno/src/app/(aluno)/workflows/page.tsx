@@ -21,7 +21,7 @@ export default function WorkflowsPage() {
             <li key={w.slug}>
               <Link
                 href={`/workflows/${w.slug}`}
-                className="group flex h-full flex-col rounded-lg border border-rule bg-surface p-6 transition-colors hover:border-ink"
+                className="group flex h-full flex-col glass rounded-2xl p-6 transition-colors hover:border-rule-strong"
               >
                 <span className="flex size-10 items-center justify-center rounded-md bg-sunken">
                   <IconBranch size={20} />

@@ -19,11 +19,11 @@ export default function CronogramaListaPage() {
         title="Cronograma"
         lead={`${modules.length} módulos mensais, de quinta a sábado. Você concluiu ${done} e está no mês ${student.monthOfCourse} de ${student.totalMonths}.`}
       />
-        <nav aria-label="Modo de visualização" className="mb-8 flex rounded-md border border-rule-strong p-0.5 text-sm md:mb-10">
-          <Link href="/cronograma" className="rounded-[5px] px-3 py-1.5 text-muted hover:text-ink">
+        <nav aria-label="Modo de visualização" className="glass mb-8 flex rounded-full p-1 text-sm md:mb-10">
+          <Link href="/cronograma" className="rounded-full px-4 py-1.5 text-muted hover:text-ink">
             Calendário
           </Link>
-          <span aria-current="page" className="rounded-[5px] bg-ink px-3 py-1.5 font-semibold text-white">
+          <span aria-current="page" className="rounded-[5px] bg-ink px-3 py-1.5 font-semibold text-on-ink">
             Lista
           </span>
         </nav>
@@ -76,7 +76,7 @@ export default function CronogramaListaPage() {
                           </span>
                         ) : null}
                         {m.state === 'next' ? (
-                          <span className="font-semibold text-brand">{relativeDays(DEMO_TODAY, m.start)}</span>
+                          <span className="font-semibold text-signal">{relativeDays(DEMO_TODAY, m.start)}</span>
                         ) : null}
                         {m.state === 'upcoming' ? <span className="text-muted">{monthShort(m.start)}</span> : null}
                       </span>

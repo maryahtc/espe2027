@@ -20,7 +20,7 @@ function NavList({ onDark = false }: { onDark?: boolean }) {
         href="/admin"
         className={cn(
           'flex min-h-10 items-center gap-3 rounded-md px-3 text-sm',
-          active('/admin') ? 'bg-sunken font-semibold text-ink' : 'text-ink-2 hover:bg-sunken',
+          active('/admin') ? 'bg-white/[0.07] font-semibold text-ink' : 'text-muted hover:bg-white/[0.04] hover:text-ink',
         )}
       >
         <NavIcon name="home" size={18} /> Início do painel
@@ -39,10 +39,10 @@ function NavList({ onDark = false }: { onDark?: boolean }) {
                     aria-current={on ? 'page' : undefined}
                     className={cn(
                       'relative flex min-h-10 items-center gap-3 rounded-md px-3 text-sm',
-                      on ? 'bg-sunken font-semibold text-ink' : 'text-ink-2 hover:bg-sunken',
+                      on ? 'bg-white/[0.07] font-semibold text-ink' : 'text-muted hover:bg-white/[0.04] hover:text-ink',
                     )}
                   >
-                    {on ? <span className="absolute top-2 bottom-2 left-0 w-[3px] bg-brand" /> : null}
+                    {on ? <span className="absolute top-1/2 left-0 h-4 w-[3px] -translate-y-1/2 rounded-r bg-brand" /> : null}
                     <NavIcon name={s.icon} size={18} />
                     {s.label}
                   </Link>
@@ -58,15 +58,15 @@ function NavList({ onDark = false }: { onDark?: boolean }) {
 
 export function AdminSidebar() {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-rule bg-surface lg:flex">
+    <aside className="glass-strong sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r lg:flex">
       <div className="px-6 pt-7 pb-6">
         <Logo href="/admin" />
-        <p className="eyebrow mt-4 text-brand">Administração</p>
+        <p className="eyebrow mt-4 text-signal">Administração</p>
       </div>
       <nav aria-label="Administração" className="flex-1 overflow-y-auto px-3 pb-6">
         <NavList />
       </nav>
-      <Link href="/" className="m-3 rounded-md border border-rule p-3 text-center text-sm font-semibold hover:border-ink">
+      <Link href="/" className="glass glass-interactive m-3 rounded-full p-3 text-center text-sm font-semibold">
         Ver portal como aluno →
       </Link>
     </aside>
@@ -76,14 +76,14 @@ export function AdminSidebar() {
 /** Celular: cabeçalho com menu recolhível (sem JavaScript: <details>). */
 export function AdminTopBar() {
   return (
-    <header className="sticky top-0 z-30 border-b border-rule bg-surface lg:hidden">
+    <header className="glass-strong sticky top-0 z-30 border-b lg:hidden">
       <details className="group">
         <summary className="flex h-14 cursor-pointer list-none items-center justify-between px-4 [&::-webkit-details-marker]:hidden">
           <span className="flex items-center gap-3">
             <Logo variant="short" href="/admin" />
-            <span className="eyebrow text-brand">Admin</span>
+            <span className="eyebrow text-signal">Admin</span>
           </span>
-          <span className="rounded-md border border-rule-strong px-3 py-1.5 text-sm font-semibold">
+          <span className="glass rounded-full px-3.5 py-1.5 text-sm font-semibold">
             <span className="group-open:hidden">Menu</span>
             <span className="hidden group-open:inline">Fechar</span>
           </span>

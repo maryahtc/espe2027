@@ -16,7 +16,7 @@ const modeCss = `
 [data-novo]:has(#modo-texto:checked) [data-modo="lista"]{display:none}`
 
 const chip =
-  'inline-flex min-h-10 cursor-pointer items-center rounded-full border border-rule-strong px-3.5 text-sm peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-ink'
+  'inline-flex min-h-10 cursor-pointer items-center rounded-full border border-rule-strong px-3.5 text-sm peer-checked:border-ink peer-checked:bg-ink peer-checked:text-on-ink peer-focus-visible:outline-2 peer-focus-visible:outline-ink'
 
 export default function NewCasePage() {
   return (
@@ -38,13 +38,13 @@ export default function NewCasePage() {
           <div className="mt-2 inline-flex rounded-md border border-rule-strong p-0.5 text-sm">
             <span>
               <input type="radio" name="modo" id="modo-lista" defaultChecked className="peer sr-only" />
-              <label htmlFor="modo-lista" className="block cursor-pointer rounded-[5px] px-3 py-1.5 text-muted peer-checked:bg-ink peer-checked:font-semibold peer-checked:text-white">
+              <label htmlFor="modo-lista" className="block cursor-pointer rounded-[5px] px-3 py-1.5 text-muted peer-checked:bg-ink peer-checked:font-semibold peer-checked:text-on-ink">
                 Escolher na lista
               </label>
             </span>
             <span>
               <input type="radio" name="modo" id="modo-texto" className="peer sr-only" />
-              <label htmlFor="modo-texto" className="block cursor-pointer rounded-[5px] px-3 py-1.5 text-muted peer-checked:bg-ink peer-checked:font-semibold peer-checked:text-white">
+              <label htmlFor="modo-texto" className="block cursor-pointer rounded-[5px] px-3 py-1.5 text-muted peer-checked:bg-ink peer-checked:font-semibold peer-checked:text-on-ink">
                 Descrever o que fiz
               </label>
             </span>

@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react'
 
-/** Campo de formulário: rótulo em linguagem do dia a dia, ajuda curta, erro com texto (nunca só cor). */
+/** Campo de formulário: opaco, rótulo claro, ajuda curta, erro com ícone e texto (nunca só cor). */
 export function Field({
   label,
   hint,
@@ -17,7 +17,7 @@ export function Field({
       <input
         id={id}
         aria-invalid={error ? true : undefined}
-        className="mt-1.5 block min-h-11 w-full rounded-md border border-rule-strong bg-surface px-3 text-base text-ink placeholder:text-faint focus:border-ink focus:outline-none aria-invalid:border-danger"
+        className="field mt-1.5 block min-h-11 w-full px-3 text-base aria-invalid:border-danger disabled:opacity-50"
         {...input}
       />
       {error ? <p className="mt-1 text-xs font-semibold text-danger">⚠ {error}</p> : null}

@@ -1,43 +1,69 @@
 /*
- * DESIGN SYSTEM CONEXO — tokens compartilhados pelos portais.
+ * DESIGN SYSTEM CONEXO — direção "DARK GLASS".
  *
- * Fonte: manual "ID Conexo" (cores 03, tipografia 04).
- *   Vermelho #CA2C2C · Preto #141414 · Raleway (texto) · Gilroy (números).
- * Gilroy é comercial: até a licença web, os números usam Outfit (gratuita, desenho geométrico próximo).
+ * Marca (manual ID Conexo): vermelho #CA2C2C, preto #141414, Raleway (texto), Gilroy (números → Outfit por ora).
+ * Manifestação digital: interface predominantemente escura, preto + branco + cinza, vermelho como assinatura.
  *
- * Regras de uso:
- *   - vermelho é destaque pontual (item ativo, "próximo", filetes, numeração de seção) — nunca grandes áreas;
- *   - vermelho NÃO significa erro nem "abaixo do esperado". Erros usam --danger (tom separado) + ícone + texto;
- *   - status e obrigatoriedade usam forma e texto, não cores novas.
+ * Regras:
+ *   - vermelho só em detalhe: estado ativo, seleção, progresso, indicadores, números-chave, ação primária,
+ *     caminho percorrido no workflow. Nunca grandes áreas;
+ *   - texto vermelho usa --signal (versão clara do vermelho, AA sobre o fundo escuro); preenchimentos usam --brand;
+ *   - vidro (.glass*) cria hierarquia: navegação, superfície principal, casos, workflow, painéis, player.
+ *     Leitura longa, formulários e tabelas ficam em superfície opaca (--surface);
+ *   - erro usa --danger (tom âmbar-coral distinto do vermelho da marca) + ícone + texto;
+ *   - status por forma e texto (ponto cheio/vazado/tracejado), não por cor.
  *
- * As fontes são carregadas pelo app (next/font) e expostas nas variáveis --font-raleway e --font-numerals.
+ * Contraste verificado sobre --paper (#090909) e --surface (#121212): ver página /design.
  */
 
 :root {
-  --brand: #ca2c2c;
-  --brand-strong: #a82222;
-  --brand-tint: #faeceb;
+  color-scheme: dark;
 
-  --ink: #141414;
-  --ink-2: #2e2d2d;
-  --muted: #5e5c5a;
-  --faint: #8d8a86;
-  --rule: #e8e5e1;
-  --rule-strong: #d2cec8;
+  /* Marca */
+  --brand: #ca2c2c; /* preenchimento: botão primário, barras de progresso, indicadores */
+  --brand-strong: #b22424; /* hover do botão primário */
+  --signal: #f0625e; /* texto/ícone em vermelho sobre fundo escuro (≥ 4.5:1) */
+  --brand-tint: rgba(202, 44, 44, 0.14); /* fundo de seleção muito sutil */
+  --brand-glow: rgba(202, 44, 44, 0.45); /* ponto de luz */
 
-  --paper: #fbfaf8;
-  --surface: #ffffff;
-  --sunken: #f3f1ee;
+  /* Texto */
+  --ink: #f3f3f1; /* principal */
+  --ink-2: #cfcfcb; /* forte secundário */
+  --muted: #9d9d98; /* secundário (≈ 7:1 sobre o fundo) */
+  --faint: #85857f; /* rótulos pequenos e ícones (≈ 5:1) */
 
-  --danger: #8e2a1f;
-  --danger-bg: #f7e9e6;
-  --ok: #2f5d47;
+  /* Superfícies */
+  --paper: #090909; /* fundo principal */
+  --surface: #121212; /* superfície opaca: leitura, formulários, tabelas */
+  --sunken: #181818; /* realce dentro de superfície */
+  --raised: #1d1d1d; /* hover */
+  --rule: rgba(255, 255, 255, 0.08);
+  --rule-strong: rgba(255, 255, 255, 0.16);
+  --on-ink: #0a0a0a; /* texto sobre preenchimento branco */
+
+  /* Vidro */
+  --glass-bg: rgba(24, 24, 24, 0.56);
+  --glass-bg-strong: rgba(16, 16, 16, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.07);
+  --glass-blur: 22px;
+  --shadow-soft: 0 24px 48px -28px rgba(0, 0, 0, 0.8);
+
+  /* Estado */
+  --danger: #f2a07b;
+  --danger-bg: rgba(242, 160, 123, 0.1);
+  --ok: #8fd0a8;
+
+  /* Movimento */
+  --dur-fast: 140ms;
+  --dur: 220ms;
 }
 
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-tint: var(--brand-tint);
+  --color-signal: var(--signal);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
@@ -47,6 +73,8 @@
   --color-paper: var(--paper);
   --color-surface: var(--surface);
   --color-sunken: var(--sunken);
+  --color-raised: var(--raised);
+  --color-on-ink: var(--on-ink);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
   --color-ok: var(--ok);
@@ -54,9 +82,9 @@
   --font-sans: var(--font-raleway), ui-sans-serif, system-ui, sans-serif;
   --font-num: var(--font-numerals), var(--font-raleway), ui-sans-serif, sans-serif;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 14px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -66,57 +94,163 @@
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    background: var(--paper);
   }
   body {
     background: var(--paper);
     color: var(--ink);
     font-family: var(--font-sans);
-    /* Raleway desenha algarismos de estilo antigo por padrão; no portal, números sempre alinhados. */
     font-variant-numeric: lining-nums;
     font-feature-settings: 'lnum' 1;
   }
+  /* Profundidade do ambiente: dois pontos de luz muito discretos, fixos atrás de tudo. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(900px 520px at 88% -8%, rgba(202, 44, 44, 0.09), transparent 62%),
+      radial-gradient(820px 600px at -6% 108%, rgba(255, 255, 255, 0.035), transparent 60%);
+  }
   ::selection {
-    background: var(--brand-tint);
+    background: rgba(202, 44, 44, 0.35);
+    color: var(--ink);
   }
   :focus-visible {
     outline: 2px solid var(--ink);
     outline-offset: 2px;
-    border-radius: 2px;
+    border-radius: 4px;
+  }
+  input,
+  select,
+  textarea {
+    color-scheme: dark;
   }
 }
 
 @layer components {
-  /* Números de destaque (datas, módulos, contadores) — papel da Gilroy no manual. */
   .num {
     font-family: var(--font-num);
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.01em;
   }
-  /* Rótulo pequeno em caixa alta. */
   .eyebrow {
     font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--muted);
   }
-  /* Filete vermelho do manual, sob títulos de seção. */
   .rule-brand {
     height: 1px;
     background: var(--brand);
   }
-  .hairline {
-    border-color: var(--rule);
+
+  /* ── Vidro ─────────────────────────────────────────────────────────────── */
+  /* Superfície principal (módulo atual, casos, nós do workflow, painéis). */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--shadow-soft);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  }
+  /* Barras de navegação e overlays: mais opaco, para o conteúdo atrás não competir. */
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    border-color: var(--glass-border);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    backdrop-filter: blur(28px) saturate(150%);
+  }
+  /* Reflexo discreto no topo de uma superfície de vidro. */
+  .glass-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+    pointer-events: none;
+  }
+  /* Interativo: hover e seleção silenciosos. */
+  .glass-interactive {
+    transition:
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      transform var(--dur) var(--ease-out-soft);
+  }
+  .glass-interactive:hover {
+    border-color: var(--rule-strong);
+    background-color: rgba(30, 30, 30, 0.66);
+  }
+  .is-selected {
+    border-color: rgba(202, 44, 44, 0.7) !important;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 0 0 1px rgba(202, 44, 44, 0.25),
+      0 0 32px -8px var(--brand-glow);
+  }
+
+  /* Ponto de luz vermelho (ativo, "você está aqui"). */
+  .glow-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--brand);
+    box-shadow: 0 0 0 3px rgba(202, 44, 44, 0.18), 0 0 14px var(--brand-glow);
+  }
+
+  /* Campos: sempre opacos e inequívocos. */
+  .field {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    color: var(--ink);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--dur-fast) ease;
+  }
+  .field:hover {
+    border-color: rgba(255, 255, 255, 0.26);
+  }
+  .field:focus {
+    border-color: var(--ink);
+    outline: none;
+  }
+  .field::placeholder {
+    color: var(--faint);
+  }
+}
+
+/* Sem vidro quando o sistema pede menos transparência ou o navegador não suporta. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-strong {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .glass-strong {
+    background: var(--surface);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .reveal {
-    animation: reveal 0.6s var(--ease-out-soft) both;
+    animation: reveal 0.5s var(--ease-out-soft) both;
   }
   @keyframes reveal {
     from {
-      opacity: 0;
+      opacity: 0.001;
       transform: translateY(6px);
     }
     to {

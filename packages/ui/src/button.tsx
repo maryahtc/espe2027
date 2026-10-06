@@ -4,15 +4,20 @@ import { cn } from './cn'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet'
 
+/**
+ * primary: vermelho Conexo — uma ação principal por área.
+ * secondary: vidro com borda fina.
+ * quiet: só texto.
+ */
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-ink text-white hover:bg-ink-2',
-  secondary: 'border border-rule-strong bg-surface text-ink hover:border-ink',
-  quiet: 'text-ink underline-offset-4 hover:underline px-0',
+  primary: 'bg-brand text-white hover:bg-brand-strong shadow-[0_8px_28px_-12px_var(--brand-glow)]',
+  secondary: 'glass glass-interactive text-ink',
+  quiet: 'px-0 text-ink underline-offset-4 hover:underline',
 }
 
 export function buttonClasses(variant: ButtonVariant = 'primary', className?: string) {
   return cn(
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors duration-150',
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-[background-color,border-color,opacity] duration-150 disabled:cursor-not-allowed disabled:opacity-45',
     VARIANTS[variant],
     className,
   )

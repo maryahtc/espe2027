@@ -13,11 +13,11 @@ export function CalendarPage({ monthKey }: { monthKey: MonthKey }) {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageTitle eyebrow={`${student.cohort} · mês ${courseMonth} de ${student.totalMonths}`} title="Cronograma" />
-        <nav aria-label="Modo de visualização" className="mb-8 flex rounded-md border border-rule-strong p-0.5 text-sm md:mb-10">
-          <span aria-current="page" className="rounded-[5px] bg-ink px-3 py-1.5 font-semibold text-white">
+        <nav aria-label="Modo de visualização" className="glass mb-8 flex rounded-full p-1 text-sm md:mb-10">
+          <span aria-current="page" className="rounded-[5px] bg-ink px-3 py-1.5 font-semibold text-on-ink">
             Calendário
           </span>
-          <Link href="/cronograma/lista" className="rounded-[5px] px-3 py-1.5 text-muted hover:text-ink">
+          <Link href="/cronograma/lista" className="rounded-full px-4 py-1.5 text-muted hover:text-ink">
             Lista
           </Link>
         </nav>

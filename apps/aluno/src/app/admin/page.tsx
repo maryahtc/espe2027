@@ -18,14 +18,14 @@ export default function AdminHome() {
           <li key={s.slug}>
             <Link
               href={s.slug === 'modulos' || s.slug === 'workflows' ? `/admin/${s.slug}/novo` : `/admin/${s.slug}`}
-              className="group flex h-full gap-4 rounded-lg border border-rule bg-surface p-5 transition-colors hover:border-ink"
+              className="group flex h-full gap-4 glass rounded-2xl p-5 transition-colors hover:border-rule-strong"
             >
               <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-sunken text-ink">
                 <NavIcon name={s.icon} size={22} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-1.5 text-lg leading-tight font-semibold">
-                  <IconPlus size={16} className="text-brand" />
+                  <IconPlus size={16} className="text-signal" />
                   {s.verb} {s.noun}
                 </span>
                 <span className="mt-1 block text-xs text-muted">em {s.where}</span>
@@ -38,7 +38,7 @@ export default function AdminHome() {
 
       <div className="mt-12 grid gap-10 lg:grid-cols-12">
         <section aria-labelledby="atencao" className="lg:col-span-7">
-          <span className="num block text-sm font-semibold text-brand">01</span>
+          <span className="num block text-sm font-semibold text-signal">01</span>
           <h2 id="atencao" className="text-2xl font-light tracking-tight">
             Precisa da sua atenção
           </h2>
@@ -59,7 +59,7 @@ export default function AdminHome() {
         </section>
 
         <section aria-labelledby="agora" className="lg:col-span-5">
-          <span className="num block text-sm font-semibold text-brand">02</span>
+          <span className="num block text-sm font-semibold text-signal">02</span>
           <h2 id="agora" className="text-2xl font-light tracking-tight">
             {adminOverview.cohort} agora
           </h2>

@@ -16,7 +16,7 @@ export function ContentRow({ item }: { item: PrepItem }) {
   const done = item.status === 'concluido'
   const Icon = item.kind === 'video' ? IconPlay : IconDoc
   return (
-    <li className={cn('group flex items-start gap-4 py-4', done && 'opacity-60')}>
+    <li className={cn('group flex items-start gap-4 py-4', done && 'opacity-85')}>
       <span
         className={cn(
           'mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-md border',

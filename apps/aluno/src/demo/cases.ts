@@ -17,6 +17,11 @@ export type PerformedProcedure = { date: CivilDate; procedure: string; quantity:
 export type DemoCase = {
   id: string
   patient: string
+  /**
+   * Foto de capa opcional. Na versão real: arquivo privado no Storage (bucket sem acesso público),
+   * lido por URL assinada de curta duração e protegido pelas mesmas regras de acesso do caso.
+   */
+  cover?: string
   procedure: string
   teeth: string
   startDate: CivilDate
@@ -35,6 +40,7 @@ export type DemoCase = {
 export const cases: DemoCase[] = [
   {
     id: 'ma-laminados',
+    cover: '/demo/casos/ma-laminados.jpg',
     patient: 'M.A.',
     procedure: 'Laminados cerâmicos',
     teeth: '12, 11, 21, 22',
@@ -95,6 +101,7 @@ export const cases: DemoCase[] = [
   },
   {
     id: 'rf-onlays',
+    cover: '/demo/casos/rf-onlays.jpg',
     patient: 'R.F.',
     procedure: 'Onlays',
     teeth: '36, 37',
@@ -117,6 +124,7 @@ export const cases: DemoCase[] = [
   },
   {
     id: 'ls-faceta-resina',
+    cover: '/demo/casos/ls-faceta-resina.jpg',
     patient: 'L.S.',
     procedure: 'Faceta em resina',
     teeth: '11',
@@ -133,6 +141,7 @@ export const cases: DemoCase[] = [
   },
   {
     id: 'brs-laminados',
+    cover: '/demo/casos/brs-laminados.jpg',
     patient: 'B.R.S.',
     procedure: 'Laminados cerâmicos',
     teeth: '13 a 23',

@@ -4,6 +4,7 @@ import { ModuleRuler } from '@portal/ui/module-ruler'
 import { Chip } from '@portal/ui/tag'
 import Link from 'next/link'
 import { ContentRow, sortPreparation } from '@/components/content/ContentRow'
+import { CaseCover } from '@/components/cases/CaseCover'
 import { HomeSection } from '@/components/home/HomeSection'
 import { NextModuleHero } from '@/components/home/NextModuleHero'
 import {
@@ -55,6 +56,7 @@ export default function HomePage() {
         description={nextModuleDetail.description}
         days={nextModuleSchedule}
         pendingRequired={pendingRequired}
+        requiredTotal={required.length}
       />
 
       {/* 01 — o que fazer antes do módulo */}
@@ -82,10 +84,10 @@ export default function HomePage() {
                 key={p.id}
                 className={
                   p.status === 'concluido'
-                    ? 'h-1 flex-1 bg-ink'
+                    ? 'h-[3px] flex-1 rounded-full bg-brand'
                     : p.status === 'em-andamento'
-                      ? 'h-1 flex-1 bg-[linear-gradient(90deg,var(--ink)_40%,var(--rule)_40%)]'
-                      : 'h-1 flex-1 bg-rule'
+                      ? 'h-[3px] flex-1 rounded-full bg-[linear-gradient(90deg,var(--brand)_40%,rgba(255,255,255,0.1)_40%)]'
+                      : 'h-[3px] flex-1 rounded-full bg-white/10'
                 }
               />
             ))}
@@ -119,7 +121,7 @@ export default function HomePage() {
           className="mt-6"
           modules={modules.map((m) => ({ number: m.number, label: m.title, state: m.state, href: `/modulos/${m.slug}` }))}
         />
-        <div className="mt-6 grid gap-px overflow-hidden rounded-md border border-rule bg-rule sm:grid-cols-3">
+        <div className="glass mt-6 grid overflow-hidden rounded-2xl sm:grid-cols-3 sm:divide-x sm:divide-white/[0.08]">
           {[
             { label: 'Anterior', m: previousModule, note: 'Concluído' },
             { label: 'Próximo', m: nextModule, note: relativeDays(today, nextModule.start) },
@@ -129,11 +131,14 @@ export default function HomePage() {
               <Link
                 key={label}
                 href={`/modulos/${m.slug}`}
-                className={`group block bg-surface p-4 transition-colors hover:bg-sunken ${label === 'Próximo' ? 'sm:shadow-[inset_0_2px_0_var(--brand)]' : ''}`}
+                className={`group relative block p-5 transition-colors hover:bg-white/[0.04] ${label === 'Próximo' ? 'bg-white/[0.03]' : ''}`}
               >
-                <p className="eyebrow">{label}</p>
+                <p className="eyebrow flex items-center gap-2">
+                  {label === 'Próximo' ? <span className="glow-dot !size-1.5" /> : null}
+                  {label}
+                </p>
                 <p className="mt-2 flex items-baseline gap-2">
-                  <span className={`num text-sm font-semibold ${label === 'Próximo' ? 'text-brand' : 'text-muted'}`}>{m.slug}</span>
+                  <span className={`num text-sm font-semibold ${label === 'Próximo' ? 'text-signal' : 'text-muted'}`}>{m.slug}</span>
                   <span className="text-[15px] leading-snug font-semibold">{m.title}</span>
                 </p>
                 <p className="mt-1 text-xs text-muted">{note}</p>
@@ -152,13 +157,13 @@ export default function HomePage() {
           <Link
             href={recLesson ? `/biblioteca/${recLesson.slug}` : '/biblioteca'}
             aria-label={`Assistir: ${recommendation.title}`}
-            className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-md bg-ink"
+            className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-black ring-1 ring-white/10"
           >
             <span
               aria-hidden="true"
               className="absolute inset-0 opacity-30 [background-image:repeating-linear-gradient(90deg,transparent_0_23px,rgba(255,255,255,.18)_23px_24px)]"
             />
-            <span className="relative flex size-14 items-center justify-center rounded-full bg-white text-ink transition-transform duration-200 group-hover:scale-105">
+            <span className="relative flex size-14 items-center justify-center rounded-full bg-white text-on-ink transition-transform duration-200 group-hover:scale-105">
               <IconPlay size={22} />
             </span>
             <span className="num absolute right-3 bottom-3 text-xs text-white/80">{recommendation.minutes} min</span>
@@ -172,7 +177,7 @@ export default function HomePage() {
             </p>
             <p className="mt-4 border-l-2 border-brand pl-3 text-sm leading-relaxed text-ink-2">{recommendation.reason}</p>
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
-              <ButtonLink href={recLesson ? `/biblioteca/${recLesson.slug}` : '/biblioteca'}>Assistir</ButtonLink>
+              <ButtonLink href={recLesson ? `/biblioteca/${recLesson.slug}` : '/biblioteca'} variant="secondary">Assistir</ButtonLink>
               <ButtonLink href={recommendation.workflow.href} variant="quiet">
                 <IconBranch size={16} /> Explorar no Workflow: {recommendation.workflow.title}
               </ButtonLink>
@@ -203,8 +208,8 @@ export default function HomePage() {
       <HomeSection id="clinica" index="04" title="Clínica">
         <div className="grid gap-8 md:grid-cols-12">
           <div className="space-y-6 md:col-span-7">
-            <div role="note" className="flex gap-3 rounded-md border-l-2 border-ink bg-sunken p-4">
-              <IconBell size={20} className="mt-0.5 shrink-0" />
+            <div role="note" className="glass flex gap-3 rounded-2xl p-5">
+              <IconBell size={20} className="mt-0.5 shrink-0 text-signal" />
               <div>
                 <p className="text-[15px] font-semibold">{clinicNotice.title}</p>
                 <p className="mt-1 text-sm leading-relaxed text-ink-2">{clinicNotice.body}</p>
@@ -219,8 +224,9 @@ export default function HomePage() {
                 <p className="eyebrow">Próxima consulta planejada</p>
                 <Link
                   href={`/casos/${upcoming.c.id}#mapa`}
-                  className="mt-2 flex items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-rule-strong"
+                  className="glass glass-interactive group mt-2 flex items-center gap-4 rounded-2xl p-3 pr-4"
                 >
+                  <CaseCover item={upcoming.c} overlay={false} sizes="64px" className="size-16 shrink-0 rounded-xl" />
                   <span className="w-12 shrink-0 text-center">
                     <span className="num block text-2xl leading-none font-light">{formatDayMonth(upcoming.s.date).slice(0, 2)}</span>
                     <span className="eyebrow block text-[10px]">{monthShort(upcoming.s.date)}</span>
@@ -247,8 +253,9 @@ export default function HomePage() {
                   const last = c.performed.filter((p) => p.date <= today).at(-1)!
                   return (
                     <li key={c.id}>
-                      <Link href={`/casos/${c.id}`} className="flex items-baseline justify-between gap-4 py-3 text-sm hover:underline">
-                        <span>
+                      <Link href={`/casos/${c.id}`} className="group flex items-center justify-between gap-4 py-3 text-sm">
+                        <CaseCover item={c} overlay={false} sizes="40px" className="size-10 shrink-0 rounded-lg" />
+                        <span className="min-w-0 flex-1 group-hover:underline">
                           <span className="num font-semibold">{c.patient}</span>
                           <span className="text-ink-2">
                             {' '}
@@ -265,7 +272,7 @@ export default function HomePage() {
           </div>
 
           <div className="md:col-span-5">
-            <div className="rounded-md border border-rule bg-surface p-5">
+            <div className="glass rounded-2xl p-5">
               <ButtonLink href="/casos/novo" className="w-full">
                 <IconPlus size={18} /> Registrar caso
               </ButtonLink>
@@ -294,7 +301,7 @@ export default function HomePage() {
             </div>
             <Link
               href="/workflows"
-              className="mt-3 flex items-center justify-between rounded-md border border-rule bg-surface p-4 text-sm font-semibold hover:border-rule-strong"
+              className="glass glass-interactive mt-3 flex items-center justify-between rounded-2xl p-4 text-sm font-semibold"
             >
               <span className="flex items-center gap-2">
                 <IconBranch size={18} /> Abrir Workflow clínico

@@ -6,7 +6,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <>
       <a
         href="#conteudo"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-ink focus:px-3 focus:py-2 focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-ink focus:px-3 focus:py-2 focus:text-on-ink"
       >
         Pular para o conteúdo
       </a>

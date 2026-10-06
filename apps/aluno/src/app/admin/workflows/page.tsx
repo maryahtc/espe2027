@@ -21,7 +21,7 @@ export default function AdminWorkflowsPage() {
           <IconPlus size={18} /> Novo workflow
         </ButtonLink>
       </div>
-      <ul className="divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-surface">
+      <ul className="divide-y divide-rule overflow-hidden glass rounded-2xl">
         {all.map((w) => (
           <li key={w.slug}>
             <Link

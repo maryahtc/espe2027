@@ -20,7 +20,7 @@ export function HomeSection({
   return (
     <section id={id} aria-labelledby={`${id}-titulo`} className="grid gap-5 border-t border-rule pt-8 lg:grid-cols-12 lg:gap-10 lg:pt-12">
       <header className="lg:col-span-3">
-        <span className="num block text-sm font-semibold text-brand">{index}</span>
+        <span className="num block text-sm font-semibold text-signal">{index}</span>
         <h2 id={`${id}-titulo`} className="text-2xl leading-tight font-light tracking-tight">
           {title}
         </h2>

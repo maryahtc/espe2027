@@ -3,7 +3,7 @@ import Link from 'next/link'
 /** Faixa da prévia (Etapa 1): avisa que os dados são fictícios e liga as três áreas para navegação. */
 export function PreviewBanner() {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-b border-rule bg-sunken px-4 py-1.5 text-[11px] font-medium tracking-wide text-muted">
+    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-b border-rule bg-black/60 px-4 py-1.5 text-[11px] font-medium tracking-wide text-muted">
       <span>
         <span className="font-semibold text-ink">Prévia</span> · dados fictícios · sem login
       </span>
