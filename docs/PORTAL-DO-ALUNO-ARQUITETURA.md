@@ -1,6 +1,6 @@
 # Portal do Aluno — Arquitetura (v1, decisões incorporadas)
 
-> Status: **arquitetura conceitual aprovada com ajustes (v1).** Nada implementado. A implementação da Etapa 1 só
+> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass.** Nada implementado. A implementação da Etapa 1 só
 > começa após autorização explícita.
 > v0: 06/10/2026 · v1: 06/10/2026 — decisões da coordenação incorporadas (ver seção P, "Alterações v0 → v1").
 > Data de referência: primeira turma em **fevereiro de 2027**. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
@@ -997,6 +997,30 @@ player do workflow) com os dados do rascunho, dentro de uma moldura de pré-visu
 **Na prévia da Etapa 1** isso já aparece em: Admin › Módulos (lista por estado, editor, pré-visualização de rascunho,
 confirmação), Admin › Aulas e conteúdos (lista por estado, pré-visualização de rascunho), Admin › Avisos (lista por
 estado com "como o aluno vê") e Admin › Workflows (barra de publicação e confirmação de nova versão).
+
+---
+
+## R. Marco — ETAPA 1 APROVADA · CONEXO DARK GLASS (06/10/2026)
+
+A Etapa 1 (fundação + protótipo navegável) está aprovada. **CONEXO / DARK GLASS é a referência visual oficial** do
+Portal do Aluno. Novas telas e componentes nascem do design system atual (`packages/ui`, catálogo em `/design`);
+mudanças estruturais de linguagem visual só com necessidade justificada.
+
+**Princípios congelados**
+- canvas predominantemente preto; branco e cinza para hierarquia;
+- vermelho Conexo com parcimônia (ativo, seleção, progresso, ação primária, caminho do workflow);
+- vidro apenas onde cria profundidade/hierarquia; leitura e formulários opacos;
+- evitar excesso de cards e qualquer aparência de plataforma EAD;
+- fotografia clínica como elemento importante em Meus casos;
+- interface silenciosa, tecnológica e clínica;
+- Admin mais funcional, dentro do mesmo sistema visual.
+
+**Requisitos aprovados para as próximas etapas** (já desenhados no protótipo)
+foto de capa do caso (armazenamento privado, E.5.1) · atalho para o Smile Cloud · Rascunho → Pré-visualizar como
+aluno → Publicar → Arquivar (Q) · calendário mensal · materiais necessários no módulo · biblioteca de aulas ·
+workflow clínico · mapa horizontal de tratamento · produção clínica do aluno.
+
+Checkpoint no repositório: commit "ETAPA 1 APROVADA — CONEXO DARK GLASS" e tag `etapa-1-aprovada`.
 
 ---
 
