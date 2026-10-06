@@ -1044,6 +1044,19 @@ Checkpoint no repositório: commit "ETAPA 1 APROVADA — CONEXO DARK GLASS" (0a7
 | 14 | Contas | Infraestrutura em nome da empresa/instituição, não pessoal. |
 | — | Conceitos | **Topics** como taxonomia central (conteúdo, workflow, procedimento, dificuldade, recomendação, dashboard). **Caso** = paciente + plano; **procedimento realizado** = evento que alimenta a produção. |
 
+### N.3 Decisões para a Etapa 2 (06/10/2026)
+| Tema | Decisão |
+|---|---|
+| Contas | Supabase, Vercel e Resend em nome da instituição/Conexo, nunca em contas pessoais. |
+| Domínio | A definir. Desenvolvimento e prévia usam endereços temporários (`*.vercel.app`); nada bloqueia a estrutura. |
+| Login | Só e-mail + senha no MVP. Sem "Entrar com Google". Sem autocadastro: contas nascem por convite. |
+| 2FA | Obrigatório para admin e coordenação; opcional para aluno. |
+| Usuários | Começamos com usuários de teste. Nenhuma credencial em código ou chat; usuários reais convidados pelo painel. |
+| Turma | "Especialização Conexo \| Turma 2027", fev/2027 a jul/2029 — editável pelo admin. |
+| Termo de uso | Texto provisório identificado como tal. **Versionado**: tabela `terms_versions` (versão, texto, vigente desde) e `terms_acceptances` (usuário, versão, data/hora). Nova versão vigente exige novo aceite no próximo acesso. |
+| Papéis | `admin`, `coordenacao`, `aluno`. Docente é entidade acadêmica (`teachers`), sem login no MVP. |
+| Segurança | Regras de acesso no banco (RLS) além da interface; nenhum segredo no GitHub; nenhuma chave sensível no navegador; imagens clínicas privadas. |
+
 ### N.2 Ainda abertas (nenhuma bloqueia a Etapa 1)
 | # | Decisão | Bloqueia a partir de |
 |---|---|---|
