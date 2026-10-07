@@ -1,6 +1,6 @@
 # Portal do Aluno — Arquitetura (v1, decisões incorporadas)
 
-> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass.** Etapa 2 aguardando autorização.
+> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass.** Etapa 2 autorizada; ambiente em configuração (ver seção S).
 > v0: 06/10/2026 · v1: 06/10/2026 — decisões da coordenação incorporadas (ver seção P, "Alterações v0 → v1").
 > Data de referência: primeira turma em **fevereiro de 2027**. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
 > (portal público de cronograma, `docs/ARQUITETURA.md`).
@@ -1022,6 +1022,22 @@ workflow clínico · mapa horizontal de tratamento · produção clínica do alu
 Checkpoint no repositório: commit "ETAPA 1 APROVADA — CONEXO DARK GLASS" (0a722a2).
 
 ---
+
+## S. Ambiente da Etapa 2 — estado da configuração (06/10/2026)
+
+Registro para retomar o trabalho em qualquer sessão. **Nenhum segredo aqui.**
+
+| Item | Estado |
+|---|---|
+| Supabase | Organização Conexo, projeto `portal-aluno`, região São Paulo. Project ref `xzwdnanssqkrxkyntwes` (público). Novos cadastros desativados. |
+| Token de acesso | Granular, escopo só da organização Conexo, ~30 dias. Permissões: Project (leitura), Database → Database e Migrations (escrita), Auth (escrita); todo o resto **None**. Revogar ao fim da Etapa 2. |
+| Vercel | Team **Conexo** (Hobby — passar a Pro antes de alunos reais). Projeto `portal-aluno`, Root Directory `apps/aluno`, produção em https://portal-aluno-kappa.vercel.app. Variáveis: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (Sensitive). A secret key exposta em captura de tela foi revogada e substituída. |
+| GitHub | Branch padrão do repositório: `claude/upbeat-bohr-8heral` (contém todo o histórico anterior). |
+| Domínio / Resend | Ainda sem domínio; será registrado no Registro.br (CPF de Thiago). Até lá, e-mails de teste pelo SMTP padrão do Supabase; Resend em subdomínio (`portal.<dominio>`) antes de convidar alunos reais. |
+| Ambiente Claude | Rede *Custom*: `api.supabase.com`, `*.supabase.co`, `*.vercel.app` + padrões. Token do Supabase como **segredo de rede** (Bearer, host `api.supabase.com`, prefixo `/v1/projects/xzwdnanssqkrxkyntwes/`) — o agente usa sem ver o valor. Variável `SUPABASE_PROJECT_REF`. Segredos só valem em sessões iniciadas depois de salvos. |
+| Pendente (pré‑existente) | `apps/publico/fixtures/preview/{MATERIAIS_POR_MODULO,ESTOQUE,EQUIPAMENTOS}.csv` nunca foram commitados → testes do portal público falham no CI. Recriar (planilhas reais ou exemplos mínimos). |
+
+**Próximo passo:** verificar a conexão (`POST /v1/projects/{ref}/database/query` com `select 1`) e iniciar a Etapa 2 conforme N.3.
 
 ## N. Decisões
 
