@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { SetPasswordForm } from '@/components/auth/forms'
 import { requireSignedIn } from '@/lib/auth/session'
@@ -15,9 +14,7 @@ const COPY = {
 
 export default async function SetPasswordPage({ searchParams }: { searchParams: Promise<{ motivo?: string; next?: string }> }) {
   const { motivo, next } = await searchParams
-  const auth = await requireSignedIn()
-  // Conta com 2FA: trocar a senha exige a sessão confirmada com o código.
-  if (auth.hasVerifiedFactor && auth.aal !== 'aal2') redirect('/seguranca/2fa?next=/definir-senha')
+  await requireSignedIn()
   const copy = motivo === 'convite' ? COPY.convite : motivo === 'recuperacao' ? COPY.recuperacao : COPY.alterar
   return (
     <AuthCard eyebrow={copy.eyebrow} title={copy.title} lead={copy.lead}>

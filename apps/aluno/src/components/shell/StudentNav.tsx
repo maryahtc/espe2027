@@ -4,12 +4,14 @@ import { cn } from '@portal/ui/cn'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { isActive, profileNav, studentNav } from '@/config/nav'
-import { student } from '@/demo/data'
 import { Logo } from './Logo'
 import { NavIcon } from './NavIcon'
 
 /** Barra lateral (desktop ≥ 1024 px). */
-export function StudentSidebar() {
+/** Quem está logado (nome, iniciais e turma) — vem do layout, lido no servidor. */
+export type Viewer = { name: string; initials: string; cohort: string }
+
+export function StudentSidebar({ viewer }: { viewer: Viewer }) {
   const pathname = usePathname()
   return (
     <aside className="glass-strong sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r lg:flex">
@@ -69,11 +71,11 @@ export function StudentSidebar() {
         )}
       >
         <span className="num flex size-9 items-center justify-center rounded-full bg-ink text-xs font-semibold text-on-ink">
-          {student.initials}
+          {viewer.initials}
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold">{student.name}</span>
-          <span className="block text-xs text-muted">{student.cohort} · Perfil</span>
+          <span className="block truncate text-sm font-semibold">{viewer.name}</span>
+          <span className="block text-xs text-muted">{viewer.cohort ? `${viewer.cohort} · ` : ''}Perfil</span>
         </span>
       </Link>
     </aside>
@@ -81,7 +83,7 @@ export function StudentSidebar() {
 }
 
 /** Cabeçalho compacto (celular e tablet). */
-export function StudentTopBar() {
+export function StudentTopBar({ viewer }: { viewer: Viewer }) {
   const pathname = usePathname()
   return (
     <header className="glass-strong sticky top-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
@@ -92,7 +94,7 @@ export function StudentTopBar() {
         aria-current={isActive(pathname, profileNav.match) ? 'page' : undefined}
         className="num flex size-9 items-center justify-center rounded-full bg-ink text-xs font-semibold text-on-ink"
       >
-        {student.initials}
+        {viewer.initials}
       </Link>
     </header>
   )

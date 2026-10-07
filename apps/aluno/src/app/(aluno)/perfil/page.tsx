@@ -2,8 +2,11 @@ import { ButtonLink } from '@portal/ui/button'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SignOutButton } from '@/components/auth/SignOutButton'
+import { NameForm } from '@/components/people/NameForm'
 import { student } from '@/demo/data'
+import { studentArea } from '@/lib/academic/student'
 import { getAuth } from '@/lib/auth/session'
+import { monthLong, year } from '@/lib/dates'
 
 export const metadata: Metadata = { title: 'Meu perfil' }
 
@@ -17,7 +20,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 export default async function ProfilePage() {
-  const auth = await getAuth()
+  const [auth, area] = await Promise.all([getAuth(), studentArea()])
   const account = auth && auth !== 'previa' ? auth : null
   const name = account ? account.displayName || account.fullName : student.name
   const initials = account
@@ -38,40 +41,55 @@ export default async function ProfilePage() {
           <span className="absolute right-1.5 bottom-1.5 glow-dot" />
         </span>
         <p className="mt-5 text-3xl font-light tracking-tight">{name}</p>
-        <p className="mt-1 text-sm text-muted">{student.cohort} · mês {student.monthOfCourse} de {student.totalMonths}</p>
+        {area ? (
+          <p className="mt-1 text-sm text-muted">
+            {area.cohort.name}
+            {area.month.current > 0 ? ` · mês ${area.month.current} de ${area.month.total}` : ''}
+          </p>
+        ) : account ? null : (
+          <p className="mt-1 text-sm text-muted">{student.cohort} · mês {student.monthOfCourse} de {student.totalMonths}</p>
+        )}
         <span className="mt-4 text-xs text-muted underline underline-offset-2">Trocar foto</span>
       </div>
 
       <Group title="Dados">
-        <dl className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <dt className="text-xs text-muted">E-mail</dt>
-            <dd className="mt-0.5 text-[15px] break-all">{account ? account.email : 'ana.lima@email.com'}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Nome de exibição</dt>
-            <dd className="mt-0.5 text-[15px]">{account ? account.displayName || account.fullName : 'Ana Lima'}</dd>
-          </div>
-        </dl>
+        {account ? (
+          <NameForm fullName={account.fullName} displayName={account.displayName} email={account.email} />
+        ) : (
+          <dl className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-muted">E-mail</dt>
+              <dd className="mt-0.5 text-[15px]">ana.lima@email.com</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">Nome de exibição</dt>
+              <dd className="mt-0.5 text-[15px]">Ana Lima</dd>
+            </div>
+          </dl>
+        )}
       </Group>
 
-      <Group title="Especialização">
-        <dl className="grid gap-5 sm:grid-cols-3">
-          {[
-            ['Turma', '2027'],
-            ['Início', 'fevereiro de 2027'],
-            ['Previsão de conclusão', 'julho de 2029'],
-          ].map(([k, v]) => (
-            <div key={k}>
-              <dt className="text-xs text-muted">{k}</dt>
-              <dd className="mt-0.5 text-[15px]">{v}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-4 text-sm text-muted">
-          Mês <span className="num text-ink">{student.monthOfCourse}</span> de <span className="num">{student.totalMonths}</span>
-        </p>
-      </Group>
+      {area ? (
+        <Group title="Especialização">
+          <dl className="grid gap-5 sm:grid-cols-3">
+            {[
+              ['Turma', area.cohort.name],
+              ['Início', `${monthLong(area.cohort.startsOn)} de ${year(area.cohort.startsOn)}`],
+              [area.cohort.status === 'encerrada' ? 'Conclusão' : 'Previsão de conclusão', `${monthLong(area.cohort.endsOn)} de ${year(area.cohort.endsOn)}`],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs text-muted">{k}</dt>
+                <dd className="mt-0.5 text-[15px]">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {area.month.current > 0 ? (
+            <p className="mt-4 text-sm text-muted">
+              Mês <span className="num text-ink">{area.month.current}</span> de <span className="num">{area.month.total}</span>
+            </p>
+          ) : null}
+        </Group>
+      ) : null}
 
       <Group title="Privacidade da produção">
         <fieldset>
@@ -109,16 +127,8 @@ export default async function ProfilePage() {
           <ButtonLink href="/definir-senha" variant="secondary">
             Alterar senha
           </ButtonLink>
-          {account && !account.hasVerifiedFactor ? (
-            <ButtonLink href="/seguranca/2fa/configurar" variant="secondary">
-              Ativar verificação em duas etapas
-            </ButtonLink>
-          ) : null}
           <SignOutButton />
         </div>
-        {account?.hasVerifiedFactor ? (
-          <p className="mt-4 text-sm text-muted">Verificação em duas etapas ativa: o portal pede o código do celular a cada entrada.</p>
-        ) : null}
         <p className="mt-4 text-sm">
           <Link href="/termo?next=/perfil" className="underline underline-offset-2">
             Termo de uso

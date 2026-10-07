@@ -5,13 +5,13 @@ import type { Database } from '@portal/db/types'
 export type Person = Database['public']['Functions']['admin_people']['Returns'][number]
 export type CohortOption = { id: string; name: string }
 
-/** Pessoas e turmas para o painel (a função do banco recusa quem não é admin com 2FA). */
+/** Pessoas e turmas para o painel (a função do banco recusa quem não é admin). */
 export async function loadPeople(): Promise<{ people: Person[]; cohorts: CohortOption[] }> {
   const supabase = await createSupabaseServerClient()
   if (!supabase) return { people: [], cohorts: [] }
   const [{ data: people }, { data: cohorts }] = await Promise.all([
     supabase.rpc('admin_people'),
-    supabase.from('cohorts').select('id, name').eq('status', 'ativa').order('starts_on'),
+    supabase.from('cohorts').select('id, name').order('starts_on'),
   ])
   return { people: people ?? [], cohorts: cohorts ?? [] }
 }

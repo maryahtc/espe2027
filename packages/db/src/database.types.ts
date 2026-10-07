@@ -9,16 +9,50 @@ export type Database = {
   
   "public": {
           Tables: {
-            "cohorts": {
+            "change_log": {
                   Row: {
-                    "created_at": string,"ends_on": string,"id": string,"name": string,"slug": string,"starts_on": string,"status": Database["public"]['Enums']["cohort_status"],"updated_at": string
+                    "action": string,"actor": string | null,"at": string,"changes": NonNullable<Json>,"cohort_id": string | null,"id": number,"module_id": string | null,"row_id": string,"table_name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"ends_on": string,"id"?: string,"name": string,"slug": string,"starts_on": string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
+                    "action": string,"actor"?: string | null,"at"?: string,"changes": NonNullable<Json>,"cohort_id"?: string | null,"id"?: never,"module_id"?: string | null,"row_id": string,"table_name": string
                   }
                   Update: {
-                    "created_at"?: string,"ends_on"?: string,"id"?: string,"name"?: string,"slug"?: string,"starts_on"?: string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
+                    "action"?: string,"actor"?: string | null,"at"?: string,"changes"?: NonNullable<Json>,"cohort_id"?: string | null,"id"?: never,"module_id"?: string | null,"row_id"?: string,"table_name"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"cohort_events": {
+                  Row: {
+                    "cohort_id": string,"created_at": string,"date": string,"description": string | null,"id": string,"kind": Database["public"]['Enums']["event_kind"],"starts_at": string | null,"status": Database["public"]['Enums']["content_status"],"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cohort_id": string,"created_at"?: string,"date": string,"description"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["event_kind"],"starts_at"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "cohort_id"?: string,"created_at"?: string,"date"?: string,"description"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["event_kind"],"starts_at"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cohort_events_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cohorts": {
+                  Row: {
+                    "closed_at": string | null,"created_at": string,"description": string | null,"ends_on": string,"id": string,"name": string,"slug": string,"starts_on": string,"status": Database["public"]['Enums']["cohort_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "closed_at"?: string | null,"created_at"?: string,"description"?: string | null,"ends_on": string,"id"?: string,"name": string,"slug": string,"starts_on": string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "closed_at"?: string | null,"created_at"?: string,"description"?: string | null,"ends_on"?: string,"id"?: string,"name"?: string,"slug"?: string,"starts_on"?: string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -49,6 +83,230 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"faculty": {
+                  Row: {
+                    "active": boolean,"created_at": string,"display_name": string,"full_name": string,"honorific": string | null,"id": string,"kind": Database["public"]['Enums']["faculty_kind"],"short_bio": string | null,"specialty": string | null,"updated_at": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"created_at"?: string,"display_name": string,"full_name": string,"honorific"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["faculty_kind"],"short_bio"?: string | null,"specialty"?: string | null,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "active"?: boolean,"created_at"?: string,"display_name"?: string,"full_name"?: string,"honorific"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["faculty_kind"],"short_bio"?: string | null,"specialty"?: string | null,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "faculty_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"material_checks": {
+                  Row: {
+                    "checked_at": string,"material_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "checked_at"?: string,"material_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "checked_at"?: string,"material_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "material_checks_material_id_fkey"
+      columns: ["material_id"]
+isOneToOne: false
+      referencedRelation: "module_materials"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "material_checks_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_days": {
+                  Row: {
+                    "created_at": string,"date": string,"id": string,"label": string | null,"module_id": string,"note": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"date": string,"id"?: string,"label"?: string | null,"module_id": string,"note"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"date"?: string,"id"?: string,"label"?: string | null,"module_id"?: string,"note"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_days_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_deliverables": {
+                  Row: {
+                    "description": string | null,"due_date": string | null,"id": string,"module_id": string,"phase": Database["public"]['Enums']["module_phase"],"position": number,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description"?: string | null,"due_date"?: string | null,"id"?: string,"module_id": string,"phase"?: Database["public"]['Enums']["module_phase"],"position"?: number,"title": string
+                  }
+                  Update: {
+                    "description"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string,"phase"?: Database["public"]['Enums']["module_phase"],"position"?: number,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_deliverables_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_internal_notes": {
+                  Row: {
+                    "module_id": string,"notes": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "module_id": string,"notes"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "module_id"?: string,"notes"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_internal_notes_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: true
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_materials": {
+                  Row: {
+                    "day_id": string | null,"group_label": string,"id": string,"item": string,"module_id": string,"note": string | null,"position": number,"required": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "day_id"?: string | null,"group_label"?: string,"id"?: string,"item": string,"module_id": string,"note"?: string | null,"position"?: number,"required"?: boolean
+                  }
+                  Update: {
+                    "day_id"?: string | null,"group_label"?: string,"id"?: string,"item"?: string,"module_id"?: string,"note"?: string | null,"position"?: number,"required"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_materials_day_id_fkey"
+      columns: ["day_id"]
+isOneToOne: false
+      referencedRelation: "module_days"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_materials_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_resources": {
+                  Row: {
+                    "available_from": string | null,"body": string | null,"created_at": string,"description": string | null,"file_path": string | null,"id": string,"kind": Database["public"]['Enums']["resource_kind"],"module_id": string,"phase": Database["public"]['Enums']["module_phase"],"position": number,"requirement": Database["public"]['Enums']["requirement_level"],"session_id": string | null,"status": Database["public"]['Enums']["content_status"],"title": string,"updated_at": string,"url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "available_from"?: string | null,"body"?: string | null,"created_at"?: string,"description"?: string | null,"file_path"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["resource_kind"],"module_id": string,"phase"?: Database["public"]['Enums']["module_phase"],"position"?: number,"requirement"?: Database["public"]['Enums']["requirement_level"],"session_id"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"title": string,"updated_at"?: string,"url"?: string | null
+                  }
+                  Update: {
+                    "available_from"?: string | null,"body"?: string | null,"created_at"?: string,"description"?: string | null,"file_path"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["resource_kind"],"module_id"?: string,"phase"?: Database["public"]['Enums']["module_phase"],"position"?: number,"requirement"?: Database["public"]['Enums']["requirement_level"],"session_id"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"title"?: string,"updated_at"?: string,"url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_resources_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_resources_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "module_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_sessions": {
+                  Row: {
+                    "activity_type": Database["public"]['Enums']["activity_type"],"created_at": string,"day_id": string,"description": string | null,"ends_at": string | null,"id": string,"module_id": string,"period": Database["public"]['Enums']["day_period"],"position": number,"starts_at": string | null,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_type"?: Database["public"]['Enums']["activity_type"],"created_at"?: string,"day_id": string,"description"?: string | null,"ends_at"?: string | null,"id"?: string,"module_id": string,"period": Database["public"]['Enums']["day_period"],"position"?: number,"starts_at"?: string | null,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "activity_type"?: Database["public"]['Enums']["activity_type"],"created_at"?: string,"day_id"?: string,"description"?: string | null,"ends_at"?: string | null,"id"?: string,"module_id"?: string,"period"?: Database["public"]['Enums']["day_period"],"position"?: number,"starts_at"?: string | null,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_sessions_day_id_module_id_fkey"
+      columns: ["day_id","module_id"]
+isOneToOne: false
+      referencedRelation: "module_days"
+      referencedColumns: ["id","module_id"]
+    }
+                  ]
+                },"module_staff": {
+                  Row: {
+                    "faculty_id": string,"id": string,"module_id": string,"position": number,"role": Database["public"]['Enums']["staff_role"],"tentative": boolean,"visible_to_students": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "faculty_id": string,"id"?: string,"module_id": string,"position"?: number,"role"?: Database["public"]['Enums']["staff_role"],"tentative"?: boolean,"visible_to_students"?: boolean
+                  }
+                  Update: {
+                    "faculty_id"?: string,"id"?: string,"module_id"?: string,"position"?: number,"role"?: Database["public"]['Enums']["staff_role"],"tentative"?: boolean,"visible_to_students"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_staff_faculty_id_fkey"
+      columns: ["faculty_id"]
+isOneToOne: false
+      referencedRelation: "faculty"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_staff_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"modules": {
+                  Row: {
+                    "archived_at": string | null,"cohort_id": string,"created_at": string,"dates_changed_at": string | null,"description": string | null,"id": string,"location": string | null,"materials_notes": string | null,"number": number | null,"position": number,"preparation": string | null,"published_at": string | null,"status": Database["public"]['Enums']["content_status"],"theme": string | null,"title": string,"updated_at": string,"workload_hours": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"cohort_id": string,"created_at"?: string,"dates_changed_at"?: string | null,"description"?: string | null,"id"?: string,"location"?: string | null,"materials_notes"?: string | null,"number"?: number | null,"position": number,"preparation"?: string | null,"published_at"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"theme"?: string | null,"title": string,"updated_at"?: string,"workload_hours"?: number | null
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"cohort_id"?: string,"created_at"?: string,"dates_changed_at"?: string | null,"description"?: string | null,"id"?: string,"location"?: string | null,"materials_notes"?: string | null,"number"?: number | null,"position"?: number,"preparation"?: string | null,"published_at"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"theme"?: string | null,"title"?: string,"updated_at"?: string,"workload_hours"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "modules_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "created_at": string,"display_name": string | null,"full_name": string,"id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string
@@ -76,6 +334,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"session_faculty": {
+                  Row: {
+                    "faculty_id": string,"module_id": string,"role": string,"session_id": string,"tentative": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "faculty_id": string,"module_id": string,"role"?: string,"session_id": string,"tentative"?: boolean
+                  }
+                  Update: {
+                    "faculty_id"?: string,"module_id"?: string,"role"?: string,"session_id"?: string,"tentative"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_faculty_faculty_id_fkey"
+      columns: ["faculty_id"]
+isOneToOne: false
+      referencedRelation: "faculty"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_faculty_session_id_module_id_fkey"
+      columns: ["session_id","module_id"]
+isOneToOne: false
+      referencedRelation: "module_sessions"
+      referencedColumns: ["id","module_id"]
+    }
                   ]
                 },"terms_acceptances": {
                   Row: {
@@ -125,11 +409,8 @@ isOneToOne: false
           Functions: {
             "admin_people":
 { Args: Record<PropertyKey, never>; Returns: {
-              "cohort_name": string,"created_at": string,"display_name": string,"email": string,"enrollment_status": Database["public"]['Enums']["enrollment_status"],"full_name": string,"has_mfa": boolean,"id": string,"invited_at": string,"last_sign_in_at": string,"role": Database["public"]['Enums']["app_role"],"role_in_cohort": Database["public"]['Enums']["cohort_role"]
+              "cohort_id": string,"cohort_name": string,"created_at": string,"display_name": string,"email": string,"enrollment_status": Database["public"]['Enums']["enrollment_status"],"full_name": string,"id": string,"invited_at": string,"last_sign_in_at": string,"role": Database["public"]['Enums']["app_role"],"role_in_cohort": Database["public"]['Enums']["cohort_role"]
             }[]
-                           },
-"admin_reset_mfa":
-{ Args: { "p_user_id": string }; Returns: undefined
                            },
 "bootstrap_first_admin":
 { Args: { "p_email": string }; Returns: string
@@ -140,11 +421,11 @@ isOneToOne: false
 "coordinates":
 { Args: { "p_cohort_id": string }; Returns: boolean
                            },
+"copy_cohort_structure":
+{ Args: { "p_shift_days": number,"p_source": string,"p_target": string }; Returns: number
+                           },
 "current_terms_version_id":
 { Args: Record<PropertyKey, never>; Returns: string
-                           },
-"has_mfa":
-{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "health":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -155,15 +436,24 @@ isOneToOne: false
 "is_enrolled":
 { Args: { "p_cohort_id": string }; Returns: boolean
                            },
-"my_mfa_enrolled":
-{ Args: Record<PropertyKey, never>; Returns: boolean
+"module_file_readable":
+{ Args: { "p_path": string }; Returns: boolean
+                           },
+"module_full_access":
+{ Args: { "p_module_id": string }; Returns: boolean
+                           },
+"module_readable":
+{ Args: { "p_module_id": string }; Returns: boolean
                            },
 "needs_terms_acceptance":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"resource_readable":
+{ Args: { "p_resource_id": string }; Returns: boolean
                            }
           }
           Enums: {
-            "app_role": "admin"|"coordenacao"|"aluno","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","enrollment_status": "ativa"|"inativa"
+            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_status": "rascunho"|"publicado"|"arquivado","day_period": "manha"|"tarde"|"noite"|"dia_todo","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -279,7 +569,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_role": ["admin", "coordenacao", "aluno"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"enrollment_status": ["ativa", "inativa"]
+            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_status": ["rascunho", "publicado", "arquivado"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"]
           }
         }
 } as const

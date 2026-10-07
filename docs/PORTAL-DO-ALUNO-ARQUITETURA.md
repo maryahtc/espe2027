@@ -517,7 +517,7 @@ workflows 1─N workflow_versions
   embutido do Supabase tem limite baixo de envio e não serve para produção.
 - **Sessão:** cookies `httpOnly`, `Secure`, `SameSite=Lax` via `@supabase/ssr`; token de acesso curto renovado
   automaticamente. Senha mínima de 10 caracteres + verificação contra senhas vazadas (recurso do Supabase).
-- **MFA (TOTP)** obrigatório para `admin` e `coordenacao` (quem vê dados de todos). Opcional para alunos.
+- ~~MFA (TOTP) obrigatório para admin e coordenação~~ — **removido em 07/10/2026** (decisão N.3): todos os perfis entram só com e-mail e senha.
 
 **Autorização em três camadas** — qualquer uma sozinha bloqueia o acesso indevido:
 
@@ -729,7 +729,7 @@ implementação do componente.
   processar fora do país — mapear).
 - Criptografia em trânsito (TLS) e em repouso (padrão do Supabase). Backups diários (plano Pro) com retenção
   definida.
-- MFA para admin/coordenação; poucos admins; `service_role` só no servidor.
+- Poucos admins; `service_role` só no servidor. (Sem 2FA desde 07/10/2026 — decisão N.3.)
 - **Registro de auditoria** de ações administrativas e de acessos da coordenação a casos individuais.
 - Logs da aplicação sem conteúdo de casos (só IDs).
 - Cabeçalhos de segurança (CSP, HSTS), `noindex` em todo o portal do aluno.
@@ -1049,7 +1049,7 @@ com `missing database_read`.) Conexão verificada com `select 1`.
 - Testes de isolamento em `packages/db/tests/` (27 casos), rodando no CI (`npm run db:test`) e no Supabase
   (transação desfeita, sem resíduo).
 
-**Etapa 2 · Parte 2 — login, convites e 2FA (aplicada em 07/10/2026, aguardando aprovação)**
+**Etapa 2 · Parte 2 — login e convites (aprovada em 07/10/2026; 2FA removido depois, ver abaixo)**
 - Migração `20261007130000_login_e_2fa`: poderes de admin e coordenação **só com sessão 2FA (aal2)**, também no
   banco; `admin_people()` e `admin_reset_mfa()` (só admin com 2FA); `bootstrap_first_admin(email)` (só o dono do
   banco, só enquanto não houver admin); `my_mfa_enrolled()`.
@@ -1059,7 +1059,7 @@ com `missing database_read`.) Conexão verificada com `select 1`.
 - Sessão em cookies httpOnly + SameSite=Lax (+ Secure em produção); login sempre no servidor.
 - Auth do projeto (API de gerenciamento): site `https://portal-aluno-kappa.vercel.app/auth/retorno`, redirecionamentos
   permitidos para esse domínio e `localhost:3001`, senha ≥ 10 com letras e números, links válidos por 24 h,
-  autocadastro desligado, TOTP ligado.
+  autocadastro desligado, TOTP desligado (desde 07/10/2026).
 - **Limites do plano gratuito sem SMTP próprio:** e-mails com o texto padrão do Supabase (em inglês) e no máximo
   **2 e-mails por hora**; modelos em português prontos em `packages/db/supabase/templates/` entram com o Resend.
   Proteção contra senhas vazadas (HaveIBeenPwned) exige plano Pro. Até lá, convites preferencialmente por
@@ -1069,11 +1069,31 @@ com `missing database_read`.) Conexão verificada com `select 1`.
 
 **Primeiro admin (uma vez):** 1) no painel do Supabase, *Authentication → Users → Invite user* com o e-mail da
 pessoa; 2) ela abre o e-mail, cria a senha e aceita o termo; 3) executar
-`select public.bootstrap_first_admin('email@...');` (SQL Editor ou API de gerenciamento); 4) no próximo acesso
-ela ativa o 2FA. A partir daí, papéis só pelo painel. **Celular do único admin perdido:** apagar os fatores por
-SQL (`delete from auth.mfa_factors where user_id = …`) — por isso convém ter dois admins.
+`select public.bootstrap_first_admin('email@...');` (SQL Editor ou API de gerenciamento). A partir daí, papéis só
+pelo painel.
 
-**Próximo passo:** Parte 3 da Etapa 2 — só após aprovação da Parte 2.
+**Remoção do 2FA (07/10/2026)** — migração `20261008110000_sem_2fa`: `is_admin()`, `coordinates()` e
+`can_view_profile()` voltam a depender só do papel e da matrícula (sem exigir sessão aal2); `admin_people()` sem a
+coluna de 2FA; removidas `has_mfa()`, `my_mfa_enrolled()` e `admin_reset_mfa()`; fatores existentes apagados.
+TOTP desligado no Auth. App: removidas as telas `/seguranca/2fa` e `/seguranca/2fa/configurar`, o botão de ativar
+2FA no Perfil, a coluna e o "Redefinir 2FA" no painel de pessoas. RLS, isolamento entre turmas, papéis protegidos,
+último admin protegido, rotas e sessão httpOnly continuam iguais.
+
+**Etapa 2 · Parte 3 — turmas, cronograma e módulos (aplicada em 07/10/2026, aguardando aprovação)**
+- Migração `20261008120000_turmas_modulos`: `faculty` (docentes e equipe, compartilhados entre turmas), `modules`,
+  `module_days` (N dias por módulo), `module_sessions` (programação por turno, horário opcional, tipo),
+  `session_faculty` (vários professores, "a confirmar"), `module_staff` (equipe; visível ou interna),
+  `module_internal_notes` (só admin/coordenação), `module_materials` + `material_checks`, `module_deliverables`,
+  `module_resources` (link/arquivo/texto, fase, obrigatoriedade, liberação por data), `cohort_events`,
+  `change_log` (histórico "de → para" com autor), `copy_cohort_structure()`; bucket privado `module-files`.
+- Aluno vê só módulos publicados da turma em que está matriculado (turma encerrada continua visível); coordenação
+  lê tudo da própria turma; só admin grava. Módulo publicado não se exclui (arquiva).
+- Pré-cadastro (`packages/db/seeds/turma-2027.sql`, executado uma vez): 30 módulos publicados ("Módulo N"),
+  90 dias, 58 atividades, 18 docentes/equipe com os nomes do material; observações da planilha em observações
+  internas; nomes ambíguos preservados.
+- Testes de banco: 63 casos (27 + 13 + 23) no CI e no Supabase.
+
+**Próximo passo:** aprovação da Parte 3.
 
 ## N. Decisões
 
@@ -1102,7 +1122,7 @@ SQL (`delete from auth.mfa_factors where user_id = …`) — por isso convém te
 | Contas | Supabase, Vercel e Resend em nome da instituição/Conexo, nunca em contas pessoais. |
 | Domínio | A definir. Desenvolvimento e prévia usam endereços temporários (`*.vercel.app`); nada bloqueia a estrutura. |
 | Login | Só e-mail + senha no MVP. Sem "Entrar com Google". Sem autocadastro: contas nascem por convite. |
-| 2FA | Obrigatório para admin e coordenação; opcional para aluno. |
+| 2FA | ~~Obrigatório para admin e coordenação; opcional para aluno.~~ **Removido em 07/10/2026:** nenhum perfil usa 2FA; admin, coordenação e aluno entram só com e-mail e senha. Permissões dependem apenas do papel e da matrícula (RLS). |
 | Usuários | Começamos com usuários de teste. Nenhuma credencial em código ou chat; usuários reais convidados pelo painel. |
 | Turma | "Especialização Conexo \| Turma 2027", fev/2027 a jul/2029 — editável pelo admin. |
 | Termo de uso | Texto provisório identificado como tal. **Versionado**: tabela `terms_versions` (versão, texto, vigente desde) e `terms_acceptances` (usuário, versão, data/hora). Nova versão vigente exige novo aceite no próximo acesso. |

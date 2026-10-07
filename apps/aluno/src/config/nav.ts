@@ -24,7 +24,7 @@ export const studentNav: NavArea[] = [
     match: ['/cronograma', '/modulos'],
     children: [
       { label: 'Cronograma', href: '/cronograma', match: ['/cronograma'] },
-      { label: 'Módulos', href: '/modulos/14', match: ['/modulos'] },
+      { label: 'Módulos', href: '/modulos', match: ['/modulos'] },
     ],
   },
   {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type AuthState, homeFor, needsMfa, nextStep, safeNext } from '@/lib/auth/flow'
+import { type AuthState, homeFor, nextStep, safeNext } from '@/lib/auth/flow'
 
 const base: AuthState = {
   userId: 'u',
@@ -7,31 +7,20 @@ const base: AuthState = {
   role: 'aluno',
   fullName: 'A',
   displayName: null,
-  aal: 'aal1',
-  hasVerifiedFactor: false,
   needsTerms: false,
 }
 const as = (patch: Partial<AuthState>): AuthState => ({ ...base, ...patch })
 
-describe('2FA obrigatório', () => {
-  it('admin e coordenação sem código confirmado precisam de 2FA', () => {
-    expect(needsMfa(as({ role: 'admin' }))).toBe(true)
-    expect(needsMfa(as({ role: 'coordenacao' }))).toBe(true)
-    expect(needsMfa(as({ role: 'admin', aal: 'aal2' }))).toBe(false)
+describe('próximo passo da entrada (só e-mail e senha)', () => {
+  it('admin, coordenação e aluno vão direto ao início do papel, sem passo extra', () => {
+    expect(nextStep(as({ role: 'admin' }))).toBe('/admin')
+    expect(nextStep(as({ role: 'coordenacao' }))).toBe('/coordenacao')
+    expect(nextStep(as({ role: 'aluno' }))).toBe('/')
   })
-  it('aluno: só se ele mesmo ativou', () => {
-    expect(needsMfa(as({}))).toBe(false)
-    expect(needsMfa(as({ hasVerifiedFactor: true }))).toBe(true)
-    expect(needsMfa(as({ hasVerifiedFactor: true, aal: 'aal2' }))).toBe(false)
-  })
-})
-
-describe('próximo passo da entrada', () => {
-  it('ordem: 2FA (ativar ou digitar) → termo → destino', () => {
-    expect(nextStep(as({ role: 'admin', needsTerms: true }))).toBe('/seguranca/2fa/configurar')
-    expect(nextStep(as({ role: 'admin', hasVerifiedFactor: true, needsTerms: true }))).toBe('/seguranca/2fa')
-    expect(nextStep(as({ role: 'admin', aal: 'aal2', needsTerms: true }))).toBe('/termo')
-    expect(nextStep(as({ role: 'admin', aal: 'aal2' }))).toBe('/admin')
+  it('termo novo vigente vem antes do destino, para qualquer papel', () => {
+    expect(nextStep(as({ role: 'admin', needsTerms: true }))).toBe('/termo')
+    expect(nextStep(as({ role: 'coordenacao', needsTerms: true }))).toBe('/termo')
+    expect(nextStep(as({ needsTerms: true }))).toBe('/termo')
   })
   it('cada papel tem o seu início', () => {
     expect(homeFor('admin')).toBe('/admin')

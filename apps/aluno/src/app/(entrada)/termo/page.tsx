@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { AcceptTermsForm } from '@/components/auth/forms'
 import { SignOutButton } from '@/components/auth/SignOutButton'
-import { homeFor, needsMfa, nextStep, requireSignedIn, safeNext } from '@/lib/auth/session'
+import { homeFor, requireSignedIn, safeNext } from '@/lib/auth/session'
 
 export const metadata: Metadata = { title: 'Termo de uso' }
 
@@ -16,7 +16,6 @@ export default async function TermsPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams
   const auth = await requireSignedIn()
   const target = safeNext(next)
-  if (needsMfa(auth)) redirect(nextStep(auth, target ?? '/termo'))
 
   const supabase = await createSupabaseServerClient()
   if (!supabase) redirect('/entrar')

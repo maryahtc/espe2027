@@ -28,7 +28,7 @@ export function InviteForm({ roles, cohorts }: { roles: Array<keyof typeof ROLE_
                 <span>
                   <span className="block font-semibold">{ROLE_LABEL[r]}</span>
                   <span className="text-muted">
-                    {r === 'coordenacao' ? 'Acompanha a turma escolhida. 2FA obrigatório.' : r === 'admin' ? 'Acesso total ao painel. 2FA obrigatório.' : 'Acesso ao portal da turma.'}
+                    {r === 'coordenacao' ? 'Acompanha a turma escolhida.' : r === 'admin' ? 'Acesso total ao painel.' : 'Acesso ao portal da turma.'}
                   </span>
                 </span>
               </label>

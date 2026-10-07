@@ -2,84 +2,102 @@ import { ButtonLink } from '@portal/ui/button'
 import { cn } from '@portal/ui/cn'
 import { IconArrowRight } from '@portal/ui/icons'
 import Link from 'next/link'
-import {
-  academicEvents,
-  type AcademicEvent,
-  COURSE_FIRST_MONTH,
-  COURSE_LAST_MONTH,
-  type DemoModule,
-  modules,
-  scheduleFor,
-} from '@/demo/data'
-import { eachDay, type MonthKey, monthGrid, shiftMonth } from '@/lib/calendar'
+import { ACTIVITY_LABEL, datesChangedRecently, EVENT_KIND_LABEL, type EventKind, type EventVM, type ModuleVM } from '@/lib/academic/model'
+import { type MonthKey, monthGrid, shiftMonth } from '@/lib/calendar'
 import { type CivilDate, day, formatRange, monthLong, monthShort, weekdayShort } from '@/lib/dates'
 
 const WEEKDAYS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
 
-type ModuleDay = { module: DemoModule; index: number; activity: string }
+type ModuleDay = { module: ModuleVM; index: number; activity: string }
+
+/** Em destaque no calendário: o módulo em andamento ou o próximo. */
+const isFocus = (m: ModuleVM) => m.state === 'next' || m.state === 'ongoing'
 
 function monthLabel(key: MonthKey) {
   const name = monthLong(`${key}-01`)
   return { name: name.charAt(0).toUpperCase() + name.slice(1), year: key.slice(0, 4) }
 }
 
-function buildIndex(key: MonthKey) {
+function buildIndex(key: MonthKey, modules: ModuleVM[], allEvents: EventVM[]) {
   const moduleDays = new Map<CivilDate, ModuleDay>()
-  const monthModules: DemoModule[] = []
+  const monthModules: ModuleVM[] = []
   for (const m of modules) {
-    const days = eachDay(m.start, m.end)
-    if (!days.some((d) => d.startsWith(key))) continue
+    if (!m.days.some((d) => d.date.startsWith(key))) continue
     monthModules.push(m)
-    const schedule = scheduleFor(m)
-    days.forEach((d, index) => {
-      const types = [...new Set(schedule.find((s) => s.date === d)?.items.map((i) => i.type) ?? [])]
-      moduleDays.set(d, { module: m, index, activity: types.join(' · ') })
+    m.days.forEach((d, index) => {
+      const types = [...new Set(d.sessions.map((s) => ACTIVITY_LABEL[s.type]))]
+      moduleDays.set(d.date, { module: m, index, activity: types.length ? types.join(' · ') : 'Em definição' })
     })
   }
-  const events = new Map<CivilDate, AcademicEvent[]>()
-  for (const e of academicEvents) if (e.date.startsWith(key)) events.set(e.date, [...(events.get(e.date) ?? []), e])
+  const events = new Map<CivilDate, EventVM[]>()
+  for (const e of allEvents) if (e.date.startsWith(key)) events.set(e.date, [...(events.get(e.date) ?? []), e])
   return { moduleDays, monthModules, events }
 }
 
-const EVENT_LABEL: Record<AcademicEvent['kind'], string> = { online: 'Online', clinica: 'Clínica', prazo: 'Prazo' }
-
-function EventMark({ kind }: { kind: AcademicEvent['kind'] }) {
-  // Forma, não cor: online = anel, clínica = ponto, prazo = losango.
+function EventMark({ kind }: { kind: EventKind }) {
+  // Forma, não cor: online = anel, clínica = ponto, prazo = losango, outro = quadrado vazado.
   if (kind === 'online') return <span aria-hidden="true" className="mt-[3px] size-2 shrink-0 rounded-full border border-ink-2" />
   if (kind === 'clinica') return <span aria-hidden="true" className="mt-[3px] size-2 shrink-0 rounded-full bg-ink-2" />
+  if (kind === 'outro') return <span aria-hidden="true" className="mt-[3px] size-2 shrink-0 border border-ink-2" />
   return <span aria-hidden="true" className="mt-[3px] size-2 shrink-0 rotate-45 bg-ink-2" />
 }
 
+const STATE_SUFFIX: Record<ModuleVM['state'], string> = {
+  done: ' · concluído',
+  next: ' · próximo',
+  ongoing: ' · em andamento',
+  upcoming: '',
+  undated: '',
+}
+
 /** Painel contextual do módulo do mês. */
-function ModulePanel({ m }: { m: DemoModule }) {
-  const isNext = m.state === 'next'
+function ModulePanel({ m, today }: { m: ModuleVM; today: CivilDate }) {
+  const isNext = isFocus(m)
   return (
     <div className={cn('glass glass-sheen rounded-[22px] p-6', isNext && 'is-selected')}>
       <p className="eyebrow flex items-center gap-2">
         {isNext ? <span className="glow-dot !size-1.5" /> : null}
-        Módulo {m.slug}
-        {m.state === 'done' ? ' · concluído' : isNext ? ' · próximo' : ''}
+        Módulo {m.label}
+        {STATE_SUFFIX[m.state]}
+        {datesChangedRecently(m.datesChangedAt, today) ? ' · data alterada' : ''}
       </p>
-      <p className="num mt-4 text-5xl leading-none font-extralight tracking-tight">{m.slug}</p>
-      <p className="num mt-4 text-sm text-signal">
-        {formatRange(m.start, m.end, false).toUpperCase()} · {weekdayShort(m.start)} a {weekdayShort(m.end)}
-      </p>
+      <p className="num mt-4 text-5xl leading-none font-extralight tracking-tight">{m.label}</p>
+      {m.start && m.end ? (
+        <p className="num mt-4 text-sm text-signal">
+          {formatRange(m.start, m.end, false).toUpperCase()} · {weekdayShort(m.start)} a {weekdayShort(m.end)}
+        </p>
+      ) : null}
       <p className="mt-2 text-xl leading-snug font-light">{m.title}</p>
-      <p className="mt-3 text-sm text-muted">{m.teachers.map((t) => t.short).join(' · ')}</p>
-      <ButtonLink href={`/modulos/${m.slug}`} variant={isNext ? 'primary' : 'secondary'} className="mt-6">
+      {m.theme ? <p className="mt-1 text-sm text-ink-2">{m.theme}</p> : null}
+      {m.teachers.length ? <p className="mt-3 text-sm text-muted">{m.teachers.map((t) => (t.tentative ? `${t.name} (a confirmar)` : t.name)).join(' · ')}</p> : null}
+      <ButtonLink href={`/modulos/${m.id}`} variant={isNext ? 'primary' : 'secondary'} className="mt-6">
         Ver módulo <IconArrowRight size={16} />
       </ButtonLink>
     </div>
   )
 }
 
-export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: CivilDate }) {
+export function MonthCalendar({
+  monthKey,
+  today,
+  modules,
+  events: allEvents,
+  firstMonth,
+  lastMonth,
+}: {
+  monthKey: MonthKey
+  today: CivilDate
+  modules: ModuleVM[]
+  events: EventVM[]
+  firstMonth: MonthKey
+  lastMonth: MonthKey
+}) {
   const weeks = monthGrid(monthKey)
-  const { moduleDays, monthModules, events } = buildIndex(monthKey)
+  const { moduleDays, monthModules, events } = buildIndex(monthKey, modules, allEvents)
   const prev = shiftMonth(monthKey, -1)
   const next = shiftMonth(monthKey, 1)
-  const hasPrev = prev >= COURSE_FIRST_MONTH
-  const hasNext = next <= COURSE_LAST_MONTH
+  const hasPrev = prev >= firstMonth
+  const hasNext = next <= lastMonth
   const { name, year } = monthLabel(monthKey)
   const todayKey = today.slice(0, 7)
   const monthEvents = [...events.values()].flat().sort((a, b) => a.date.localeCompare(b.date))
@@ -96,7 +114,7 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
             <span className="num text-lg text-muted">{year}</span>
           </h2>
           <div className="flex items-center gap-2">
-            {todayKey !== monthKey ? (
+            {todayKey !== monthKey && todayKey >= firstMonth && todayKey <= lastMonth ? (
               <Link href={`/cronograma/${todayKey}`} className="mr-2 text-xs font-semibold text-muted hover:text-ink">
                 Mês atual
               </Link>
@@ -136,7 +154,7 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
               const md = cell.inMonth ? moduleDays.get(cell.date) : undefined
               const ev = cell.inMonth ? (events.get(cell.date) ?? []) : []
               const isToday = cell.date === today
-              const isNext = md?.module.state === 'next'
+              const isNext = md ? isFocus(md.module) : false
               const body = (
                 <>
                   <span
@@ -155,7 +173,7 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
                       {md.index === 0 ? (
                         <>
                           <span className={cn('num block text-[11px] font-semibold tracking-wider', isNext ? 'text-signal' : 'text-ink-2')}>
-                            MÓDULO {md.module.slug}
+                            MÓDULO {md.module.label}
                           </span>
                           <span className="line-clamp-2 block text-[13px] leading-snug font-semibold">{md.module.title}</span>
                         </>
@@ -168,10 +186,10 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
                   {ev.length ? (
                     <ul className="mt-1.5 space-y-1">
                       {ev.map((e) => (
-                        <li key={e.title} className="flex gap-1.5 text-[11px] leading-tight text-ink-2">
+                        <li key={e.id} className="flex gap-1.5 text-[11px] leading-tight text-ink-2">
                           <EventMark kind={e.kind} />
                           <span>
-                            {e.time ? <span className="num">{e.time} </span> : null}
+                            {e.startsAt ? <span className="num">{e.startsAt.slice(0, 5)} </span> : null}
                             {e.title}
                           </span>
                         </li>
@@ -183,7 +201,7 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
               return md ? (
                 <Link
                   key={cell.date}
-                  href={`/modulos/${md.module.slug}`}
+                  href={`/modulos/${md.module.id}`}
                   className={cn('glass glass-interactive relative block min-h-[7.25rem] rounded-2xl p-2.5', isNext && 'is-selected')}
                 >
                   <span className={cn('absolute top-3 right-3 size-1.5 rounded-full', isNext ? 'bg-brand shadow-[0_0_10px_var(--brand-glow)]' : 'bg-white/40')} />
@@ -217,7 +235,7 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
                       'num inline-flex size-9 items-center justify-center rounded-full text-[15px]',
                       !cell.inMonth && 'text-white/20',
                       cell.inMonth && !md && 'text-ink-2',
-                      md && (md.module.state === 'next' ? 'bg-brand font-semibold text-white shadow-[0_0_16px_var(--brand-glow)]' : 'bg-white/[0.1] text-ink ring-1 ring-white/25'),
+                      md && (isFocus(md.module) ? 'bg-brand font-semibold text-white shadow-[0_0_16px_var(--brand-glow)]' : 'bg-white/[0.1] text-ink ring-1 ring-white/25'),
                       isToday && !md && 'ring-1 ring-ink',
                     )}
                   >
@@ -229,8 +247,8 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
               return md ? (
                 <Link
                   key={cell.date}
-                  href={`/modulos/${md.module.slug}`}
-                  aria-label={`${day(cell.date)}: Módulo ${md.module.slug}, ${md.module.title}`}
+                  href={`/modulos/${md.module.id}`}
+                  aria-label={`${day(cell.date)}: Módulo ${md.module.label}, ${md.module.title}`}
                   className="flex h-12 flex-col items-center justify-center"
                 >
                   {inner}
@@ -266,14 +284,14 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
       {/* Painel contextual: módulo e eventos do mês */}
       <aside aria-label={`${name} ${year}`} className="space-y-6 lg:col-span-4 lg:pt-[4.5rem]">
         {monthModules.map((m) => (
-          <ModulePanel key={m.number} m={m} />
+          <ModulePanel key={m.id} m={m} today={today} />
         ))}
         {monthEvents.length ? (
           <div>
             <p className="eyebrow">Também em {name.toLowerCase()}</p>
             <ul className="mt-3 space-y-1">
               {monthEvents.map((e) => (
-                <li key={e.date + e.title} className="flex items-start gap-4 rounded-xl px-2 py-2.5">
+                <li key={e.id} className="flex items-start gap-4 rounded-xl px-2 py-2.5">
                   <span className="w-10 shrink-0 text-center">
                     <span className="num block text-xl leading-none font-light">{day(e.date)}</span>
                     <span className="eyebrow block text-[9px]">{monthShort(e.date)}</span>
@@ -283,8 +301,8 @@ export function MonthCalendar({ monthKey, today }: { monthKey: MonthKey; today: 
                     <span>
                       <span className="block">{e.title}</span>
                       <span className="block text-xs text-muted">
-                        {EVENT_LABEL[e.kind]}
-                        {e.time ? <span className="num"> · {e.time}</span> : null}
+                        {EVENT_KIND_LABEL[e.kind]}
+                        {e.startsAt ? <span className="num"> · {e.startsAt.slice(0, 5)}</span> : null}
                       </span>
                     </span>
                   </span>

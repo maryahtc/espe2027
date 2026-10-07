@@ -1,4 +1,4 @@
-/** Regras puras da entrada (sem acesso a rede): quem precisa de 2FA, para onde ir depois de cada passo. */
+/** Regras puras da entrada (sem acesso a rede): para onde ir depois de cada passo. */
 
 export type Role = 'admin' | 'coordenacao' | 'aluno'
 
@@ -8,16 +8,7 @@ export type AuthState = {
   role: Role
   fullName: string
   displayName: string | null
-  /** aal2 = sessão confirmada com o código do aplicativo autenticador. */
-  aal: 'aal1' | 'aal2'
-  hasVerifiedFactor: boolean
   needsTerms: boolean
-}
-
-/** 2FA obrigatório para admin e coordenação; para o aluno, só se ele mesmo ativou. */
-export function needsMfa(auth: AuthState): boolean {
-  if (auth.aal === 'aal2') return false
-  return auth.role !== 'aluno' || auth.hasVerifiedFactor
 }
 
 export function homeFor(role: Role): string {
@@ -30,15 +21,9 @@ export function safeNext(next: unknown): string | null {
   return next
 }
 
-function withNext(path: string, next: string | null) {
-  return next ? `${path}?next=${encodeURIComponent(next)}` : path
-}
-
-/** Próxima tela depois de cada passo da entrada: 2FA → termo → destino (ou início do papel). */
+/** Próxima tela depois de entrar: termo de uso (se houver versão nova) → destino (ou início do papel). */
 export function nextStep(auth: AuthState, next?: unknown): string {
   const target = safeNext(next)
-  if (needsMfa(auth)) return withNext(auth.hasVerifiedFactor ? '/seguranca/2fa' : '/seguranca/2fa/configurar', target)
-  if (auth.needsTerms) return withNext('/termo', target)
+  if (auth.needsTerms) return target ? `/termo?next=${encodeURIComponent(target)}` : '/termo'
   return target ?? homeFor(auth.role)
 }
-

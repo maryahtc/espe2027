@@ -1,155 +1,170 @@
 import { ButtonLink } from '@portal/ui/button'
+import { EmptyState } from '@portal/ui/empty-state'
 import { IconArrowRight, IconBell, IconBranch, IconPlay, IconPlus } from '@portal/ui/icons'
 import { ModuleRuler } from '@portal/ui/module-ruler'
 import { Chip } from '@portal/ui/tag'
 import Link from 'next/link'
-import { ContentRow, sortPreparation } from '@/components/content/ContentRow'
 import { CaseCover } from '@/components/cases/CaseCover'
 import { HomeSection } from '@/components/home/HomeSection'
 import { NextModuleHero } from '@/components/home/NextModuleHero'
-import {
-  clinicNotice,
-  DEMO_TODAY,
-  followingModule,
-  modules,
-  nextModule,
-  nextModuleDetail,
-  nextModuleSchedule,
-  preparation,
-  previousModule,
-  productionSnapshot,
-  recommendation,
-  student,
-} from '@/demo/data'
+import { ResourceRow } from '@/components/modules/ResourceRow'
+import { clinicNotice, DEMO_TODAY, productionSnapshot, recommendation } from '@/demo/data'
 import { cases, nextSession, sortedCases } from '@/demo/cases'
 import { library } from '@/demo/library'
-import { formatDayMonth, formatLongDay, monthShort, relativeDays, year } from '@/lib/dates'
+import { loadModuleDetail } from '@/lib/academic/load'
+import { focusModule, type ModuleVM } from '@/lib/academic/model'
+import { studentArea } from '@/lib/academic/student'
+import { getAuth } from '@/lib/auth/session'
+import { formatDayMonth, formatLongDay, monthLong, monthShort, relativeDays, year } from '@/lib/dates'
 
 function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-export default function HomePage() {
-  const today = DEMO_TODAY
-  const required = preparation.filter((p) => p.requirement === 'obrigatorio')
-  const requiredDone = required.filter((p) => p.status === 'concluido').length
-  const pendingRequired = required.length - requiredDone
-  const done = modules.filter((m) => m.state === 'done').length
-  // Próxima consulta planejada entre os casos em andamento.
+function firstName(auth: Awaited<ReturnType<typeof getAuth>>) {
+  if (!auth || auth === 'previa') return null
+  const name = (auth.displayName || auth.fullName).trim()
+  return name ? name.split(/\s+/)[0] : null
+}
+
+const rulerState = (m: ModuleVM) => (m.state === 'done' ? 'done' : m.state === 'next' || m.state === 'ongoing' ? 'next' : 'upcoming')
+
+export default async function HomePage() {
+  const [area, auth] = await Promise.all([studentArea(), getAuth()])
+  const name = firstName(auth)
+  // Seções 03 e 04 (casos, recomendações) seguem fictícias até as etapas delas; usam a data da demonstração.
+  const demoToday = DEMO_TODAY
   const upcoming = cases
     .filter((c) => c.status === 'andamento')
     .map((c) => ({ c, s: nextSession(c) }))
-    .filter((x): x is { c: (typeof cases)[number]; s: NonNullable<ReturnType<typeof nextSession>> } => x.s !== null && x.s.date >= today)
+    .filter((x): x is { c: (typeof cases)[number]; s: NonNullable<ReturnType<typeof nextSession>> } => x.s !== null && x.s.date >= demoToday)
     .sort((a, b) => a.s.date.localeCompare(b.s.date))[0]
-  const recent = sortedCases().filter((c) => c.performed.some((p) => p.date <= today)).slice(0, 2)
+  const recent = sortedCases().filter((c) => c.performed.some((p) => p.date <= demoToday)).slice(0, 2)
   const recLesson = library.find((l) => l.title === recommendation.title)
+
+  const today = area?.today ?? demoToday
+  const modules = area?.modules ?? []
+  const focus = focusModule(modules)
+  const focusDetail = focus ? await loadModuleDetail(focus.id, modules) : null
+  const preparation = (focusDetail?.resources ?? []).filter(
+    (r) => r.phase === 'antes' && r.status === 'publicado' && (!r.availableFrom || new Date(r.availableFrom) <= new Date()),
+  )
+  const required = preparation.filter((r) => r.requirement === 'obrigatorio').length
+  const done = modules.filter((m) => m.state === 'done').length
+  const focusIdx = focus ? modules.findIndex((m) => m.id === focus.id) : -1
+  const previousModule = focusIdx > 0 ? modules[focusIdx - 1] : null
+  const followingModule = focusIdx >= 0 ? modules[focusIdx + 1] : null
 
   return (
     <div className="space-y-10 lg:space-y-14">
       <p className="reveal text-sm text-muted">
-        {capitalize(formatLongDay(today))} · Olá, <span className="text-ink">{student.firstName}</span>
+        {capitalize(formatLongDay(today))}
+        {name ? (
+          <>
+            {' '}
+            · Olá, <span className="text-ink">{name}</span>
+          </>
+        ) : null}
       </p>
 
-      <NextModuleHero
-        module={nextModule}
-        today={today}
-        description={nextModuleDetail.description}
-        days={nextModuleSchedule}
-        pendingRequired={pendingRequired}
-        requiredTotal={required.length}
-      />
+      {!area ? (
+        <EmptyState title="Sua turma ainda não foi vinculada">
+          Assim que a coordenação vincular sua conta a uma turma, o cronograma e os módulos aparecem aqui.
+        </EmptyState>
+      ) : null}
+
+      {focus && focus.start && focus.end ? (
+        <NextModuleHero
+          module={{ ...focus, start: focus.start, end: focus.end }}
+          today={today}
+          preparationCount={preparation.length}
+          requiredCount={required}
+        />
+      ) : null}
 
       {/* 01 — o que fazer antes do módulo */}
-      <HomeSection
-        id="preparacao"
-        index="01"
-        title="Preparação"
-        note={
-          <>
-            Para o Módulo {nextModule.slug}.{' '}
-            {pendingRequired > 0 ? (
-              <span className="text-ink">
-                Faltam <strong>{pendingRequired}</strong> obrigatórios.
-              </span>
-            ) : (
-              'Tudo pronto.'
-            )}
-          </>
-        }
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex flex-1 gap-1" aria-hidden="true">
-            {required.map((p) => (
-              <span
-                key={p.id}
-                className={
-                  p.status === 'concluido'
-                    ? 'h-[3px] flex-1 rounded-full bg-brand'
-                    : p.status === 'em-andamento'
-                      ? 'h-[3px] flex-1 rounded-full bg-[linear-gradient(90deg,var(--brand)_40%,rgba(255,255,255,0.1)_40%)]'
-                      : 'h-[3px] flex-1 rounded-full bg-white/10'
-                }
-              />
-            ))}
-          </div>
-          <p className="num shrink-0 text-sm">
-            <strong className="font-semibold">{requiredDone}</strong>
-            <span className="text-muted"> de {required.length} obrigatórios concluídos</span>
-          </p>
-        </div>
-        <ul className="mt-2 divide-y divide-rule">
-          {sortPreparation(preparation).map((item) => (
-            <ContentRow key={item.id} item={item} />
-          ))}
-        </ul>
-      </HomeSection>
+      {focus ? (
+        <HomeSection id="preparacao" index="01" title="Preparação" note={<>Para o Módulo {focus.label}.</>}>
+          {focus.preparation ? <p className="max-w-[62ch] text-[15px] leading-relaxed whitespace-pre-line text-ink-2">{focus.preparation}</p> : null}
+          {preparation.length ? (
+            <ul className="mt-2 divide-y divide-rule">
+              {preparation.map((item) => (
+                <ResourceRow key={item.id} item={item} />
+              ))}
+            </ul>
+          ) : !focus.preparation ? (
+            <p className="text-sm text-muted">A coordenação ainda não publicou a preparação deste módulo.</p>
+          ) : null}
+        </HomeSection>
+      ) : null}
 
       {/* 02 — onde estou na especialização */}
-      <HomeSection id="especializacao" index="02" title="Sua especialização">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <p className="text-lg">
-            <span className="text-muted">Mês </span>
-            <span className="num text-3xl font-light">{student.monthOfCourse}</span>
-            <span className="text-muted"> de {student.totalMonths}</span>
-          </p>
-          <p className="text-sm text-muted">
-            <span className="num font-semibold text-ink">{done}</span> módulos concluídos ·{' '}
-            <span className="num">{modules.length - done}</span> pela frente
-          </p>
-        </div>
-        <ModuleRuler
-          className="mt-6"
-          modules={modules.map((m) => ({ number: m.number, label: m.title, state: m.state, href: `/modulos/${m.slug}` }))}
-        />
-        <div className="glass mt-6 grid overflow-hidden rounded-2xl sm:grid-cols-3 sm:divide-x sm:divide-white/[0.08]">
-          {[
-            { label: 'Anterior', m: previousModule, note: 'Concluído' },
-            { label: 'Próximo', m: nextModule, note: relativeDays(today, nextModule.start) },
-            { label: 'Depois', m: followingModule, note: followingModule ? `${monthShort(followingModule.start)} ${year(followingModule.start)}` : '' },
-          ].map(({ label, m, note }) =>
-            m ? (
-              <Link
-                key={label}
-                href={`/modulos/${m.slug}`}
-                className={`group relative block p-5 transition-colors hover:bg-white/[0.04] ${label === 'Próximo' ? 'bg-white/[0.03]' : ''}`}
-              >
-                <p className="eyebrow flex items-center gap-2">
-                  {label === 'Próximo' ? <span className="glow-dot !size-1.5" /> : null}
-                  {label}
-                </p>
-                <p className="mt-2 flex items-baseline gap-2">
-                  <span className={`num text-sm font-semibold ${label === 'Próximo' ? 'text-signal' : 'text-muted'}`}>{m.slug}</span>
-                  <span className="text-[15px] leading-snug font-semibold">{m.title}</span>
-                </p>
-                <p className="mt-1 text-xs text-muted">{note}</p>
-              </Link>
-            ) : null,
-          )}
-        </div>
-        <Link href="/cronograma" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline">
-          Ver cronograma completo <IconArrowRight size={15} />
-        </Link>
-      </HomeSection>
+      {area ? (
+        <HomeSection id="especializacao" index="02" title="Sua especialização">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+            {area.month.current > 0 ? (
+              <p className="text-lg">
+                <span className="text-muted">Mês </span>
+                <span className="num text-3xl font-light">{area.month.current}</span>
+                <span className="text-muted"> de {area.month.total}</span>
+              </p>
+            ) : (
+              <p className="text-lg">
+                <span className="text-muted">Começa em </span>
+                <span className="text-ink">
+                  {monthLong(area.cohort.startsOn)} de {year(area.cohort.startsOn)}
+                </span>
+              </p>
+            )}
+            <p className="text-sm text-muted">
+              <span className="num font-semibold text-ink">{done}</span> módulos concluídos ·{' '}
+              <span className="num">{modules.length - done}</span> pela frente
+            </p>
+          </div>
+          {modules.length ? (
+            <ModuleRuler
+              className="mt-6"
+              modules={modules.map((m, i) => ({ number: m.number ?? i + 1, label: m.title, state: rulerState(m), href: `/modulos/${m.id}` }))}
+            />
+          ) : null}
+          {focus ? (
+            <div className="glass mt-6 grid overflow-hidden rounded-2xl sm:grid-cols-3 sm:divide-x sm:divide-white/[0.08]">
+              {[
+                { label: 'Anterior', m: previousModule, note: previousModule?.state === 'done' ? 'Concluído' : '' },
+                {
+                  label: focus.state === 'ongoing' ? 'Agora' : 'Próximo',
+                  m: focus,
+                  note: focus.state === 'ongoing' ? 'Em andamento' : focus.start ? relativeDays(today, focus.start) : '',
+                },
+                { label: 'Depois', m: followingModule, note: followingModule?.start ? `${monthShort(followingModule.start)} ${year(followingModule.start)}` : '' },
+              ].map(({ label, m, note }) =>
+                m ? (
+                  <Link
+                    key={label}
+                    href={`/modulos/${m.id}`}
+                    className={`group relative block p-5 transition-colors hover:bg-white/[0.04] ${m === focus ? 'bg-white/[0.03]' : ''}`}
+                  >
+                    <p className="eyebrow flex items-center gap-2">
+                      {m === focus ? <span className="glow-dot !size-1.5" /> : null}
+                      {label}
+                    </p>
+                    <p className="mt-2 flex items-baseline gap-2">
+                      <span className={`num text-sm font-semibold ${m === focus ? 'text-signal' : 'text-muted'}`}>{m.label}</span>
+                      <span className="text-[15px] leading-snug font-semibold">{m.title}</span>
+                    </p>
+                    <p className="mt-1 text-xs text-muted">{note}</p>
+                  </Link>
+                ) : (
+                  <span key={label} />
+                ),
+              )}
+            </div>
+          ) : null}
+          <Link href="/cronograma" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline">
+            Ver cronograma completo <IconArrowRight size={15} />
+          </Link>
+        </HomeSection>
+      ) : null}
 
       {/* 03 — conteúdo relevante para mim */}
       <HomeSection id="para-voce" index="03" title="Para você" note="Escolhido a partir do que você registrou na clínica.">
@@ -239,7 +254,7 @@ export default function HomePage() {
                       Paciente <span className="num">{upcoming.c.patient}</span> · Consulta{' '}
                       <span className="num">{String(upcoming.s.number).padStart(2, '0')}</span> de{' '}
                       <span className="num">{String(upcoming.c.sessions.length).padStart(2, '0')}</span> ·{' '}
-                      {relativeDays(today, upcoming.s.date)}
+                      {relativeDays(demoToday, upcoming.s.date)}
                     </span>
                   </span>
                 </Link>
@@ -250,7 +265,7 @@ export default function HomePage() {
               <p className="eyebrow">Registrados recentemente</p>
               <ul className="mt-1 divide-y divide-rule">
                 {recent.map((c) => {
-                  const last = c.performed.filter((p) => p.date <= today).at(-1)!
+                  const last = c.performed.filter((p) => p.date <= demoToday).at(-1)!
                   return (
                     <li key={c.id}>
                       <Link href={`/casos/${c.id}`} className="group flex items-center justify-between gap-4 py-3 text-sm">

@@ -1,22 +1,20 @@
-import { EmptyState } from '@portal/ui/empty-state'
 import type { Metadata } from 'next'
+import { FacultyManager } from '@/components/admin/academic/FacultyManager'
 import { PeoplePage } from '@/components/admin/people/PeoplePage'
+import { loadFaculty } from '@/lib/academic/load'
 
 export const metadata: Metadata = { title: 'Docentes e coordenação' }
 
-export default function AdminTeamPage() {
+export default async function AdminTeamPage() {
+  const faculty = await loadFaculty()
   return (
     <PeoplePage
       title="Docentes e coordenação"
-      lead="Quem acompanha a turma e quem administra o portal. Os dois papéis exigem verificação em duas etapas."
+      lead="Quem acompanha a turma e quem administra o portal."
       roles={['coordenacao', 'admin']}
       filter={(p) => p.role !== 'aluno'}
       inviteTitle="Convidar coordenação ou administração"
-      note={
-        <EmptyState stage="Etapa 3" title="Docentes">
-          Docente é cadastro de conteúdo (nome, especialidade e foto), sem login: aparece no cronograma e nas aulas.
-        </EmptyState>
-      }
+      note={<FacultyManager faculty={faculty} />}
     />
   )
 }

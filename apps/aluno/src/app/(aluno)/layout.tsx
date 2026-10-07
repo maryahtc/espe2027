@@ -1,9 +1,27 @@
 import { PreviewBanner } from '@/components/shell/PreviewBanner'
+import { student } from '@/demo/data'
+import { currentCohort } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { StudentBottomNav, StudentSidebar, StudentTopBar } from '@/components/shell/StudentNav'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
-  await requireUser()
+  const auth = await requireUser()
+  const cohort = auth ? await currentCohort() : null
+  // Sem Supabase (modo prévia), mantém a pessoa fictícia da Etapa 1.
+  const name = auth ? (auth.displayName || auth.fullName || auth.email).trim() : student.name
+  const viewer = {
+    name,
+    initials: auth
+      ? name
+          .split(/[\s@.]+/)
+          .filter(Boolean)
+          .map((w) => w[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()
+      : student.initials,
+    cohort: auth ? (cohort?.name.split('|').at(-1)?.trim() ?? '') : student.cohort,
+  }
   return (
     <>
       <a
@@ -13,10 +31,10 @@ export default async function StudentLayout({ children }: { children: React.Reac
         Pular para o conteúdo
       </a>
       <div className="flex min-h-dvh">
-        <StudentSidebar />
+        <StudentSidebar viewer={viewer} />
         <div className="min-w-0 flex-1">
           <PreviewBanner />
-          <StudentTopBar />
+          <StudentTopBar viewer={viewer} />
           <main id="conteudo" className="mx-auto w-full max-w-[1120px] px-4 pt-6 pb-28 sm:px-6 lg:px-12 lg:pt-10 lg:pb-20">
             {children}
           </main>

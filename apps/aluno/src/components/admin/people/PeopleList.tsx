@@ -1,5 +1,8 @@
 import { cn } from '@portal/ui/cn'
-import { isPending, type Person } from '@/lib/admin/people'
+import { ActionForm } from '@/components/admin/academic/ActionForm'
+import { Input, Select } from '@/components/admin/academic/ui'
+import { adminUpdatePerson } from '@/lib/admin/academic-actions'
+import { type CohortOption, isPending, type Person } from '@/lib/admin/people'
 import { PersonActions } from './PersonActions'
 
 const ROLE_LABEL = { aluno: 'Aluno', coordenacao: 'Coordenação', admin: 'Administração' } as const
@@ -19,22 +22,44 @@ function Situation({ person }: { person: Person }) {
   )
 }
 
-export function PeopleList({ people, selfId, showRole = false }: { people: Person[]; selfId: string; showRole?: boolean }) {
+function PersonEdit({ p, cohorts }: { p: Person; cohorts: CohortOption[] }) {
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer text-xs font-semibold text-muted hover:text-ink">Editar dados</summary>
+      <div className="mt-3 rounded-2xl border border-rule bg-surface p-4">
+        <ActionForm action={adminUpdatePerson}>
+          <input type="hidden" name="id" value={p.id} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="Nome completo" name="nome" required defaultValue={p.full_name} />
+            <Input label="Nome de exibição" name="exibicao" defaultValue={p.display_name ?? ''} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Select label="Papel" name="papel" defaultValue={p.role} options={[['aluno', 'Aluno'], ['coordenacao', 'Coordenação'], ['admin', 'Administração']]} />
+            <Select label="Turma" name="turma" defaultValue={p.cohort_id ?? ''} options={[['', 'Sem turma'], ...cohorts.map((c) => [c.id, c.name] as [string, string])]} />
+            <Select label="Matrícula" name="situacao" defaultValue={p.enrollment_status ?? 'ativa'} options={[['ativa', 'Ativa'], ['inativa', 'Inativa (perde o acesso à turma)']]} />
+          </div>
+          <p className="text-xs text-muted">E-mail não muda por aqui (é o login da pessoa).</p>
+        </ActionForm>
+      </div>
+    </details>
+  )
+}
+
+export function PeopleList({ people, selfId, showRole = false, cohorts = [] }: { people: Person[]; selfId: string; showRole?: boolean; cohorts?: CohortOption[] }) {
   if (people.length === 0) {
     return <p className="rounded-2xl border border-dashed border-rule-strong px-6 py-10 text-sm text-muted">Ninguém por aqui ainda. Use o formulário para convidar.</p>
   }
   return (
     <div className="glass overflow-hidden rounded-2xl">
-      <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_9.5rem_3.5rem] gap-4 border-b border-rule px-5 py-3 text-xs font-semibold text-muted md:grid">
+      <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_9.5rem] gap-4 border-b border-rule px-5 py-3 text-xs font-semibold text-muted md:grid">
         <span>Pessoa</span>
         <span>{showRole ? 'Papel · turma' : 'Turma'}</span>
         <span>Situação</span>
-        <span>2FA</span>
       </div>
       <ul className="divide-y divide-rule">
         {people.map((p) => (
           <li key={p.id} className="px-5 py-4">
-            <div className="grid gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_9.5rem_3.5rem] md:items-center">
+            <div className="grid gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_9.5rem] md:items-center">
               <div className="min-w-0">
                 <p className="truncate text-[15px] font-semibold">
                   {p.full_name || '—'}
@@ -50,10 +75,10 @@ export function PeopleList({ people, selfId, showRole = false }: { people: Perso
                 <Situation person={p} />
                 {p.last_sign_in_at ? <p className="num mt-1 text-xs text-faint">último acesso {date.format(new Date(p.last_sign_in_at))}</p> : null}
               </div>
-              <p className="text-sm text-ink-2">{p.has_mfa ? 'Ativo' : '—'}</p>
             </div>
             <div className="mt-2">
-              <PersonActions id={p.id} email={p.email} pending={isPending(p)} hasMfa={p.has_mfa} isSelf={p.id === selfId} />
+              <PersonActions email={p.email} pending={isPending(p)} />
+              <PersonEdit p={p} cohorts={cohorts} />
             </div>
           </li>
         ))}

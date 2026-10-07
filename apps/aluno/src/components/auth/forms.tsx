@@ -7,12 +7,10 @@ import { useActionState } from 'react'
 import {
   acceptTerms,
   confirmEmailLink,
-  confirmMfaEnrollment,
   type FormState,
   requestPasswordReset,
   setPassword,
   signIn,
-  verifyMfa,
 } from '@/lib/auth/actions'
 
 /** Erro com ícone e texto (nunca só cor); aviso neutro em superfície rebaixada. */
@@ -40,15 +38,6 @@ function Submit({ pending, children }: { pending: boolean; children: React.React
       {pending ? 'Aguarde…' : children}
     </Button>
   )
-}
-
-const codeProps = {
-  inputMode: 'numeric' as const,
-  autoComplete: 'one-time-code',
-  pattern: '[0-9 ]{6,7}',
-  maxLength: 7,
-  required: true,
-  placeholder: '000 000',
 }
 
 export function SignInForm({ next }: { next?: string }) {
@@ -117,31 +106,6 @@ export function SetPasswordForm({ next, label }: { next?: string; label: string 
       <Field label="Repita a nova senha" name="confirmacao" type="password" autoComplete="new-password" minLength={10} required />
       <FormMessage state={state} />
       <Submit pending={pending}>{label}</Submit>
-    </form>
-  )
-}
-
-export function VerifyMfaForm({ next }: { next?: string }) {
-  const [state, action, pending] = useActionState(verifyMfa, undefined)
-  return (
-    <form action={action} className="space-y-5">
-      <input type="hidden" name="next" value={next ?? ''} />
-      <Field label="Código de 6 números" name="codigo" {...codeProps} autoFocus />
-      <FormMessage state={state} />
-      <Submit pending={pending}>Confirmar</Submit>
-    </form>
-  )
-}
-
-export function EnrollMfaForm({ factorId, next }: { factorId: string; next?: string }) {
-  const [state, action, pending] = useActionState(confirmMfaEnrollment, undefined)
-  return (
-    <form action={action} className="space-y-5">
-      <input type="hidden" name="factor_id" value={factorId} />
-      <input type="hidden" name="next" value={next ?? ''} />
-      <Field label="Código de 6 números" name="codigo" {...codeProps} hint="O código que aparece no aplicativo agora." />
-      <FormMessage state={state} />
-      <Submit pending={pending}>Ativar verificação</Submit>
     </form>
   )
 }

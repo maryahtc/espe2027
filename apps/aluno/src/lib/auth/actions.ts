@@ -24,7 +24,7 @@ async function client() {
   return supabase
 }
 
-/** Depois de um passo concluído, lê a sessão atualizada e segue para o próximo (2FA → termo → destino). */
+/** Depois de um passo concluído, lê a sessão atualizada e segue para o próximo (termo → destino). */
 async function continueTo(next: unknown): Promise<never> {
   const auth = await loadAuth()
   if (!auth || auth === 'previa') redirect('/entrar')
@@ -97,8 +97,7 @@ export async function establishSessionFromLink(_: FormState, formData: FormData)
 }
 
 export async function setPassword(_: FormState, formData: FormData): Promise<FormState> {
-  const auth = await requireSignedIn()
-  if (auth.hasVerifiedFactor && auth.aal !== 'aal2') redirect('/seguranca/2fa?next=/definir-senha')
+  await requireSignedIn()
   const password = typeof formData.get('senha') === 'string' ? (formData.get('senha') as string) : ''
   const confirm = typeof formData.get('confirmacao') === 'string' ? (formData.get('confirmacao') as string) : ''
   if (!validPassword(password)) return { erro: PASSWORD_RULE }
@@ -110,40 +109,6 @@ export async function setPassword(_: FormState, formData: FormData): Promise<For
     if (error.code === 'weak_password') return { erro: `Senha fraca. ${PASSWORD_RULE}` }
     return { erro: 'Não foi possível salvar a senha. Tente de novo.' }
   }
-  return continueTo(formData.get('next'))
-}
-
-async function firstVerifiedTotp() {
-  const supabase = await client()
-  const { data } = await supabase.auth.mfa.listFactors()
-  return data?.all.find((f) => f.factor_type === 'totp' && f.status === 'verified') ?? null
-}
-
-/** Entrada com 2FA: confere o código de 6 dígitos do aplicativo autenticador. */
-export async function verifyMfa(_: FormState, formData: FormData): Promise<FormState> {
-  await requireSignedIn()
-  const code = text(formData, 'codigo').replace(/\s/g, '')
-  if (!/^\d{6}$/.test(code)) return { erro: 'Digite os 6 números que aparecem no aplicativo.' }
-  const factor = await firstVerifiedTotp()
-  if (!factor) redirect('/seguranca/2fa/configurar')
-  const supabase = await client()
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code })
-  if (error) {
-    if (error.status === 429) return { erro: 'Muitas tentativas seguidas. Aguarde alguns minutos.' }
-    return { erro: 'Código incorreto ou expirado. Confira o horário do celular e tente o código atual.' }
-  }
-  return continueTo(formData.get('next'))
-}
-
-/** Cadastro do 2FA: confirma o primeiro código do aplicativo, o que também eleva a sessão para aal2. */
-export async function confirmMfaEnrollment(_: FormState, formData: FormData): Promise<FormState> {
-  await requireSignedIn()
-  const factorId = text(formData, 'factor_id')
-  const code = text(formData, 'codigo').replace(/\s/g, '')
-  if (!/^\d{6}$/.test(code)) return { erro: 'Digite os 6 números que aparecem no aplicativo.' }
-  const supabase = await client()
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code })
-  if (error) return { erro: 'Código incorreto ou expirado. Confira o horário do celular e tente o código atual.' }
   return continueTo(formData.get('next'))
 }
 

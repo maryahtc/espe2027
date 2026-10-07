@@ -16,7 +16,7 @@ function text(formData: FormData, key: string) {
   return typeof v === 'string' ? v.trim() : ''
 }
 
-/** Só admin com 2FA (requireUser) — e, de novo, a RLS no banco em cada gravação. */
+/** Só admin (requireUser) — e, de novo, a RLS no banco em cada gravação. */
 async function adminContext() {
   const auth = await requireUser(['admin'])
   const supabase = await createSupabaseServerClient()
@@ -110,15 +110,4 @@ export async function renewInvite(_: PeopleFormState, formData: FormData): Promi
   const { data, error } = await ctx.service.auth.admin.generateLink({ type: 'invite', email })
   if (error) return { erro: 'Não foi possível gerar o link. Se a pessoa já criou a senha, ela deve usar "Esqueci minha senha".' }
   return { aviso: 'Novo link gerado (vale por 24 horas, uso único).', link: await inviteLink(data.properties.hashed_token) }
-}
-
-/** Celular perdido: apaga o 2FA de outra pessoa; ela configura de novo na próxima entrada. */
-export async function resetPersonMfa(_: PeopleFormState, formData: FormData): Promise<PeopleFormState> {
-  const ctx = await adminContext()
-  if ('erro' in ctx) return { erro: ctx.erro }
-  const { error } = await ctx.supabase.rpc('admin_reset_mfa', { p_user_id: text(formData, 'id') })
-  if (error) return { erro: 'Não foi possível redefinir o 2FA.' }
-  revalidatePath('/admin/alunos')
-  revalidatePath('/admin/equipe')
-  return { aviso: '2FA redefinido. A pessoa vai configurar de novo na próxima entrada.' }
 }

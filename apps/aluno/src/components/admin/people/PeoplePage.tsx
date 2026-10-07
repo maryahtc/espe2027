@@ -29,7 +29,7 @@ export async function PeoplePage({
       <div className="flex flex-col-reverse gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="space-y-6">
           {auth ? (
-            <PeopleList people={people.filter(filter)} selfId={auth.userId} showRole={roles.length > 1} />
+            <PeopleList people={people.filter(filter)} selfId={auth.userId} showRole={roles.length > 1} cohorts={cohorts} />
           ) : (
             <p className="text-sm text-muted">Prévia sem banco: a lista aparece quando o Supabase estiver configurado.</p>
           )}

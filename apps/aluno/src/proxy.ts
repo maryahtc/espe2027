@@ -10,7 +10,7 @@ function isPublic(pathname: string) {
 
 /**
  * Renova a sessão (cookies) e manda para /entrar quem não está logado.
- * É só a primeira barreira: papéis, 2FA e termo são conferidos no servidor de cada área, e a RLS no banco
+ * É só a primeira barreira: papéis e termo são conferidos no servidor de cada área, e a RLS no banco
  * é a garantia final.
  */
 export async function proxy(request: NextRequest) {

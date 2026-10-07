@@ -26,7 +26,9 @@ enabled = true
 port = 54324
 
 [storage]
-enabled = false
+# Arquivos dos módulos (bucket privado module-files, criado pela migração).
+enabled = true
+file_size_limit = "50MiB"
 
 [realtime]
 enabled = false
@@ -69,13 +71,13 @@ content_path = "./supabase/templates/convite.html"
 subject = "Redefinir sua senha · Portal do Aluno Conexo"
 content_path = "./supabase/templates/recuperacao.html"
 
-# 2FA por aplicativo autenticador (TOTP): obrigatório para admin e coordenação, opcional para aluno.
+# Sem verificação em duas etapas (decisão de 07/10/2026): todos entram só com e-mail e senha.
 [auth.mfa]
 max_enrolled_factors = 10
 
 [auth.mfa.totp]
-enroll_enabled = true
-verify_enabled = true
+enroll_enabled = false
+verify_enabled = false
 
 [auth.mfa.phone]
 enroll_enabled = false

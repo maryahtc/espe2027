@@ -8,7 +8,7 @@ export type ProxySession = { response: NextResponse; userId: string | null; conf
 
 /**
  * Renova a sessão a cada requisição (proxy do Next) e informa se há usuário logado.
- * Só confere a assinatura do token; papéis, 2FA e termo são verificados no servidor, em cada área.
+ * Só confere a assinatura do token; papéis e termo são verificados no servidor, em cada área.
  */
 export async function refreshSession(request: NextRequest): Promise<ProxySession> {
   let response = NextResponse.next({ request })
