@@ -1,3 +1,5 @@
+-- ⚠ NÃO EXECUTAR NO SUPABASE DE PRODUÇÃO (regra de 07/10/2026, ver AGENTS.md).
+-- Rodar só no ambiente local (supabase start) ou no Postgres do CI.
 -- Testes de isolamento — login e primeiro admin (Etapa 2 · Parte 2, sem 2FA desde 07/10/2026).
 -- Todos os perfis entram só com e-mail e senha (sessão aal1). Os poderes vêm do papel e da matrícula.
 -- Mesmo formato dos demais: transação desfeita no final, lista "ordem|teste|passou".

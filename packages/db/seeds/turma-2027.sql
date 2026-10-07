@@ -1,3 +1,5 @@
+-- ⚠ NÃO EXECUTAR NO SUPABASE DE PRODUÇÃO (regra de 07/10/2026, ver AGENTS.md).
+-- Rodar só no ambiente local (supabase start) ou no Postgres do CI.
 -- Pré-cadastro da Turma 2027 a partir do planejamento enviado em 07/10/2026
 -- ("Cronograma Módulo Espe – DATAS" e "– AULAS/PROFESSORES").
 -- Tudo aqui é ponto de partida: datas, professores, programação e observações são editáveis pelo Admin.

@@ -1,3 +1,5 @@
+-- ⚠ NÃO EXECUTAR NO SUPABASE DE PRODUÇÃO (regra de 07/10/2026, ver AGENTS.md).
+-- Rodar só no ambiente local (supabase start) ou no Postgres do CI.
 -- Testes de isolamento — Etapa 2 · Parte 1 (pessoas e acesso).
 -- Roda inteiro numa transação desfeita no final: não deixa nenhum dado, nem no banco local nem no Supabase.
 -- Cada teste entra como um usuário (papel authenticated + JWT simulado), tenta a ação e registra o resultado.

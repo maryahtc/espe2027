@@ -1,3 +1,5 @@
+-- ⚠ NÃO EXECUTAR NO SUPABASE DE PRODUÇÃO (regra de 07/10/2026, ver AGENTS.md).
+-- Rodar só no ambiente local (supabase start) ou no Postgres do CI.
 -- Testes de isolamento — Etapa 2 · Parte 3 (turmas, cronograma e módulos).
 -- Mesmo formato dos anteriores: transação desfeita no final, lista "ordem|teste|passou".
 --

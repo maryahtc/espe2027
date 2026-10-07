@@ -1,3 +1,5 @@
+-- ⚠ NÃO EXECUTAR NO SUPABASE DE PRODUÇÃO (regra de 07/10/2026, ver AGENTS.md).
+-- Rodar só no ambiente local (supabase start) ou no Postgres do CI.
 -- Testes — gestão de pessoas e equipe (excluir com segurança e desativar acesso).
 -- Mesmo formato dos demais: transação desfeita no final, lista "ordem|teste|passou".
 --

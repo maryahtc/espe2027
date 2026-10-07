@@ -841,6 +841,7 @@ Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima
 | 9 | **Produção + recomendações** | Ver a produção mudar após registrar; ver recomendações coerentes | — |
 | 10 | **Workflows**: motor, player, editor estruturado + mapa, validação, versões, "explorar no workflow" | Montar sozinha o workflow "Alteração estética anterior" e usá‑lo como aluno | — |
 | 11 | **Painel da coordenação** | Ver a turma de teste; conferir o que aparece em agregados × casos individuais; ver o registro de auditoria | — |
+| 11b | **Proteção de produção e backups** (obrigatória, detalhada em M.3) | Restaurar um backup na homologação; ver o CI recusar um seed apontado para produção | Conta Backblaze B2; projeto de homologação; Supabase Pro |
 | 12 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas | Uso real | Domínio; termo revisado (LGPD) |
 | 13 | **Lançamento MVP 1** → MVP 2 em etapas do mesmo tamanho | — | — |
 
@@ -848,6 +849,39 @@ Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima
 para o MVP 1 cabe, mas **sem folga**. Se apertar, a ordem acima já prioriza o que o aluno usa na primeira semana
 (login, cronograma, biblioteca, Início, casos); workflows e painel da coordenação podem entrar nas primeiras
 semanas de aula sem prejuízo, porque a produção ainda será pequena. Ver decisão aberta 9.
+
+### M.3 Etapa obrigatória antes do go-live — **Proteção de produção e backups**
+
+Registrada em 07/10/2026. **Obrigatória antes de alimentar definitivamente o sistema e antes da entrada de
+alunos reais** (entra entre a última etapa funcional e o Piloto, etapa 12). A estratégia já foi aprovada; só a
+implementação foi adiada para não interromper o desenvolvimento.
+
+**Regra vigente até lá (e depois dela):** não rodar testes, seeds, pré-cadastros, resets ou operações
+destrutivas no Supabase de produção; não sobrescrever nem apagar dados já cadastrados; migrações necessárias
+para continuar o desenvolvimento devem preservar os dados existentes. (Também registrada em `AGENTS.md`.)
+
+**As 6 configurações que a Maryah faz pessoalmente (uma de cada vez, com o agente conduzindo):**
+
+1. Criar o projeto Supabase de **homologação** (`portal-aluno-homologacao`, São Paulo, plano Free).
+2. Criar o destino dos backups: conta **Backblaze B2** (10 GB grátis, sem cartão), bucket e chave de acesso.
+3. Escolher a **frase-senha de criptografia** dos backups e guardá-la num gerenciador de senhas.
+4. Cadastrar os **segredos no GitHub**: senhas do banco (produção e homologação), chave do B2, frase-senha.
+5. Trocar os **tokens do Supabase**: token só de leitura para o uso diário do agente; token de escrita apenas
+   no GitHub, para as migrações automáticas.
+6. Apontar as variáveis do ambiente **Preview da Vercel** para a homologação.
+
+**O que o agente implementa nessa etapa (automático, sem procedimento manual no dia a dia):**
+- Marcador de ambiente no banco: seeds e testes recusam rodar em produção.
+- Verificação no CI que bloqueia migração destrutiva sem marcador de autorização explícita.
+- Congelamento das migrações já aplicadas (arquivo aplicado não pode ser editado).
+- Homologação para testes, seeds e previews.
+- Histórico completo (perfis, matrículas, aceites), além do `change_log` já existente.
+- Lixeira de arquivos por 30 dias.
+- Separação de acesso: leitura no dia a dia, escrita só pelo fluxo automatizado.
+- Backup diário criptografado do banco e dos arquivos (storage) no B2.
+- Backup automático antes de cada migração.
+- Teste periódico de restauração.
+- **Supabase Pro obrigatório antes dos alunos reais** (durante o desenvolvimento, Free).
 
 ### M.1 Escopo da ETAPA 1 — Fundação
 
@@ -1105,7 +1139,12 @@ TOTP desligado no Auth. App: removidas as telas `/seguranca/2fa` e `/seguranca/2
   coordenação.
 - Testes de banco: 78 casos (27 + 13 + 23 + 15).
 
-**Próximo passo:** aprovação da Parte 3.
+**Regra de dados de produção (07/10/2026):** a partir daqui, nada de testes, seeds, pré-cadastros, resets ou
+operações destrutivas no Supabase de produção; dados já cadastrados não são sobrescritos nem apagados; migrações
+novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no ambiente local e no CI. A etapa
+**"Proteção de produção e backups"** (seção M.3) é obrigatória antes do go-live.
+
+**Próximo passo:** Etapa 3 (restante) / Etapa 4 — proposta para aprovação.
 
 ## N. Decisões
 
