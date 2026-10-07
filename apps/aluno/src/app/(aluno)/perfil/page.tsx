@@ -1,6 +1,9 @@
-import { Button } from '@portal/ui/button'
+import { ButtonLink } from '@portal/ui/button'
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { SignOutButton } from '@/components/auth/SignOutButton'
 import { student } from '@/demo/data'
+import { getAuth } from '@/lib/auth/session'
 
 export const metadata: Metadata = { title: 'Meu perfil' }
 
@@ -13,16 +16,28 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   )
 }
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const auth = await getAuth()
+  const account = auth && auth !== 'previa' ? auth : null
+  const name = account ? account.displayName || account.fullName : student.name
+  const initials = account
+    ? name
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : student.initials
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="sr-only">Meu perfil</h1>
       <div className="flex flex-col items-center pb-6 text-center">
         <span className="num relative flex size-28 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_25%,#2a2a2a,#0f0f0f)] text-4xl font-extralight ring-1 ring-white/15">
-          {student.initials}
+          {initials}
           <span className="absolute right-1.5 bottom-1.5 glow-dot" />
         </span>
-        <p className="mt-5 text-3xl font-light tracking-tight">{student.name}</p>
+        <p className="mt-5 text-3xl font-light tracking-tight">{name}</p>
         <p className="mt-1 text-sm text-muted">{student.cohort} · mês {student.monthOfCourse} de {student.totalMonths}</p>
         <span className="mt-4 text-xs text-muted underline underline-offset-2">Trocar foto</span>
       </div>
@@ -31,11 +46,11 @@ export default function ProfilePage() {
         <dl className="grid gap-5 sm:grid-cols-2">
           <div>
             <dt className="text-xs text-muted">E-mail</dt>
-            <dd className="mt-0.5 text-[15px]">ana.lima@email.com</dd>
+            <dd className="mt-0.5 text-[15px] break-all">{account ? account.email : 'ana.lima@email.com'}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted">Nome de exibição</dt>
-            <dd className="mt-0.5 text-[15px]">Ana Lima</dd>
+            <dd className="mt-0.5 text-[15px]">{account ? account.displayName || account.fullName : 'Ana Lima'}</dd>
           </div>
         </dl>
       </Group>
@@ -91,16 +106,24 @@ export default function ProfilePage() {
 
       <Group title="Conta">
         <div className="flex flex-wrap gap-3">
-          <Button type="button" variant="secondary">
+          <ButtonLink href="/definir-senha" variant="secondary">
             Alterar senha
-          </Button>
-          <Button type="button" variant="secondary">
-            Sair
-          </Button>
+          </ButtonLink>
+          {account && !account.hasVerifiedFactor ? (
+            <ButtonLink href="/seguranca/2fa/configurar" variant="secondary">
+              Ativar verificação em duas etapas
+            </ButtonLink>
+          ) : null}
+          <SignOutButton />
         </div>
+        {account?.hasVerifiedFactor ? (
+          <p className="mt-4 text-sm text-muted">Verificação em duas etapas ativa: o portal pede o código do celular a cada entrada.</p>
+        ) : null}
         <p className="mt-4 text-sm">
-          <span className="underline underline-offset-2">Termo de uso</span> ·{' '}
-          <span className="underline underline-offset-2">Aviso de privacidade</span>
+          <Link href="/termo?next=/perfil" className="underline underline-offset-2">
+            Termo de uso
+          </Link>{' '}
+          · <span className="underline underline-offset-2">Aviso de privacidade</span>
         </p>
       </Group>
     </div>

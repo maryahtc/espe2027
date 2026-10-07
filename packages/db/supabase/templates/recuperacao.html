@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Redefinir sua senha</title>
+  </head>
+  <body style="margin:0;padding:0;background:#090909;color:#f3f3f1;font-family:Raleway,'Helvetica Neue',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#090909;">
+      <tr>
+        <td align="center" style="padding:40px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+            <tr>
+              <td style="padding:0 4px 28px;">
+                <img src="{{ .SiteURL }}/logo-conexo-escuro.png" alt="Conexo — Clavijo &amp; Ottoboni" height="26" style="display:block;height:26px;width:auto;border:0;" />
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#121212;border:1px solid rgba(255,255,255,0.09);border-radius:22px;padding:36px 32px;">
+                <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#9d9d98;">Segurança</p>
+                <h1 style="margin:10px 0 0;font-size:26px;line-height:1.2;font-weight:300;letter-spacing:-0.01em;color:#f3f3f1;">Redefinir sua senha</h1>
+                <div style="margin:12px 0 0;width:64px;height:1px;background:#ca2c2c;"></div>
+                <p style="margin:22px 0 0;font-size:15px;line-height:1.6;color:#cfcfcb;">Recebemos um pedido para redefinir a senha da sua conta no Portal do Aluno da Especialização Conexo.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 0;">
+                  <tr>
+                    <td style="border-radius:999px;background:#ca2c2c;">
+                      <a href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;padding:13px 26px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">Definir nova senha</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:28px 0 0;font-size:13px;line-height:1.6;color:#9d9d98;">O link vale por 24 horas e só pode ser usado uma vez. Se você não pediu a redefinição, ignore este e-mail: sua senha continua a mesma.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:22px 4px 0;font-size:12px;line-height:1.6;color:#85857f;">
+                Especialização Conexo · Portal do Aluno. Este é um e-mail automático; não responda.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

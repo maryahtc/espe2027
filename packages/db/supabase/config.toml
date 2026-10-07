@@ -1,0 +1,82 @@
+# Supabase local (desenvolvimento e testes) — espelha as regras do projeto portal-aluno.
+# Subir: `npx supabase start` dentro de packages/db. Os e-mails de teste aparecem no Mailpit (porta 54324).
+# Valores de produção são aplicados pela API de gerenciamento (ver docs, seção S); nada secreto aqui.
+
+project_id = "portal-aluno"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = true
+port = 54324
+
+[storage]
+enabled = false
+
+[realtime]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://localhost:3001"
+additional_redirect_urls = ["http://localhost:3001/**", "http://127.0.0.1:3001/**"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# Sem autocadastro: contas nascem por convite (N.3).
+enable_signup = false
+enable_anonymous_sign_ins = false
+minimum_password_length = 10
+password_requirements = "letters_digits"
+
+[auth.rate_limit]
+email_sent = 100
+
+[auth.email]
+# true = login por e-mail e senha ligado. Quem bloqueia o autocadastro é o enable_signup = false de [auth].
+enable_signup = true
+enable_confirmations = false
+double_confirm_changes = true
+secure_password_change = false
+otp_expiry = 86400
+
+[auth.email.template.invite]
+subject = "Seu acesso ao Portal do Aluno · Conexo"
+content_path = "./supabase/templates/convite.html"
+
+[auth.email.template.recovery]
+subject = "Redefinir sua senha · Portal do Aluno Conexo"
+content_path = "./supabase/templates/recuperacao.html"
+
+# 2FA por aplicativo autenticador (TOTP): obrigatório para admin e coordenação, opcional para aluno.
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false

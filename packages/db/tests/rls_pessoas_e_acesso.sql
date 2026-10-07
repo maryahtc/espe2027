@@ -11,9 +11,11 @@ begin;
 
 create temp table resultados (ordem serial, teste text not null, passou boolean not null) on commit drop;
 
+-- Sessão com 2FA confirmado (aal2). Os casos sem 2FA estão em rls_login_e_2fa.sql.
 create function pg_temp.entrar(p_uid uuid) returns void language plpgsql as $$
 begin
-  perform set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   perform set_config('request.jwt.claim.sub', p_uid::text, true);
   execute 'set local role authenticated';
 end

@@ -3,6 +3,7 @@
 import { cn } from '@portal/ui/cn'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { SignOutButton } from '@/components/auth/SignOutButton'
 import { adminGroups } from '@/config/nav'
 import { Logo } from './Logo'
 import { NavIcon } from './NavIcon'
@@ -66,9 +67,10 @@ export function AdminSidebar() {
       <nav aria-label="Administração" className="flex-1 overflow-y-auto px-3 pb-6">
         <NavList />
       </nav>
-      <Link href="/" className="glass glass-interactive m-3 rounded-full p-3 text-center text-sm font-semibold">
+      <Link href="/" className="glass glass-interactive mx-3 mt-3 rounded-full p-3 text-center text-sm font-semibold">
         Ver portal como aluno →
       </Link>
+      <SignOutButton className="px-3 pt-1 pb-3 text-center" quiet />
     </aside>
   )
 }
@@ -93,6 +95,7 @@ export function AdminTopBar() {
           <Link href="/" className="mt-5 block rounded-md border border-rule p-3 text-center text-sm font-semibold">
             Ver portal como aluno →
           </Link>
+          <SignOutButton className="mt-2 text-center" quiet />
         </nav>
       </details>
     </header>

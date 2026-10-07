@@ -8,7 +8,10 @@
     "./server": "./src/server.ts",
     "./browser": "./src/browser.ts",
     "./health": "./src/health.ts",
-    "./types": "./src/database.types.ts"
+    "./types": "./src/database.types.ts",
+    "./proxy": "./src/proxy.ts",
+    "./admin": "./src/admin.ts",
+    "./cookies": "./src/cookies.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

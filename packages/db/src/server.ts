@@ -1,19 +1,21 @@
 import 'server-only'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { sessionCookieOptions } from './cookies'
 import type { Database } from './database.types'
 import { readSupabaseEnv } from './env'
 
 /**
  * Cliente do Supabase para Server Components, Server Actions e Route Handlers.
  * Usa a sessão do usuário (cookies) → toda leitura passa pela RLS.
- * Devolve null enquanto o projeto não estiver configurado (Etapa 1).
+ * Devolve null enquanto o projeto não estiver configurado.
  */
 export async function createSupabaseServerClient() {
   const env = readSupabaseEnv()
   if (!env) return null
   const cookieStore = await cookies()
   return createServerClient<Database>(env.url, env.publishableKey, {
+    cookieOptions: sessionCookieOptions,
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (toSet) => {

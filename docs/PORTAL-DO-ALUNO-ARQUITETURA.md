@@ -1049,7 +1049,31 @@ com `missing database_read`.) Conexão verificada com `select 1`.
 - Testes de isolamento em `packages/db/tests/` (27 casos), rodando no CI (`npm run db:test`) e no Supabase
   (transação desfeita, sem resíduo).
 
-**Próximo passo:** Parte 2 — login e convites — só após aprovação da Parte 1.
+**Etapa 2 · Parte 2 — login, convites e 2FA (aplicada em 07/10/2026, aguardando aprovação)**
+- Migração `20261007130000_login_e_2fa`: poderes de admin e coordenação **só com sessão 2FA (aal2)**, também no
+  banco; `admin_people()` e `admin_reset_mfa()` (só admin com 2FA); `bootstrap_first_admin(email)` (só o dono do
+  banco, só enquanto não houver admin); `my_mfa_enrolled()`.
+- Telas: `/entrar`, `/esqueci-senha`, `/auth/confirmar` (links com token_hash), `/auth/retorno` (links no formato
+  padrão do Supabase), `/definir-senha`, `/seguranca/2fa`, `/seguranca/2fa/configurar`, `/termo`; painel
+  `/admin/alunos` e `/admin/equipe` (convite por e-mail ou link, novo link, reenviar, redefinir 2FA).
+- Sessão em cookies httpOnly + SameSite=Lax (+ Secure em produção); login sempre no servidor.
+- Auth do projeto (API de gerenciamento): site `https://portal-aluno-kappa.vercel.app/auth/retorno`, redirecionamentos
+  permitidos para esse domínio e `localhost:3001`, senha ≥ 10 com letras e números, links válidos por 24 h,
+  autocadastro desligado, TOTP ligado.
+- **Limites do plano gratuito sem SMTP próprio:** e-mails com o texto padrão do Supabase (em inglês) e no máximo
+  **2 e-mails por hora**; modelos em português prontos em `packages/db/supabase/templates/` entram com o Resend.
+  Proteção contra senhas vazadas (HaveIBeenPwned) exige plano Pro. Até lá, convites preferencialmente por
+  **"Gerar link para enviar por mensagem"**.
+- Ambiente local completo: `npx supabase start` em `packages/db` (config em `supabase/config.toml`, e-mails no
+  Mailpit). Testes de banco: 43 casos (27 + 16) no CI e no Supabase.
+
+**Primeiro admin (uma vez):** 1) no painel do Supabase, *Authentication → Users → Invite user* com o e-mail da
+pessoa; 2) ela abre o e-mail, cria a senha e aceita o termo; 3) executar
+`select public.bootstrap_first_admin('email@...');` (SQL Editor ou API de gerenciamento); 4) no próximo acesso
+ela ativa o 2FA. A partir daí, papéis só pelo painel. **Celular do único admin perdido:** apagar os fatores por
+SQL (`delete from auth.mfa_factors where user_id = …`) — por isso convém ter dois admins.
+
+**Próximo passo:** Parte 3 da Etapa 2 — só após aprovação da Parte 2.
 
 ## N. Decisões
 

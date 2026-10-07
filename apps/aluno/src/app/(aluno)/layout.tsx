@@ -1,7 +1,9 @@
 import { PreviewBanner } from '@/components/shell/PreviewBanner'
+import { requireUser } from '@/lib/auth/session'
 import { StudentBottomNav, StudentSidebar, StudentTopBar } from '@/components/shell/StudentNav'
 
-export default function StudentLayout({ children }: { children: React.ReactNode }) {
+export default async function StudentLayout({ children }: { children: React.ReactNode }) {
+  await requireUser()
   return (
     <>
       <a
