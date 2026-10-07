@@ -1037,7 +1037,19 @@ Registro para retomar o trabalho em qualquer sessão. **Nenhum segredo aqui.**
 | Ambiente Claude | Rede *Custom*: `api.supabase.com`, `*.supabase.co`, `*.vercel.app` + padrões. Token do Supabase como **segredo de rede** (Bearer, host `api.supabase.com`, prefixo `/v1/projects/xzwdnanssqkrxkyntwes/`) — o agente usa sem ver o valor. Variável `SUPABASE_PROJECT_REF`. Segredos só valem em sessões iniciadas depois de salvos. |
 | Pendente (pré‑existente) | `apps/publico/fixtures/preview/{MATERIAIS_POR_MODULO,ESTOQUE,EQUIPAMENTOS}.csv` nunca foram commitados → testes do portal público falham no CI. Recriar (planilhas reais ou exemplos mínimos). |
 
-**Próximo passo:** verificar a conexão (`POST /v1/projects/{ref}/database/query` com `select 1`) e iniciar a Etapa 2 conforme N.3.
+**Token (atualizado 07/10/2026):** recriado com Project → Read, Database → Database **Read-write**, Database →
+Migrations Read-write, Auth Read-write; todo o resto None. (Sem *Database Read‑write* a API recusa consultas SQL
+com `missing database_read`.) Conexão verificada com `select 1`.
+
+**Etapa 2 · Parte 1 — pessoas e acesso (aplicada em 07/10/2026, aguardando aprovação)**
+- Migrações aplicadas no Supabase e registradas com a mesma versão dos arquivos: `20261006120000_base`
+  (Etapa 1, ainda não aplicada no remoto) e `20261007120000_pessoas_e_acesso`.
+- Tabelas: `cohorts`, `profiles`, `enrollments`, `terms_versions`, `terms_acceptances`, todas com RLS.
+  Dados iniciais: turma "Especialização Conexo | Turma 2027" (01/02/2027–31/07/2029) e termo `0.1-provisorio`.
+- Testes de isolamento em `packages/db/tests/` (27 casos), rodando no CI (`npm run db:test`) e no Supabase
+  (transação desfeita, sem resíduo).
+
+**Próximo passo:** Parte 2 — login e convites — só após aprovação da Parte 1.
 
 ## N. Decisões
 
