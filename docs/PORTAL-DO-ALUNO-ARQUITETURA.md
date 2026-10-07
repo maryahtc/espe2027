@@ -1144,7 +1144,7 @@ operações destrutivas no Supabase de produção; dados já cadastrados não s�
 novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no ambiente local e no CI. A etapa
 **"Proteção de produção e backups"** (seção M.3) é obrigatória antes do go-live.
 
-**Etapa 3 · Parte A — portal público lendo o banco (aplicada em 08/10/2026, aguardando aprovação)**
+**Etapa 3 · Parte A — portal público lendo o banco (aplicada em 08/10/2026; concluída)**
 - Decisão: o **Admin do Portal do Aluno é a única fonte** de cronograma, módulos e professores. O portal público
   (`apps/publico`) só consulta; a área `/coordenacao` dele edita apenas materiais, estoque e equipamentos (planilha).
 - Migração `20261009120000_portal_publico` (só aditiva): `cohorts.show_on_public` (padrão desmarcado; no máximo uma
@@ -1163,10 +1163,12 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
 - Testes: banco 96 (78 + 18 novos), local e CI; portal público 14 novos (as 10 falhas pré‑existentes por falta dos
   CSVs de prévia continuam); E2E local 28/28 (Admin → portal público) + regressões 48/48, 58/58, 26/26.
 - Produção: migração aplicada; conferido só por leitura que nenhum dado existente mudou e que as visões estão vazias
-  até a turma ser marcada. **Pendente (Maryah):** identificar o projeto do portal público na Vercel, cadastrar as duas
-  variáveis e marcar a Turma 2027 no Admin.
+  até a turma ser marcada.
+- **Publicação adiada (decisão de 08/10/2026):** o portal público nunca foi publicado na Vercel (o time Conexo só tem
+  o projeto `portal-aluno`). Fica para depois: criar o projeto na Vercel, configurar a planilha (conta de serviço e
+  login Google) e só então marcar a Turma 2027. Até lá a caixa "Exibir no portal público" continua desmarcada.
 
-**Próximo passo:** configuração do portal público na Vercel (guiada) e aprovação da Parte A.
+**Próximo passo:** proposta da Etapa 4 (Temas + Biblioteca) para aprovação.
 
 ## N. Decisões
 
