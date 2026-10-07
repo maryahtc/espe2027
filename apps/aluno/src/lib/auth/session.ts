@@ -21,10 +21,11 @@ export async function loadAuth(): Promise<AuthState | null | 'previa'> {
   const { claims } = data
 
   const [{ data: profile }, { data: needsTerms }] = await Promise.all([
-    supabase.from('profiles').select('role, full_name, display_name').eq('id', claims.sub).maybeSingle(),
+    supabase.from('profiles').select('role, full_name, display_name, deactivated_at').eq('id', claims.sub).maybeSingle(),
     supabase.rpc('needs_terms_acceptance'),
   ])
-  if (!profile) return null
+  // Conta desativada pelo admin: tratada como sem sessão (o Auth também bloqueia a entrada).
+  if (!profile || profile.deactivated_at) return null
 
   return {
     userId: claims.sub,

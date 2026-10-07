@@ -309,14 +309,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"display_name": string | null,"full_name": string,"id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string
+                    "created_at": string,"deactivated_at": string | null,"display_name": string | null,"full_name": string,"id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"display_name"?: string | null,"full_name"?: string,"id": string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string
+                    "created_at"?: string,"deactivated_at"?: string | null,"display_name"?: string | null,"full_name"?: string,"id": string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"display_name"?: string | null,"full_name"?: string,"id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string
+                    "created_at"?: string,"deactivated_at"?: string | null,"display_name"?: string | null,"full_name"?: string,"id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -409,8 +409,11 @@ isOneToOne: false
           Functions: {
             "admin_people":
 { Args: Record<PropertyKey, never>; Returns: {
-              "cohort_id": string,"cohort_name": string,"created_at": string,"display_name": string,"email": string,"enrollment_status": Database["public"]['Enums']["enrollment_status"],"full_name": string,"id": string,"invited_at": string,"last_sign_in_at": string,"role": Database["public"]['Enums']["app_role"],"role_in_cohort": Database["public"]['Enums']["cohort_role"]
+              "cohort_id": string,"cohort_name": string,"created_at": string,"deactivated_at": string,"display_name": string,"email": string,"enrollment_status": Database["public"]['Enums']["enrollment_status"],"full_name": string,"id": string,"invited_at": string,"last_sign_in_at": string,"role": Database["public"]['Enums']["app_role"],"role_in_cohort": Database["public"]['Enums']["cohort_role"]
             }[]
+                           },
+"admin_person_footprint":
+{ Args: { "p_user_id": string }; Returns: Json
                            },
 "bootstrap_first_admin":
 { Args: { "p_email": string }; Returns: string

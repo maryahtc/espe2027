@@ -1,6 +1,6 @@
 import { ActionForm } from './ActionForm'
 import { AddPanel, Check, Editable, Input, Select, TextArea } from './ui'
-import { saveFaculty } from '@/lib/admin/academic-actions'
+import { removeFaculty, saveFaculty } from '@/lib/admin/academic-actions'
 import { FACULTY_KIND_LABEL, type FacultyRef } from '@/lib/academic/model'
 
 const KIND_OPTIONS = Object.entries(FACULTY_KIND_LABEL) as Array<[string, string]>
@@ -61,6 +61,16 @@ export function FacultyManager({ faculty }: { faculty: FacultyRef[] }) {
                 <input type="hidden" name="id" value={f.id} />
                 <Fields f={f} />
               </ActionForm>
+              <div className="mt-5 border-t border-rule pt-4">
+                <ActionForm
+                  action={removeFaculty}
+                  submit="Excluir…"
+                  quiet
+                  confirmText={`Excluir ${f.fullName}?\n\nSe estiver em algum módulo ou atividade, fica INATIVO (sai das listas de escolha) e continua aparecendo onde já estava — nada do histórico é apagado. Sem vínculos, o cadastro é excluído.`}
+                >
+                  <input type="hidden" name="id" value={f.id} />
+                </ActionForm>
+              </div>
             </Editable>
           </li>
         ))}

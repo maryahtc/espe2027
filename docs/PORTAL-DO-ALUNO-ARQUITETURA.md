@@ -1093,6 +1093,18 @@ TOTP desligado no Auth. App: removidas as telas `/seguranca/2fa` e `/seguranca/2
   internas; nomes ambíguos preservados.
 - Testes de banco: 63 casos (27 + 13 + 23) no CI e no Supabase.
 
+**Ajustes na gestão de pessoas e equipe (07/10/2026)** — migração `20261008130000_gestao_pessoas`:
+- **Excluir pessoa (login):** sem histórico (nunca entrou, sem aceite, sem alterações, sem vínculo de docente) → conta
+  apagada no Auth; com histórico → **acesso desativado** (`profiles.deactivated_at` + bloqueio no Auth): perde na hora
+  admin/coordenação/turma (as funções de permissão exigem conta ativa), perfil e histórico ficam; "Reativar acesso"
+  desfaz. Só admin desativa/reativa; o último admin ativo não pode ser desativado; ninguém exclui a própria conta.
+- **Excluir docente/equipe (sem login):** sem vínculo com atividades ou equipes de módulo → excluído; com vínculo →
+  inativo (sai das listas de escolha, continua onde já estava). As chaves estrangeiras impedem apagar vínculos.
+- **Reenviar acesso:** quem ainda não entrou → novo convite; quem já tem senha → link de nova senha (recuperação),
+  sem criar conta. Link para copiar (WhatsApp) ou envio por e-mail. Painel "Abrir" em Alunos e em Docentes e
+  coordenação.
+- Testes de banco: 78 casos (27 + 13 + 23 + 15).
+
 **Próximo passo:** aprovação da Parte 3.
 
 ## N. Decisões

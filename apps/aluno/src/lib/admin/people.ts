@@ -17,5 +17,5 @@ export async function loadPeople(): Promise<{ people: Person[]; cohorts: CohortO
 }
 
 export function isPending(p: Person) {
-  return p.invited_at !== null && p.last_sign_in_at === null
+  return p.invited_at !== null && p.last_sign_in_at === null && p.deactivated_at === null
 }

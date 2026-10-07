@@ -217,6 +217,25 @@ export async function saveFaculty(_: ActionState, fd: FormData): Promise<ActionS
   })
 }
 
+/** Excluir docente/equipe: sem vínculo com módulos ou atividades → apaga; com vínculo → fica inativo. */
+export async function removeFaculty(_: ActionState, fd: FormData): Promise<ActionState> {
+  return run(async (db) => {
+    const facultyId = id(fd)
+    const [{ count: sessions }, { count: staff }] = await Promise.all([
+      db.from('session_faculty').select('faculty_id', { count: 'exact', head: true }).eq('faculty_id', facultyId),
+      db.from('module_staff').select('id', { count: 'exact', head: true }).eq('faculty_id', facultyId),
+    ])
+    if (!sessions && !staff) {
+      const { error, count } = await db.from('faculty').delete({ count: 'exact' }).eq('id', facultyId)
+      if (error?.code !== '23503') fail(error, 'excluir')
+      if (!error && count) return 'Excluído (não estava em nenhum módulo).'
+    }
+    const { error } = await db.from('faculty').update({ active: false }).eq('id', facultyId)
+    fail(error)
+    return `Estava em ${sessions ?? 0} atividade(s) e ${staff ?? 0} equipe(s) de módulo: ficou inativo (sai das listas de escolha) e o histórico foi mantido.`
+  })
+}
+
 // ─── Módulos ──────────────────────────────────────────────────────────────────────────────────────
 export async function createModule(_: ActionState, fd: FormData): Promise<ActionState> {
   let newId = ''
