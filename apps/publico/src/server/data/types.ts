@@ -38,6 +38,8 @@ export type DataIssue = {
 export type DataReport = {
   generatedAt: string
   source: PublicDataset['source']
+  /** De onde vieram módulos, aulas e professores: banco (Admin) ou planilha (só prévia/demonstração). */
+  academicSource: 'banco' | 'planilha'
   counts: Record<'modules' | 'classes' | 'professors' | 'materials' | 'inventory' | 'equipment', number>
   issues: DataIssue[]
 }

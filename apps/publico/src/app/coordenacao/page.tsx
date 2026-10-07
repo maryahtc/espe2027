@@ -39,7 +39,10 @@ export default async function EditingHome() {
 
   return (
     <>
-      <PageHeader title="O que você quer atualizar?" description="As alterações são gravadas na planilha e aparecem no portal na hora." />
+      <PageHeader
+        title="O que você quer atualizar?"
+        description="Materiais, estoque e equipamentos: as alterações são gravadas na planilha e aparecem no portal na hora. Cronograma, módulos e professores são atualizados só no Admin do Portal do Aluno."
+      />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {counts.map(({ entity, count }) => (
           <li key={entity.slug}>

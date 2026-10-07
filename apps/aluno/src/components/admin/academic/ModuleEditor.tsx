@@ -53,7 +53,7 @@ function SessionFields({ s }: { s?: SessionVM }) {
         <Select label="Tipo" name="tipo" defaultValue={s?.type ?? 'outro'} options={TYPE_OPTIONS} />
       </div>
       <Input label="Atividade" name="titulo" required defaultValue={s?.title} />
-      <TextArea label="Detalhes (opcional)" name="descricao" rows={2} defaultValue={s?.description ?? ''} />
+      <TextArea label="Detalhes (opcional)" name="descricao" rows={2} defaultValue={s?.description ?? ''} hint="Atividade, horário, detalhes e professores aparecem também no portal público." />
     </>
   )
 }
@@ -192,7 +192,7 @@ export function ModuleEditor({ page, internalNotes }: { page: AdminModulePage; i
             <Input label="Título" name="titulo" required defaultValue={m.title} />
           </div>
           <Input label="Tema" name="tema" defaultValue={m.theme ?? ''} />
-          <TextArea label="Descrição para os alunos" name="descricao" rows={3} defaultValue={m.description ?? ''} />
+          <TextArea label="Descrição para os alunos" name="descricao" rows={3} defaultValue={m.description ?? ''} hint="Tema e descrição aparecem também no portal público. Local e carga horária, não." />
           <div className="grid gap-5 sm:grid-cols-[1fr_10rem]">
             <Input label="Local" name="local" defaultValue={m.location ?? ''} />
             <Input label="Carga horária (h)" name="carga" inputMode="decimal" defaultValue={m.workloadHours ?? ''} />
@@ -401,7 +401,7 @@ export function ModuleEditor({ page, internalNotes }: { page: AdminModulePage; i
         </AddPanel>
       </Block>
 
-      <Block index="07" title="Equipe do módulo" hint="Professor principal, equipe clínica, coordenação e apoio. Desmarque “visível” para quem é só interno.">
+      <Block index="07" title="Equipe do módulo" hint="Professor principal, equipe clínica, coordenação e apoio. Quem está “visível” aparece também no portal público; desmarque para quem é só interno.">
         {m.staff.length ? (
           <ul className="space-y-2">
             {m.staff.map((s) => (

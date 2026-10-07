@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <div className="max-w-xl">
       <PageHeader
         title="Entrar para editar"
-        description="Professores e coordenação podem atualizar o cronograma, os materiais e o estoque. Tudo o que for salvo aqui é gravado diretamente na planilha oficial."
+        description="Professores e coordenação podem atualizar materiais, estoque e equipamentos. Tudo o que for salvo aqui é gravado diretamente na planilha oficial. Cronograma, módulos e professores são atualizados no Admin do Portal do Aluno."
       />
       {erro && ERRORS[erro] ? (
         <div role="alert" className="mb-6 rounded-md border border-danger/40 bg-danger-bg px-4 py-3 text-sm text-danger">

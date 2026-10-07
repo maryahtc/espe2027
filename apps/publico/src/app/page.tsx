@@ -15,7 +15,7 @@ import {
 import { getDataset } from '@/server/data/repository'
 
 // Mantenha igual a cacheConfig.revalidateSeconds (o Next exige um literal aqui).
-export const revalidate = 300
+export const revalidate = 60
 
 export default async function HomePage() {
   const ds = await getDataset()

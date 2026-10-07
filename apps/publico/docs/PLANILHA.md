@@ -1,7 +1,12 @@
 # Guia da planilha — para a coordenação
 
 A planilha **continua sendo a fonte oficial**. O portal só lê; nada precisa ser digitado duas vezes.
-Alterou a planilha → em até **5 minutos** o portal mostra a mudança.
+Alterou a planilha → em até **1 minuto** o portal mostra a mudança.
+
+> **Atualização (Etapa 3 · Parte A, 08/10/2026):** cronograma, módulos e professores passaram a vir **somente do
+> Admin do Portal do Aluno** (banco, visões públicas). As abas MÓDULOS, AULAS e PROFESSORES não são mais lidas nem
+> editadas por aqui; a planilha continua oficial apenas para **materiais, estoque e equipamentos**. Ver
+> `docs/PORTAL-DO-ALUNO-ARQUITETURA.md` (seção S) na raiz do repositório.
 
 ## O que o portal lê
 

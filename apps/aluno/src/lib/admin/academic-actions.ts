@@ -171,6 +171,26 @@ export async function setCohortStatus(_: ActionState, fd: FormData): Promise<Act
   })
 }
 
+/**
+ * "Exibir no portal público": no máximo uma turma por vez. Marcar uma turma tira a marcação da anterior
+ * (o banco também garante isso com um índice único).
+ */
+export async function setCohortPublic(_: ActionState, fd: FormData): Promise<ActionState> {
+  return run(async (db) => {
+    const cohortId = id(fd)
+    const show = checked(fd, 'portal_publico')
+    if (show) {
+      const { error: e1 } = await db.from('cohorts').update({ show_on_public: false }).eq('show_on_public', true).neq('id', cohortId)
+      fail(e1, 'tirar a outra turma do portal público')
+    }
+    const { error } = await db.from('cohorts').update({ show_on_public: show }).eq('id', cohortId)
+    fail(error)
+    return show
+      ? 'Turma exibida no portal público. Módulos publicados aparecem lá em até 1 minuto.'
+      : 'Turma retirada do portal público.'
+  })
+}
+
 // ─── Eventos da turma ─────────────────────────────────────────────────────────────────────────────
 export async function saveEvent(_: ActionState, fd: FormData): Promise<ActionState> {
   return run(async (db) => {

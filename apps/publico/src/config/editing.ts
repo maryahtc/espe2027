@@ -50,7 +50,12 @@ export type EntityDef = {
 const STATUS_MODULO = ['Confirmado', 'A confirmar', 'Rascunho']
 const STATUS_AULA = ['Confirmada', 'A confirmar', 'Rascunho']
 
-export const EDITABLE_ENTITIES: EntityDef[] = [
+/**
+ * Todas as abas que a máquina de edição sabe ler e gravar.
+ * MÓDULOS, AULAS e PROFESSORES ficam aqui só como definição da planilha antiga (prévia/demonstração):
+ * desde a Etapa 3 o cronograma é editado SOMENTE no Admin do Portal do Aluno.
+ */
+export const SHEET_ENTITIES: EntityDef[] = [
   {
     tab: 'modules',
     slug: 'modulos',
@@ -163,6 +168,12 @@ export const EDITABLE_ENTITIES: EntityDef[] = [
   },
 ]
 
+/** Abas acadêmicas: nunca editáveis por aqui (Admin do Portal do Aluno é a fonte única). */
+export const READ_ONLY_TABS: readonly TabKey[] = ['modules', 'classes', 'professors']
+
+/** O que a área /coordenacao edita: só logística (materiais, estoque, equipamentos). */
+export const EDITABLE_ENTITIES: EntityDef[] = SHEET_ENTITIES.filter((e) => !READ_ONLY_TABS.includes(e.tab))
+
 export const ID_HEADER = 'ID'
 export const HISTORY_TAB = 'HISTÓRICO'
 export const HISTORY_HEADER = ['Data e hora', 'Pessoa', 'Perfil', 'Ação', 'Aba', 'ID', 'Linha', 'Alterações']
@@ -177,6 +188,12 @@ export function canEdit(_role: EditorRole, _entity: EntityDef): boolean {
   return true
 }
 
+/** Entidade editável pela área /coordenacao (cronograma, módulos e professores nunca). */
 export function getEntity(slug: string): EntityDef | undefined {
   return EDITABLE_ENTITIES.find((e) => e.slug === slug)
+}
+
+/** Definição de qualquer aba conhecida (inclusive as acadêmicas, só leitura). Não usar para autorizar gravação. */
+export function sheetEntity(slug: string): EntityDef | undefined {
+  return SHEET_ENTITIES.find((e) => e.slug === slug)
 }

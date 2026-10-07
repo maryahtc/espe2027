@@ -8,10 +8,16 @@ Professores e coordenação encontram, pelo celular e em segundos, **quando é c
 módulo precisa** — sem login, sem PDF, sem grupo de WhatsApp.
 
 ```
-Google Sheets (privada) → servidor (leitura por whitelist + validação) → dados públicos → cache → portal
+Admin do Portal do Aluno → banco (visões públicas, só leitura) ─┐
+                                                                ├→ servidor → dados públicos → cache (60 s) → portal
+Google Sheets (privada, logística) → leitura por whitelist ─────┘
 ```
 
-A **planilha é a fonte oficial**. O portal apenas lê; nada é cadastrado duas vezes.
+**Desde a Etapa 3:** cronograma, módulos e professores vêm **somente** do banco do Portal do Aluno (editados no
+Admin). O portal lê três visões públicas (`public_modules`, `public_schedule`, `public_teachers`) com a chave
+pública; alunos, observações internas, equipe interna e dados administrativos nunca chegam aqui. Materiais, estoque
+e equipamentos continuam na planilha. A área `/coordenacao` edita só a logística. As abas MÓDULOS, AULAS e
+PROFESSORES da planilha não são mais lidas (a coluna E-mail de PROFESSORES ainda libera o login da área de edição).
 
 - Arquitetura e decisões: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
 - Guia da planilha para a coordenação: [`docs/PLANILHA.md`](docs/PLANILHA.md)
@@ -23,7 +29,8 @@ A **planilha é a fonte oficial**. O portal apenas lê; nada é cadastrado duas 
 - **Zod** para validar linhas da planilha e os DTOs públicos
 - **google-auth-library** + API REST do Google Sheets (Service Account, somente leitura)
 - **Vitest** para os testes
-- Sem banco de dados, sem autenticação.
+- Leitura do banco do Portal do Aluno (Supabase) pela API REST, só nas visões públicas
+- Login Google apenas na área de edição de logística (`/coordenacao`)
 
 ## Rodando localmente
 
@@ -135,6 +142,8 @@ falhar, só aquela seção fica vazia.
 1. Importe o repositório na Vercel (framework detectado automaticamente).
 2. Em **Settings → Environment Variables**, cadastre as variáveis acima para **Production**
    (e, se quiser, **Preview** com `DATA_SOURCE=mock` para revisar mudanças com dados fictícios).
+   Em produção são obrigatórias `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` (chave **pública** do projeto
+   Supabase do Portal do Aluno).
    A chave privada pode ser colada inteira, com as quebras de linha.
 3. Deploy. Depois, em **Settings → Domains**, adicione o domínio desejado e configure o DNS indicado.
 4. Teste: `curl -H "Authorization: Bearer $REVALIDATE_SECRET" https://SEU-DOMINIO/api/saude`.

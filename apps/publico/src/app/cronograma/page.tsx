@@ -12,7 +12,7 @@ import type { PublicModule } from '@/schemas/public'
 import { getDataset } from '@/server/data/repository'
 
 export const metadata: Metadata = { title: 'Cronograma' }
-export const revalidate = 300
+export const revalidate = 60
 
 function groupByYear(modules: PublicModule[]) {
   const groups: { key: string; label: string; modules: PublicModule[] }[] = []

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { demoWorkbook } from '@fixtures/workbook'
-import { getEntity } from '@/config/editing'
+import { EDITABLE_ENTITIES, getEntity, sheetEntity } from '@/config/editing'
 import { buildPortalData } from '@/server/data/pipeline/build'
 import { MemoryWorkbook } from '@/server/data/store/memory'
 import { readPreviewWorkbook } from '@/server/data/source/preview'
@@ -11,9 +11,9 @@ import { createRecord, removeRecord, updateRecord, type Editor } from '@/server/
 
 const editor: Editor = { email: 'coordenacao@exemplo.com', role: 'coordenacao' }
 const NOW = new Date('2026-09-29T15:00:00Z')
-const aulas = getEntity('aulas')!
-const modulos = getEntity('modulos')!
-const professores = getEntity('professores')!
+const aulas = sheetEntity('aulas')!
+const modulos = sheetEntity('modulos')!
+const professores = sheetEntity('professores')!
 const materiais = getEntity('materiais')!
 const estoque = getEntity('estoque')!
 
@@ -32,6 +32,14 @@ async function history(wb: MemoryWorkbook) {
 
 afterEach(() => vi.unstubAllEnvs())
 
+describe('cronograma só no Admin do Portal do Aluno', () => {
+  it('a área /coordenacao edita só materiais, estoque e equipamentos', () => {
+    expect(EDITABLE_ENTITIES.map((e) => e.slug)).toEqual(['materiais', 'estoque', 'equipamentos'])
+    for (const slug of ['modulos', 'aulas', 'professores']) expect(getEntity(slug)).toBeUndefined()
+  })
+})
+
+// A máquina de edição continua genérica; as abas acadêmicas abaixo servem só para testá-la.
 describe('edição: grava só o que mudou', () => {
   it('altera um campo, atribui ID e registra no HISTÓRICO', async () => {
     const wb = preview()

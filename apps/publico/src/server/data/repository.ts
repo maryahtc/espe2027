@@ -2,7 +2,7 @@
  * Ponto ÚNICO de acesso aos dados do portal.
  *
  * - Cache compartilhado (tag "portal-data"), revalidado a cada cacheConfig.revalidateSeconds.
- * - Se a planilha falhar, a função lança erro: o Next continua servindo a última
+ * - Se o banco ou a planilha falharem, a função lança erro: o Next continua servindo a última
  *   versão válida do cache e tenta de novo na próxima requisição.
  * - Cópia em memória da última versão válida cobre instâncias sem cache ainda.
  */
@@ -12,7 +12,7 @@ import { cacheConfig } from '@/config/cache'
 import { errorMessage, log } from '@/lib/log'
 import type { PublicDataset } from '@/schemas/public'
 import { buildPortalData } from './pipeline/build'
-import { createSheetSource } from './source'
+import { createAcademicLoader, createSheetSource } from './source'
 import type { PortalData } from './types'
 
 let lastGood: PortalData | null = null
@@ -20,10 +20,11 @@ let lastGood: PortalData | null = null
 async function load(): Promise<PortalData> {
   const started = Date.now()
   try {
-    const data = await buildPortalData(createSheetSource())
+    const data = await buildPortalData(createSheetSource(), new Date(), createAcademicLoader())
     const errors = data.report.issues.filter((i) => i.severity === 'error').length
     log.info('portal.data_loaded', {
       source: data.report.source,
+      academic: data.report.academicSource,
       ms: Date.now() - started,
       ...data.report.counts,
       issues: data.report.issues.length,

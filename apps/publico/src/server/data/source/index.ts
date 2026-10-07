@@ -1,6 +1,8 @@
 import 'server-only'
 import { demoWorkbook } from '@fixtures/workbook'
 import { MemoryWorkbook } from '../store/memory'
+import { type AcademicData, mapAcademic } from '../academic/map'
+import { fetchAcademicRows, readSupabaseConfigFromEnv } from '../academic/supabase'
 import type { SheetSource } from '../types'
 import { GoogleSheetsWriter } from '../write/google-writer'
 import type { SheetWriter } from '../write/types'
@@ -43,4 +45,20 @@ export function createSheetWriter(): SheetWriter {
   const kind = dataSourceKind()
   if (kind === 'sheets') return GoogleSheetsWriter.fromEnv()
   return memoryWorkbook(kind)
+}
+
+/**
+ * Cronograma, módulos e professores vêm do banco (Admin do Portal do Aluno = fonte única).
+ * Sem banco configurado (só prévia/demonstração local), a parte acadêmica sai da planilha de exemplo.
+ * Em produção o banco é obrigatório.
+ */
+export function createAcademicLoader(): (() => Promise<AcademicData>) | null {
+  const config = readSupabaseConfigFromEnv()
+  if (!config) {
+    if (isProductionDeployment()) {
+      throw new Error('Em produção o cronograma vem do banco: configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY.')
+    }
+    return null
+  }
+  return async () => mapAcademic(await fetchAcademicRows(config))
 }

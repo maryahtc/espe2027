@@ -11,7 +11,7 @@ import { padModuleNumber } from '@/lib/text'
 import { getDataset } from '@/server/data/repository'
 
 export const metadata: Metadata = { title: 'Equipamentos' }
-export const revalidate = 300
+export const revalidate = 60
 
 export default async function EquipmentPage() {
   const ds = await getDataset()

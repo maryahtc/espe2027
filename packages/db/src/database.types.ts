@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"cohorts": {
                   Row: {
-                    "closed_at": string | null,"created_at": string,"description": string | null,"ends_on": string,"id": string,"name": string,"slug": string,"starts_on": string,"status": Database["public"]['Enums']["cohort_status"],"updated_at": string
+                    "closed_at": string | null,"created_at": string,"description": string | null,"ends_on": string,"id": string,"name": string,"show_on_public": boolean,"slug": string,"starts_on": string,"status": Database["public"]['Enums']["cohort_status"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "closed_at"?: string | null,"created_at"?: string,"description"?: string | null,"ends_on": string,"id"?: string,"name": string,"slug": string,"starts_on": string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
+                    "closed_at"?: string | null,"created_at"?: string,"description"?: string | null,"ends_on": string,"id"?: string,"name": string,"show_on_public"?: boolean,"slug": string,"starts_on": string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
                   }
                   Update: {
-                    "closed_at"?: string | null,"created_at"?: string,"description"?: string | null,"ends_on"?: string,"id"?: string,"name"?: string,"slug"?: string,"starts_on"?: string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
+                    "closed_at"?: string | null,"created_at"?: string,"description"?: string | null,"ends_on"?: string,"id"?: string,"name"?: string,"show_on_public"?: boolean,"slug"?: string,"starts_on"?: string,"status"?: Database["public"]['Enums']["cohort_status"],"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -147,6 +147,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "modules"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_days_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
+      referencedColumns: ["id"]
     }
                   ]
                 },"module_deliverables": {
@@ -167,6 +173,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "modules"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_deliverables_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
+      referencedColumns: ["id"]
     }
                   ]
                 },"module_internal_notes": {
@@ -186,6 +198,12 @@ isOneToOne: false
       columns: ["module_id"]
 isOneToOne: true
       referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_internal_notes_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: true
+      referencedRelation: "public_modules"
       referencedColumns: ["id"]
     }
                   ]
@@ -213,6 +231,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "modules"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_materials_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
+      referencedColumns: ["id"]
     }
                   ]
                 },"module_resources": {
@@ -234,10 +258,22 @@ isOneToOne: false
       referencedRelation: "modules"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "module_resources_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "module_resources_session_id_fkey"
       columns: ["session_id"]
 isOneToOne: false
       referencedRelation: "module_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_resources_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "public_schedule"
       referencedColumns: ["id"]
     }
                   ]
@@ -280,10 +316,22 @@ isOneToOne: false
       referencedRelation: "faculty"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "module_staff_faculty_id_fkey"
+      columns: ["faculty_id"]
+isOneToOne: false
+      referencedRelation: "public_teachers"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "module_staff_module_id_fkey"
       columns: ["module_id"]
 isOneToOne: false
       referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_staff_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
       referencedColumns: ["id"]
     }
                   ]
@@ -354,10 +402,22 @@ isOneToOne: false
       referencedRelation: "faculty"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "session_faculty_faculty_id_fkey"
+      columns: ["faculty_id"]
+isOneToOne: false
+      referencedRelation: "public_teachers"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "session_faculty_session_id_module_id_fkey"
       columns: ["session_id","module_id"]
 isOneToOne: false
       referencedRelation: "module_sessions"
+      referencedColumns: ["id","module_id"]
+    },{
+      foreignKeyName: "session_faculty_session_id_module_id_fkey"
+      columns: ["session_id","module_id"]
+isOneToOne: false
+      referencedRelation: "public_schedule"
       referencedColumns: ["id","module_id"]
     }
                   ]
@@ -404,7 +464,37 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "public_modules": {
+                  Row: {
+                    "description": string | null,"ends_on": string | null,"id": string | null,"number": number | null,"position": number | null,"staff_ids": (string)[] | null,"starts_on": string | null,"theme": string | null,"title": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"public_schedule": {
+                  Row: {
+                    "activity_type": Database["public"]['Enums']["activity_type"] | null,"date": string | null,"day_number": number | null,"description": string | null,"ends_at": string | null,"faculty_ids": (string)[] | null,"id": string | null,"module_id": string | null,"period": Database["public"]['Enums']["day_period"] | null,"position": number | null,"starts_at": string | null,"tentative": boolean | null,"title": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"public_teachers": {
+                  Row: {
+                    "display_name": string | null,"honorific": string | null,"id": string | null,"short_bio": string | null,"specialty": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "display_name"?: string | null,"honorific"?: string | null,"id"?: string | null,"short_bio"?: string | null,"specialty"?: string | null
+                         }
+                        Update: {
+                           "display_name"?: string | null,"honorific"?: string | null,"id"?: string | null,"short_bio"?: string | null,"specialty"?: string | null
+                         }
+                        Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
             "admin_people":

@@ -5,7 +5,7 @@ import { buildSearchIndex } from '@/lib/search'
 import { getDataset } from '@/server/data/repository'
 
 export const metadata: Metadata = { title: 'Busca' }
-export const revalidate = 300
+export const revalidate = 60
 
 /**
  * Busca global. O índice contém só campos públicos que o portal já exibe;

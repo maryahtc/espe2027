@@ -18,7 +18,7 @@ export async function EditPage({ entitySlug, refValue }: { entitySlug: string; r
   const table = await loadTable(writer, entity)
   const record = refValue ? findRecord(entity, table, decodeURIComponent(refValue)) : null
   if (refValue && !record) notFound()
-  const options = await editorOptions(writer)
+  const options = await editorOptions()
 
   return (
     <>

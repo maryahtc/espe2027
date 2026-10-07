@@ -19,6 +19,7 @@ import type {
 import type { ClassRow, EquipmentRow, InventoryRow, MaterialRow, ModuleRow, ProfessorRow } from '@/schemas/rows'
 import type { DataIssue } from '../types'
 import type { Parsed } from './parse'
+import type { AcademicData } from '../academic/map'
 import { ProfessorRegistry } from './professors'
 
 export type AssembleInput = {
@@ -29,6 +30,20 @@ export type AssembleInput = {
   materials: Parsed<MaterialRow>[]
   inventory: Parsed<InventoryRow>[]
   equipment: Parsed<EquipmentRow>[]
+  /**
+   * Parte acadêmica já pronta vinda do banco (Admin = fonte única). Quando presente, as abas
+   * MÓDULOS, AULAS e PROFESSORES são ignoradas e só a logística vem da planilha.
+   */
+  academic?: AcademicData
+}
+
+type AcademicPart = {
+  modules: PublicModule[]
+  classes: PublicClass[]
+  professors: PublicProfessor[]
+  /** Números de módulos que existem só como rascunho (escondidos também na logística). */
+  hiddenNumbers: Set<number>
+  findProfessor: (name: string) => string | null
 }
 
 export type AssembleOutput = {
@@ -57,6 +72,98 @@ function inCourse(date: string): boolean {
 export function assemble(input: AssembleInput): AssembleOutput {
   const { tabs } = input
   const issues: DataIssue[] = []
+  const academic: AcademicPart = input.academic
+    ? { ...input.academic, hiddenNumbers: new Set() }
+    : academicFromSheet(input, issues)
+  const { modules, classes, hiddenNumbers } = academic
+  const visibleModules = new Set(modules.map((m) => m.number))
+  const firstSlug = new Map<number, string>()
+  for (const m of modules) if (!firstSlug.has(m.number)) firstSlug.set(m.number, m.slug)
+  const participating = new Set(academic.professors.map((p) => p.slug))
+  // ── Estoque ────────────────────────────────────────────────────────────────
+  const inventory: (PublicInventoryItem & { nameKey: string; brandKey: string })[] = []
+  const usedKeys = new Set<string>()
+  for (const row of input.inventory) {
+    const base = slugify(`${row.material} ${row.brandSpec ?? ''}`) || 'item'
+    let key = base
+    for (let i = 2; usedKeys.has(key); i++) key = `${base}-${i}`
+    usedKeys.add(key)
+    inventory.push({
+      key,
+      name: row.material,
+      category: row.category,
+      brandSpec: row.brandSpec,
+      unit: row.unit,
+      current: row.current,
+      minimum: row.minimum,
+      updatedAt: row.updatedAt,
+      status: computeInventoryStatus(row.current, row.minimum),
+      moduleNumbers: [],
+      nameKey: normalizeText(row.material),
+      brandKey: normalizeText(row.brandSpec ?? ''),
+    })
+  }
+
+  function findInventory(name: string, brand: string | null) {
+    const nameKey = normalizeText(name)
+    const sameName = inventory.filter((item) => item.nameKey === nameKey)
+    if (sameName.length <= 1) return sameName[0]
+    const brandKey = normalizeText(brand ?? '')
+    return sameName.find((item) => item.brandKey === brandKey)
+  }
+
+  // ── Materiais por módulo ──────────────────────────────────────────────────
+  const materials: PublicMaterial[] = []
+  for (const row of input.materials) {
+    if (!visibleModules.has(row.module)) continue
+    const stock = findInventory(row.material, row.brandSpec)
+    if (!stock) {
+      issues.push({ severity: 'warning', code: 'material_not_in_inventory', tab: tabs.materials, row: row.row, field: 'Material' })
+    } else if (!stock.moduleNumbers.includes(row.module)) {
+      stock.moduleNumbers.push(row.module)
+    }
+    const availability = computeAvailability(row.required, stock?.current ?? null)
+    const professorSlug = row.professor ? academic.findProfessor(row.professor) : null
+    materials.push({
+      id: `mat-${row.row}`,
+      moduleNumber: row.module,
+      moduleSlug: firstSlug.get(row.module) ?? null,
+      classTitle: row.classTitle,
+      professorSlug: professorSlug && participating.has(professorSlug) ? professorSlug : null,
+      name: row.material,
+      brandSpec: row.brandSpec ?? stock?.brandSpec ?? null,
+      category: stock?.category ?? null,
+      inventoryKey: stock?.key ?? null,
+      ...availability,
+    })
+  }
+  materials.sort((a, b) => a.moduleNumber - b.moduleNumber || a.name.localeCompare(b.name, 'pt-BR'))
+
+  // ── Equipamentos ──────────────────────────────────────────────────────────
+  const equipment: PublicEquipment[] = input.equipment.map((row) => ({
+    id: `eq-${row.row}`,
+    name: row.name,
+    category: row.category,
+    moduleNumbers: row.modules.filter((n) => !hiddenNumbers.has(n)),
+    ...computeAvailability(row.required, row.available),
+  }))
+
+  return {
+    modules,
+    classes,
+    professors: academic.professors,
+    materials,
+    inventory: inventory
+      .map(({ nameKey: _n, brandKey: _b, ...item }) => ({ ...item, moduleNumbers: item.moduleNumbers.sort((a, b) => a - b) }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    equipment: equipment.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    issues,
+  }
+}
+
+/** Parte acadêmica montada a partir da planilha (modo prévia/demonstração, sem banco). */
+function academicFromSheet(input: AssembleInput, issues: DataIssue[]): AcademicPart {
+  const { tabs } = input
   const registry = new ProfessorRegistry(input.professors, tabs.professors, tabs.classes)
 
   // ── Módulos ────────────────────────────────────────────────────────────────
@@ -206,94 +313,13 @@ export function assemble(input: AssembleInput): AssembleOutput {
       professorSlugs: [...new Set(own.flatMap((c) => c.professorSlugs))],
     }
   })
-  const visibleModules = new Set(modules.map((m) => m.number))
-  const firstSlug = new Map<number, string>()
-  for (const m of modules) if (!firstSlug.has(m.number)) firstSlug.set(m.number, m.slug)
-  const participating = new Set(classes.flatMap((c) => c.professorSlugs))
-
-  // ── Estoque ────────────────────────────────────────────────────────────────
-  const inventory: (PublicInventoryItem & { nameKey: string; brandKey: string })[] = []
-  const usedKeys = new Set<string>()
-  for (const row of input.inventory) {
-    const base = slugify(`${row.material} ${row.brandSpec ?? ''}`) || 'item'
-    let key = base
-    for (let i = 2; usedKeys.has(key); i++) key = `${base}-${i}`
-    usedKeys.add(key)
-    inventory.push({
-      key,
-      name: row.material,
-      category: row.category,
-      brandSpec: row.brandSpec,
-      unit: row.unit,
-      current: row.current,
-      minimum: row.minimum,
-      updatedAt: row.updatedAt,
-      status: computeInventoryStatus(row.current, row.minimum),
-      moduleNumbers: [],
-      nameKey: normalizeText(row.material),
-      brandKey: normalizeText(row.brandSpec ?? ''),
-    })
-  }
-
-  function findInventory(name: string, brand: string | null) {
-    const nameKey = normalizeText(name)
-    const sameName = inventory.filter((item) => item.nameKey === nameKey)
-    if (sameName.length <= 1) return sameName[0]
-    const brandKey = normalizeText(brand ?? '')
-    return sameName.find((item) => item.brandKey === brandKey)
-  }
-
-  // ── Materiais por módulo ──────────────────────────────────────────────────
-  const materials: PublicMaterial[] = []
-  for (const row of input.materials) {
-    if (!visibleModules.has(row.module)) continue
-    const stock = findInventory(row.material, row.brandSpec)
-    if (!stock) {
-      issues.push({ severity: 'warning', code: 'material_not_in_inventory', tab: tabs.materials, row: row.row, field: 'Material' })
-    } else if (!stock.moduleNumbers.includes(row.module)) {
-      stock.moduleNumbers.push(row.module)
-    }
-    const availability = computeAvailability(row.required, stock?.current ?? null)
-    const professorSlug = row.professor ? registry.find(row.professor) : null
-    materials.push({
-      id: `mat-${row.row}`,
-      moduleNumber: row.module,
-      moduleSlug: firstSlug.get(row.module) ?? null,
-      classTitle: row.classTitle,
-      professorSlug: professorSlug && participating.has(professorSlug) ? professorSlug : null,
-      name: row.material,
-      brandSpec: row.brandSpec ?? stock?.brandSpec ?? null,
-      category: stock?.category ?? null,
-      inventoryKey: stock?.key ?? null,
-      ...availability,
-    })
-  }
-  materials.sort((a, b) => a.moduleNumber - b.moduleNumber || a.name.localeCompare(b.name, 'pt-BR'))
-
-  // ── Equipamentos ──────────────────────────────────────────────────────────
-  const equipment: PublicEquipment[] = input.equipment.map((row) => ({
-    id: `eq-${row.row}`,
-    name: row.name,
-    category: row.category,
-    moduleNumbers: row.modules.filter((n) => !hiddenNumbers.has(n)),
-    ...computeAvailability(row.required, row.available),
-  }))
-
   // ── Professores: só quem participa de alguma aula publicada ─────────────────
+  const participating = new Set(classes.flatMap((c) => c.professorSlugs))
   const professors = registry
     .all()
     .filter((p) => participating.has(p.slug))
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  issues.unshift(...registry.issues)
 
-  return {
-    modules,
-    classes,
-    professors,
-    materials,
-    inventory: inventory
-      .map(({ nameKey: _n, brandKey: _b, ...item }) => ({ ...item, moduleNumbers: item.moduleNumbers.sort((a, b) => a - b) }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
-    equipment: equipment.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
-    issues: [...registry.issues, ...issues],
-  }
+  return { modules, classes, professors, hiddenNumbers, findProfessor: (name) => registry.find(name) }
 }

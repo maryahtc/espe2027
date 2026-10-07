@@ -34,6 +34,7 @@ export default async function AdminCohortsPage() {
                     <span className="block truncate text-[15px] font-semibold">{c.name}</span>
                     <span className="block text-xs text-muted">
                       <span className="num">{c.students}</span> {c.students === 1 ? 'aluno' : 'alunos'}
+                      {c.onPublic ? ' · no portal público' : ''}
                     </span>
                   </span>
                   <span className="num text-sm text-ink-2">{formatRange(c.startsOn, c.endsOn)}</span>

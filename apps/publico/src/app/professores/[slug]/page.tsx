@@ -22,7 +22,7 @@ import {
 import type { PublicClass } from '@/schemas/public'
 import { getDataset } from '@/server/data/repository'
 
-export const revalidate = 300
+export const revalidate = 60
 
 type Props = { params: Promise<{ slug: string }> }
 

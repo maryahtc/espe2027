@@ -14,7 +14,7 @@ import { padModuleNumber } from '@/lib/text'
 import { getDataset } from '@/server/data/repository'
 
 export const metadata: Metadata = { title: 'Materiais' }
-export const revalidate = 300
+export const revalidate = 60
 
 export default async function MaterialsPage() {
   const ds = await getDataset()

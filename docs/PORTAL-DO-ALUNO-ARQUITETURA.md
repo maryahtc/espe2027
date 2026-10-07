@@ -1144,7 +1144,29 @@ operações destrutivas no Supabase de produção; dados já cadastrados não s�
 novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no ambiente local e no CI. A etapa
 **"Proteção de produção e backups"** (seção M.3) é obrigatória antes do go-live.
 
-**Próximo passo:** Etapa 3 (restante) / Etapa 4 — proposta para aprovação.
+**Etapa 3 · Parte A — portal público lendo o banco (aplicada em 08/10/2026, aguardando aprovação)**
+- Decisão: o **Admin do Portal do Aluno é a única fonte** de cronograma, módulos e professores. O portal público
+  (`apps/publico`) só consulta; a área `/coordenacao` dele edita apenas materiais, estoque e equipamentos (planilha).
+- Migração `20261009120000_portal_publico` (só aditiva): `cohorts.show_on_public` (padrão desmarcado; no máximo uma
+  turma, por índice único) e três visões com lista fechada de colunas — `public_modules` (número, título, tema,
+  descrição, datas, equipe visível), `public_schedule` (data, dia do módulo, turno, horário, atividade, descrição,
+  tipo, professores, "a confirmar"), `public_teachers` (nome de exibição, tratamento, especialidade, minibio). Filtros:
+  turma marcada, módulos publicados, equipe visível. O visitante (anon) só lê essas visões; tabelas fechadas.
+- Nunca expostos: alunos, perfis, e-mails, matrículas, termos, observações internas (módulo e dias), equipe interna,
+  histórico, entregas, recursos, arquivos, local, carga horária, preparo, nome completo e vínculo docente↔conta.
+- Admin: bloco "Portal público" em `/admin/turmas/[id]` (caixa "Exibir no portal público"; marcar uma turma
+  desmarca a anterior); lista de turmas indica qual está no portal; avisos "aparece também no portal público".
+- Portal público: lê as visões pela API REST com a chave **pública** (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
+  obrigatórias em produção; a secreta é recusada). Cache de 60 s: mudanças do Admin aparecem em até ~1 minuto.
+  Abas MÓDULOS, AULAS e PROFESSORES da planilha não são mais lidas (nada apagado; a coluna E-mail de PROFESSORES
+  ainda libera o login da área de logística).
+- Testes: banco 96 (78 + 18 novos), local e CI; portal público 14 novos (as 10 falhas pré‑existentes por falta dos
+  CSVs de prévia continuam); E2E local 28/28 (Admin → portal público) + regressões 48/48, 58/58, 26/26.
+- Produção: migração aplicada; conferido só por leitura que nenhum dado existente mudou e que as visões estão vazias
+  até a turma ser marcada. **Pendente (Maryah):** identificar o projeto do portal público na Vercel, cadastrar as duas
+  variáveis e marcar a Turma 2027 no Admin.
+
+**Próximo passo:** configuração do portal público na Vercel (guiada) e aprovação da Parte A.
 
 ## N. Decisões
 

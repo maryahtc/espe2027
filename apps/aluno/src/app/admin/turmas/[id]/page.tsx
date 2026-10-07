@@ -6,8 +6,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
-import { AddPanel, Block, Editable, Input, Select, TextArea } from '@/components/admin/academic/ui'
-import { deleteEvent, saveEvent, setCohortStatus, updateCohort } from '@/lib/admin/academic-actions'
+import { AddPanel, Block, Check, Editable, Input, Select, TextArea } from '@/components/admin/academic/ui'
+import { deleteEvent, saveEvent, setCohortPublic, setCohortStatus, updateCohort } from '@/lib/admin/academic-actions'
 import { adminModules, listCohorts } from '@/lib/admin/academic'
 import { EVENT_KIND_LABEL } from '@/lib/academic/model'
 import { formatDayMonth, formatRange, year } from '@/lib/dates'
@@ -86,7 +86,18 @@ export default async function AdminCohortPage({ params }: { params: Promise<{ id
         </ActionForm>
       </Block>
 
-      <Block index="02" title="Módulos" hint="Ordem, datas e situação. Para editar, abra o módulo.">
+      <Block
+        index="02"
+        title="Portal público"
+        hint="O portal público (sem login) mostra o cronograma desta turma: módulos publicados, datas, programação e professores. Nunca mostra alunos, observações internas nem equipe interna. Só uma turma por vez."
+      >
+        <ActionForm action={setCohortPublic}>
+          <input type="hidden" name="id" value={cohort.id} />
+          <Check label="Exibir no portal público" name="portal_publico" defaultChecked={cohort.onPublic} />
+        </ActionForm>
+      </Block>
+
+      <Block index="03" title="Módulos" hint="Ordem, datas e situação. Para editar, abra o módulo.">
         {modules.length ? (
           <ul className="divide-y divide-rule rounded-2xl border border-rule bg-surface">
             {modules.map((m) => (
@@ -107,7 +118,7 @@ export default async function AdminCohortPage({ params }: { params: Promise<{ id
         )}
       </Block>
 
-      <Block index="03" title="Outros eventos do calendário" hint="Aula online, clínica extra, prazos gerais. Publicados aparecem no cronograma dos alunos.">
+      <Block index="04" title="Outros eventos do calendário" hint="Aula online, clínica extra, prazos gerais. Publicados aparecem no cronograma dos alunos.">
         {(events ?? []).length ? (
           <ul className="space-y-2">
             {(events as EventRow[]).map((e) => (

@@ -17,7 +17,13 @@ function Fields({ f }: { f?: FacultyRef }) {
         <Select label="Tipo" name="tipo" defaultValue={f?.kind ?? 'docente'} options={KIND_OPTIONS} />
         <Input label="Especialidade (opcional)" name="especialidade" defaultValue={f?.specialty ?? ''} />
       </div>
-      <TextArea label="Minibio (opcional, visível ao aluno)" name="bio" rows={2} defaultValue={f?.bio ?? ''} />
+      <TextArea
+        label="Minibio (opcional, visível ao aluno)"
+        name="bio"
+        rows={2}
+        defaultValue={f?.bio ?? ''}
+        hint="Tratamento, nome de exibição, especialidade e minibio aparecem também no portal público para quem dá aula publicada ou está na equipe visível. Nome completo, não."
+      />
       {f ? (
         <>
           <input type="hidden" name="ativo" value="" />

@@ -9,19 +9,20 @@ async function client() {
   return supabase
 }
 
-export type CohortSummary = CohortVM & { modules: number; published: number; students: number }
+export type CohortSummary = CohortVM & { modules: number; published: number; students: number; onPublic: boolean }
 
 /** Turmas com contagens, para a lista do painel. */
 export async function listCohorts(): Promise<CohortSummary[]> {
   const supabase = await createSupabaseServerClient()
   if (!supabase) return []
   const [{ data: cohorts }, { data: modules }, { data: enrollments }] = await Promise.all([
-    supabase.from('cohorts').select('id, name, slug, starts_on, ends_on, status, description, closed_at').order('starts_on', { ascending: false }),
+    supabase.from('cohorts').select('id, name, slug, starts_on, ends_on, status, description, closed_at, show_on_public').order('starts_on', { ascending: false }),
     supabase.from('modules').select('cohort_id, status').neq('status', 'arquivado'),
     supabase.from('enrollments').select('cohort_id, role_in_cohort, status'),
   ])
   return (cohorts ?? []).map((c) => ({
     ...toCohort(c),
+    onPublic: c.show_on_public,
     modules: (modules ?? []).filter((m) => m.cohort_id === c.id).length,
     published: (modules ?? []).filter((m) => m.cohort_id === c.id && m.status === 'publicado').length,
     students: (enrollments ?? []).filter((e) => e.cohort_id === c.id && e.role_in_cohort === 'aluno' && e.status === 'ativa').length,

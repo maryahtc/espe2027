@@ -3,6 +3,11 @@
 > Status: **aprovado e implementado** (fases 1–6). Ajustes feitos durante a implementação estão marcados com **[impl.]**.
 > Base: briefing completo + leitura da planilha real **"Cronograma Módulo Espe"** (Google Drive, 26/09/2026).
 
+> **Atualização (Etapa 3 · Parte A, 08/10/2026):** cronograma, módulos e professores passaram a vir **somente do
+> Admin do Portal do Aluno** (banco, visões públicas). As abas MÓDULOS, AULAS e PROFESSORES não são mais lidas nem
+> editadas por aqui; a planilha continua oficial apenas para **materiais, estoque e equipamentos**. Ver
+> `docs/PORTAL-DO-ALUNO-ARQUITETURA.md` (seção S) na raiz do repositório.
+
 ---
 
 ## 0. Diagnóstico — o que a planilha real revelou

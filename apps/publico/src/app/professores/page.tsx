@@ -11,7 +11,7 @@ import { normalizeText, padModuleNumber } from '@/lib/text'
 import { getDataset } from '@/server/data/repository'
 
 export const metadata: Metadata = { title: 'Professores' }
-export const revalidate = 300
+export const revalidate = 60
 
 const defs: FilterDef[] = [{ param: 'q', label: 'Professor', kind: 'text', level: 'item' }]
 
