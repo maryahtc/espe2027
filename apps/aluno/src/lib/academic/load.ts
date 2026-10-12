@@ -260,11 +260,26 @@ export type ResourceVM = {
   position: number
 }
 
+/** Conteúdo da biblioteca ligado ao módulo (a RLS só entrega ao aluno o que está publicado e liberado). */
+export type ModuleLibraryItem = {
+  contentId: string
+  slug: string
+  title: string
+  kind: 'video' | 'artigo' | 'capitulo' | 'livro' | 'pdf' | 'slides' | 'link'
+  status: ContentStatus
+  phase: ModulePhase
+  requirement: RequirementLevel
+  position: number
+  note: string | null
+  progress: 'iniciado' | 'concluido' | null
+}
+
 export type ModuleDetail = {
   module: ModuleVM
   materials: MaterialVM[]
   deliverables: DeliverableVM[]
   resources: ResourceVM[]
+  library: ModuleLibraryItem[]
   /** Observações internas: só chegam para admin e coordenação (RLS). */
   internalNotes: string | null
 }
@@ -291,6 +306,12 @@ export async function loadModuleDetail(id: string, siblings?: ModuleVM[]): Promi
       .order('position'),
     supabase.from('module_internal_notes').select('notes').eq('module_id', id).maybeSingle(),
   ])
+  const { data: claims } = await supabase.auth.getClaims()
+  const [{ data: links }, { data: progress }] = await Promise.all([
+    supabase.from('module_contents').select('phase, requirement, position, note, contents(id, slug, title, kind, status)').eq('module_id', id).order('position'),
+    supabase.from('content_progress').select('content_id, status').eq('user_id', claims?.claims.sub ?? '00000000-0000-0000-0000-000000000000'),
+  ])
+  const progressOf = new Map((progress ?? []).map((p) => [p.content_id, p.status]))
   const checked = new Set((checks ?? []).map((c) => c.material_id))
   return {
     module: mod,
@@ -320,6 +341,23 @@ export async function loadModuleDetail(id: string, siblings?: ModuleVM[]): Promi
       status: r.status,
       position: r.position,
     })),
+    library: (links ?? [])
+      .filter((l) => l.contents)
+      .map((l) => {
+        const c = l.contents as unknown as { id: string; slug: string; title: string; kind: ModuleLibraryItem['kind']; status: ContentStatus }
+        return {
+          contentId: c.id,
+          slug: c.slug,
+          title: c.title,
+          kind: c.kind,
+          status: c.status,
+          phase: l.phase,
+          requirement: l.requirement,
+          position: l.position,
+          note: l.note,
+          progress: progressOf.get(c.id) ?? null,
+        }
+      }),
     internalNotes: notes?.notes ?? null,
   }
 }

@@ -179,3 +179,8 @@ export function related(item: LibraryItem, n = 3) {
     .slice(0, n)
     .map((x) => x.i)
 }
+
+/** Capa da prévia (dados fictícios). */
+export function demoPoster(l: LibraryItem) {
+  return { slug: l.slug, video: l.kind === 'Videoaula', category: l.category, minutes: l.minutes, progress: l.progress ?? null }
+}

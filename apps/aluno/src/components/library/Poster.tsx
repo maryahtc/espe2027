@@ -1,6 +1,8 @@
 import { cn } from '@portal/ui/cn'
 import { IconDoc, IconPlay } from '@portal/ui/icons'
-import type { LibraryItem } from '@/demo/library'
+
+/** O mínimo para desenhar a capa (conteúdo real ou da prévia). */
+export type PosterData = { slug: string; video: boolean; category: string; minutes: number | null; progress?: number | null; label?: string | null }
 
 /** Posição da luz de cada capa, estável por conteúdo (sem imagens inventadas). */
 function lightFor(slug: string) {
@@ -13,8 +15,8 @@ function lightFor(slug: string) {
  * Capa de conteúdo em estilo catálogo: quadro escuro com luz suave, categoria, duração e progresso discreto.
  * Vídeo mostra o botão de play; leitura mostra o ícone de documento.
  */
-export function Poster({ item, size = 'md', className }: { item: LibraryItem; size?: 'md' | 'lg'; className?: string }) {
-  const video = item.kind === 'Videoaula'
+export function Poster({ item, size = 'md', className }: { item: PosterData; size?: 'md' | 'lg'; className?: string }) {
+  const video = item.video
   const { x, y } = lightFor(item.slug)
   return (
     <span
@@ -33,7 +35,8 @@ export function Poster({ item, size = 'md', className }: { item: LibraryItem; si
       >
         {video ? <IconPlay size={size === 'lg' ? 26 : 18} /> : <IconDoc size={size === 'lg' ? 26 : 18} />}
       </span>
-      <span className="num absolute right-4 bottom-3 text-xs text-white/70">{item.minutes} min</span>
+      {item.minutes ? <span className="num absolute right-4 bottom-3 text-xs text-white/70">{item.minutes} min</span> : null}
+      {item.label ? <span className="absolute bottom-3 left-4 text-[11px] text-white/70">{item.label}</span> : null}
       {item.progress ? (
         <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/15">
           <span className="block h-full bg-brand" style={{ width: `${item.progress}%` }} />

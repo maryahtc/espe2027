@@ -14,6 +14,7 @@ import {
 } from '@/lib/academic/model'
 import { type CivilDate, day, formatDayMonth, formatRange, monthLong, relativeDays, weekday } from '@/lib/dates'
 import { MaterialChecklist } from './MaterialChecklist'
+import { LibraryRow } from './LibraryRow'
 import { ResourceRow } from './ResourceRow'
 
 function Section({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
@@ -103,7 +104,9 @@ export function ModuleView({
   const activities = m.days.flatMap((d) => d.sessions)
   const before = detail.resources.filter((r) => r.phase === 'antes')
   const after = detail.resources.filter((r) => r.phase !== 'antes')
-  const requiredBefore = before.filter((r) => r.requirement === 'obrigatorio').length
+  const libBefore = detail.library.filter((l) => l.phase === 'antes')
+  const libAfter = detail.library.filter((l) => l.phase !== 'antes')
+  const requiredBefore = before.filter((r) => r.requirement === 'obrigatorio').length + libBefore.filter((l) => l.requirement === 'obrigatorio').length
   const materialGroups = groupMaterials(detail.materials, m.days)
   const coordinationNotes = (m.materialsNotes ?? '').split('\n').map((n) => n.trim()).filter(Boolean)
   const visibleStaff = m.staff.filter((s) => preview || s.visible)
@@ -171,7 +174,7 @@ export function ModuleView({
             {[
               ['Dias', m.start && m.end ? `${formatDayMonth(m.start)} a ${formatDayMonth(m.end)}` : 'A definir'],
               ['Atividades', activities.length ? `${activities.length} em ${m.days.length} ${m.days.length === 1 ? 'dia' : 'dias'}` : 'Em definição'],
-              ['Preparação', before.length ? `${before.length} ${before.length === 1 ? 'item' : 'itens'}${requiredBefore ? ` · ${requiredBefore} obrigatório${requiredBefore > 1 ? 's' : ''}` : ''}` : 'A publicar'],
+              ['Preparação', before.length + libBefore.length ? `${before.length + libBefore.length} ${before.length + libBefore.length === 1 ? 'item' : 'itens'}${requiredBefore ? ` · ${requiredBefore} obrigatório${requiredBefore > 1 ? 's' : ''}` : ''}` : 'A publicar'],
               ['Materiais', detail.materials.length ? `${detail.materials.length} itens` : 'A publicar'],
               ...(m.workloadHours !== null ? [['Carga horária', `${String(m.workloadHours).replace('.', ',')} h`]] : []),
               ['Local', m.location || 'A definir'],
@@ -259,8 +262,11 @@ export function ModuleView({
           }
         >
           {m.preparation ? <p className="mb-4 max-w-[62ch] text-[15px] leading-relaxed whitespace-pre-line text-ink-2">{m.preparation}</p> : null}
-          {before.length ? (
+          {before.length || libBefore.length ? (
             <ul className="divide-y divide-rule">
+              {libBefore.map((l) => (
+                <LibraryRow key={l.contentId} item={l} preview={preview} />
+              ))}
               {before.map((r) => (
                 <ResourceRow key={r.id} item={r} preview={preview} />
               ))}
@@ -300,8 +306,11 @@ export function ModuleView({
         </Section>
 
         <Section id="durante" title="Durante e depois">
-          {after.length ? (
+          {after.length || libAfter.length ? (
             <ul className="divide-y divide-rule border-y border-rule">
+              {libAfter.map((l) => (
+                <LibraryRow key={l.contentId} item={l} preview={preview} />
+              ))}
               {after.map((r) => (
                 <ResourceRow key={r.id} item={r} preview={preview} />
               ))}

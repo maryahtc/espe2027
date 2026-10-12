@@ -1,58 +1,126 @@
-import { Button, ButtonLink } from '@portal/ui/button'
-import { IconArrowRight, IconBranch, IconDoc } from '@portal/ui/icons'
-import { Chip } from '@portal/ui/tag'
+import { buttonClasses, ButtonLink } from '@portal/ui/button'
+import { IconArrowRight, IconDoc, IconExternal } from '@portal/ui/icons'
+import { RequirementTag } from '@portal/ui/tag'
 import Link from 'next/link'
-import { Poster } from '@/components/library/Poster'
-import { modules } from '@/demo/data'
-import { type LibraryItem, related } from '@/demo/library'
+import { moduleLabel } from '@/lib/academic/model'
+import { type AttachmentVM, type ContentVM, facultyNames, KIND_LABEL, minutes, PHASE_LABEL } from '@/lib/library/model'
+import { posterOf, releaseLabel } from './ContentCard'
+import { Poster } from './Poster'
+import { ProgressButton } from './ProgressButton'
 
-export function LessonView({ item }: { item: LibraryItem }) {
-  const rel = related(item)
-  const mods = modules.filter((m) => item.modules.includes(m.number))
-  const video = item.kind === 'Videoaula'
+/**
+ * Página de um conteúdo da biblioteca. `preview` = pré-visualização do painel (sem gravar progresso).
+ * Vídeo: o player protegido entra na Parte 2 (Bunny); até lá a capa indica "vídeo em preparação".
+ */
+export function LessonView({
+  item,
+  attachments,
+  related,
+  preview = false,
+  backHref = '/biblioteca',
+}: {
+  item: ContentVM
+  attachments: AttachmentVM[]
+  related: ContentVM[]
+  preview?: boolean
+  backHref?: string
+}) {
+  const mins = minutes(item.durationSeconds)
+  const release = releaseLabel(item)
+  const done = item.progress?.status === 'concluido'
+  const file = (extra = '') => `/biblioteca/arquivo/${item.id}${extra}`
 
   return (
     <article>
-      <Link href="/biblioteca" className="text-sm text-muted hover:text-ink">
-        ← Biblioteca
+      <Link href={backHref} className="text-sm text-muted hover:text-ink">
+        ← {preview ? 'Voltar ao conteúdo' : 'Biblioteca'}
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-12">
         <div className="min-w-0 lg:col-span-8">
-          <Poster item={item} size="lg" />
+          <Poster item={posterOf(item)} size="lg" />
           <p className="eyebrow mt-6">
-            {item.kind} · {item.category}
+            {KIND_LABEL[item.kind]} · {item.category}
+            {release ? <span className="text-signal"> · {release}</span> : null}
           </p>
           <h1 className="mt-2 text-3xl leading-tight font-light tracking-tight text-balance sm:text-4xl">{item.title}</h1>
-          <p className="mt-2 text-sm text-muted">
-            {item.teacher} · <span className="num">{item.minutes} min</span>
-          </p>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            {video ? (
-              <Button type="button">{item.progress && item.progress < 100 ? `Continuar de onde parei · ${item.progress}%` : 'Assistir'}</Button>
-            ) : (
-              <Button type="button">
-                <IconDoc size={18} /> Abrir {item.kind === 'PDF' ? 'PDF' : 'leitura'}
-              </Button>
-            )}
-            <Button type="button" variant="secondary">
-              {item.progress === 100 ? '✓ Concluído' : 'Marcar como concluído'}
-            </Button>
-          </div>
-          <p className="mt-8 max-w-[65ch] text-[15px] leading-relaxed text-ink-2">{item.description}</p>
-          <p className="mt-5 flex flex-wrap gap-2">
-            {item.topics.map((t) => (
-              <Chip key={t}>{t}</Chip>
-            ))}
-          </p>
+          {item.faculty.length || mins ? (
+            <p className="mt-2 text-sm text-muted">
+              {facultyNames(item.faculty)}
+              {item.faculty.length && mins ? ' · ' : ''}
+              {mins ? <span className="num">{mins} min</span> : null}
+            </p>
+          ) : null}
 
-          {item.attachments?.length ? (
+          <div className="mt-5 flex flex-wrap items-start gap-3">
+            {item.kind === 'video' && !item.videoId ? (
+              <p className="glass rounded-full px-4 py-2.5 text-sm text-muted">O vídeo desta aula entra em breve.</p>
+            ) : null}
+            {item.filePath ? (
+              <>
+                <a href={file()} target="_blank" rel="noopener" className={buttonClasses('primary')}>
+                  <IconDoc size={18} /> Abrir {item.kind === 'slides' ? 'slides' : 'PDF'}
+                </a>
+                <a href={file('?baixar=1')} className={buttonClasses('secondary')}>
+                  Baixar
+                </a>
+              </>
+            ) : null}
+            {item.url ? (
+              <a href={`/biblioteca/abrir/${item.id}`} target="_blank" rel="noopener" className={buttonClasses(item.filePath ? 'secondary' : 'primary')}>
+                <IconExternal size={16} /> Abrir link
+              </a>
+            ) : null}
+            {preview ? null : <ProgressButton contentId={item.id} done={done} />}
+          </div>
+
+          {item.description ? <p className="mt-8 max-w-[65ch] text-[15px] leading-relaxed whitespace-pre-line text-ink-2">{item.description}</p> : null}
+
+          {item.topics.length ? (
+            <p className="mt-5 flex flex-wrap gap-2">
+              {item.topics.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/biblioteca/temas/${t.slug}`}
+                  className="inline-flex items-center rounded-full border border-rule px-2.5 py-0.5 text-xs font-medium text-ink-2 hover:border-ink hover:text-ink"
+                >
+                  {t.name}
+                </Link>
+              ))}
+            </p>
+          ) : null}
+
+          {item.citation ? (
+            <div className="mt-8">
+              <p className="eyebrow">Referência</p>
+              <p className="mt-2 max-w-[70ch] text-sm leading-relaxed whitespace-pre-line text-ink-2">{item.citation}</p>
+            </div>
+          ) : null}
+
+          {attachments.length ? (
             <div className="mt-10">
               <p className="eyebrow">Materiais complementares</p>
               <ul className="mt-2 divide-y divide-rule border-y border-rule">
-                {item.attachments.map((a) => (
-                  <li key={a} className="flex items-center gap-3 py-3 text-sm">
-                    <IconDoc size={18} className="text-muted" /> {a}
+                {attachments.map((a) => (
+                  <li key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 text-sm">
+                    <span className="flex min-w-0 flex-1 items-center gap-3">
+                      {a.url ? <IconExternal size={16} className="text-muted" /> : <IconDoc size={18} className="text-muted" />}
+                      {a.title}
+                    </span>
+                    {a.url ? (
+                      <a href={`/biblioteca/abrir/${item.id}?anexo=${a.id}`} target="_blank" rel="noopener" className="font-semibold hover:underline">
+                        Abrir link
+                      </a>
+                    ) : (
+                      <span className="flex gap-4">
+                        <a href={file(`?anexo=${a.id}`)} target="_blank" rel="noopener" className="font-semibold hover:underline">
+                          Abrir
+                        </a>
+                        <a href={file(`?anexo=${a.id}&baixar=1`)} className="text-muted hover:text-ink hover:underline">
+                          Baixar
+                        </a>
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -61,31 +129,20 @@ export function LessonView({ item }: { item: LibraryItem }) {
         </div>
 
         <aside className="space-y-10 lg:col-span-4">
-          {item.workflow ? (
-            <Link
-              href={`/workflows/${item.workflow.slug}${item.workflow.path ? `/${item.workflow.path}` : ''}`}
-              className="group block glass rounded-2xl p-5 hover:border-rule-strong"
-            >
-              <span className="flex size-9 items-center justify-center rounded-md bg-sunken">
-                <IconBranch size={18} />
-              </span>
-              <span className="eyebrow mt-4 block text-[10px]">Explorar no Workflow clínico</span>
-              <span className="mt-1 flex items-center justify-between gap-2 text-[15px] font-semibold">
-                {item.workflow.label}
-                <IconArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </Link>
-          ) : null}
-
-          {mods.length ? (
+          {item.modules.length ? (
             <div>
               <p className="eyebrow">Módulos relacionados</p>
               <ul className="mt-2 divide-y divide-rule border-y border-rule">
-                {mods.map((m) => (
-                  <li key={m.number}>
-                    <Link href={`/modulos/${m.slug}`} className="flex items-baseline gap-3 py-3 text-sm hover:underline">
-                      <span className="num font-semibold text-muted">{m.slug}</span>
-                      {m.title}
+                {item.modules.map((m) => (
+                  <li key={m.moduleId}>
+                    <Link href={`/modulos/${m.moduleId}`} className="block py-3 text-sm hover:underline">
+                      <span className="flex items-baseline gap-3">
+                        <span className="num font-semibold text-muted">{moduleLabel(m.number)}</span>
+                        {m.theme || m.title}
+                      </span>
+                      <span className="mt-1 flex flex-wrap items-center gap-3 pl-9 text-xs text-muted">
+                        {PHASE_LABEL[m.phase]} <RequirementTag level={m.requirement} />
+                      </span>
                     </Link>
                   </li>
                 ))}
@@ -93,18 +150,19 @@ export function LessonView({ item }: { item: LibraryItem }) {
             </div>
           ) : null}
 
-          {rel.length ? (
+          {related.length ? (
             <div>
               <p className="eyebrow">Conteúdos relacionados</p>
               <ul className="mt-3 space-y-4">
-                {rel.map((r) => (
-                  <li key={r.slug}>
+                {related.map((r) => (
+                  <li key={r.id}>
                     <Link href={`/biblioteca/${r.slug}`} className="group grid grid-cols-[7rem_1fr] gap-3">
-                      <Poster item={r} />
+                      <Poster item={posterOf(r)} />
                       <span className="min-w-0">
                         <span className="block text-sm leading-snug font-semibold group-hover:underline">{r.title}</span>
                         <span className="mt-0.5 block text-xs text-muted">
-                          {r.teacher} · <span className="num">{r.minutes} min</span>
+                          {KIND_LABEL[r.kind]}
+                          {r.faculty.length ? ` · ${facultyNames(r.faculty)}` : ''}
                         </span>
                       </span>
                     </Link>
@@ -113,9 +171,11 @@ export function LessonView({ item }: { item: LibraryItem }) {
               </ul>
             </div>
           ) : null}
-          <ButtonLink href="/biblioteca" variant="quiet">
-            Ver toda a biblioteca <IconArrowRight size={15} />
-          </ButtonLink>
+          {preview ? null : (
+            <ButtonLink href="/biblioteca" variant="quiet">
+              Ver toda a biblioteca <IconArrowRight size={15} />
+            </ButtonLink>
+          )}
         </aside>
       </div>
     </article>

@@ -1,18 +1,26 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { LessonView } from '@/components/library/LessonView'
-import { library, librarySlug } from '@/demo/library'
+import { currentCohort } from '@/lib/academic/load'
+import { requireUser } from '@/lib/auth/session'
+import { loadAttachments, loadLibrary } from '@/lib/library/load'
+import { relatedContents } from '@/lib/library/model'
 
-export function generateStaticParams() {
-  return library.map((l) => ({ slug: l.slug }))
+async function find(slug: string) {
+  const auth = await requireUser()
+  const cohort = await currentCohort()
+  const all = await loadLibrary(auth?.userId ?? null, cohort?.id ?? null)
+  return { item: all.find((c) => c.slug === slug) ?? null, all }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  return { title: librarySlug((await params).slug)?.title ?? 'Biblioteca' }
+  const { item } = await find((await params).slug)
+  return { title: item?.title ?? 'Biblioteca' }
 }
 
-export default async function LessonPage({ params }: { params: Promise<{ slug: string }> }) {
-  const item = librarySlug((await params).slug)
+export default async function ContentPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { item, all } = await find((await params).slug)
   if (!item) notFound()
-  return <LessonView item={item} />
+  const attachments = await loadAttachments(item.id)
+  return <LessonView item={item} attachments={attachments} related={relatedContents(item, all)} />
 }

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ButtonLink } from '@portal/ui/button'
 import { RequirementTag, StatusPill } from '@portal/ui/tag'
 import Link from 'next/link'
@@ -79,7 +80,7 @@ function describeChange(e: HistoryEntry): string {
 }
 
 /** Editor do módulo: um formulário por bloco; tudo grava na hora e entra no histórico. */
-export function ModuleEditor({ page, internalNotes }: { page: AdminModulePage; internalNotes: string }) {
+export function ModuleEditor({ page, internalNotes, library }: { page: AdminModulePage; internalNotes: string; library?: ReactNode }) {
   const { detail, cohort, faculty, history, students } = page
   const m = detail.module
   const published = m.status === 'publicado'
@@ -363,7 +364,11 @@ export function ModuleEditor({ page, internalNotes }: { page: AdminModulePage; i
         {resourceList(after, 'durante')}
       </Block>
 
-      <Block index="06" title="Entregas" hint="Tarefas do aluno ligadas ao módulo. Com prazo, aparecem também no calendário.">
+      <Block index="06" title="Biblioteca" hint="Conteúdos da biblioteca ligados a este módulo, com quando (antes, durante, depois) e obrigatoriedade. O aluno vê só os publicados.">
+        {library}
+      </Block>
+
+      <Block index="07" title="Entregas" hint="Tarefas do aluno ligadas ao módulo. Com prazo, aparecem também no calendário.">
         {detail.deliverables.length ? (
           <ul className="space-y-2">
             {detail.deliverables.map((d) => (
@@ -401,7 +406,7 @@ export function ModuleEditor({ page, internalNotes }: { page: AdminModulePage; i
         </AddPanel>
       </Block>
 
-      <Block index="07" title="Equipe do módulo" hint="Professor principal, equipe clínica, coordenação e apoio. Quem está “visível” aparece também no portal público; desmarque para quem é só interno.">
+      <Block index="08" title="Equipe do módulo" hint="Professor principal, equipe clínica, coordenação e apoio. Quem está “visível” aparece também no portal público; desmarque para quem é só interno.">
         {m.staff.length ? (
           <ul className="space-y-2">
             {m.staff.map((s) => (
@@ -433,14 +438,14 @@ export function ModuleEditor({ page, internalNotes }: { page: AdminModulePage; i
         </AddPanel>
       </Block>
 
-      <Block index="08" title="Observações internas" hint="Só admin e coordenação veem. Nunca aparece para o aluno.">
+      <Block index="09" title="Observações internas" hint="Só admin e coordenação veem. Nunca aparece para o aluno.">
         <ActionForm action={saveInternalNotes}>
           <input type="hidden" name="modulo" value={m.id} />
           <TextArea label="Observações" name="notas" rows={5} defaultValue={internalNotes} />
         </ActionForm>
       </Block>
 
-      <Block index="09" title="Histórico" hint="Quem alterou, quando e o que mudou (últimas 40 alterações).">
+      <Block index="10" title="Histórico" hint="Quem alterou, quando e o que mudou (últimas 40 alterações).">
         {history.length ? (
           <ol className="divide-y divide-rule rounded-2xl border border-rule bg-surface">
             {history.map((h) => (

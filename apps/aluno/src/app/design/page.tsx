@@ -14,7 +14,7 @@ import { Logo } from '@/components/shell/Logo'
 import { PreviewBanner } from '@/components/shell/PreviewBanner'
 import { cases } from '@/demo/cases'
 import { modules } from '@/demo/data'
-import { library } from '@/demo/library'
+import { demoPoster, library } from '@/demo/library'
 
 export const metadata: Metadata = { title: 'Design system' }
 
@@ -256,7 +256,7 @@ export default function DesignPage() {
               ))}
               {library.slice(0, 2).map((l) => (
                 <Link key={l.slug} href={`/biblioteca/${l.slug}`} className="group block">
-                  <Poster item={l} />
+                  <Poster item={demoPoster(l)} />
                   <span className="mt-3 block text-[15px] font-semibold group-hover:underline">{l.title}</span>
                   <span className="block text-sm text-muted">
                     {l.teacher} · <span className="num">{l.minutes} min</span>

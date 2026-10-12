@@ -9,16 +9,30 @@ export type Database = {
   
   "public": {
           Tables: {
-            "change_log": {
+            "categories": {
                   Row: {
-                    "action": string,"actor": string | null,"at": string,"changes": NonNullable<Json>,"cohort_id": string | null,"id": number,"module_id": string | null,"row_id": string,"table_name": string
+                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"position": number,"slug": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"actor"?: string | null,"at"?: string,"changes": NonNullable<Json>,"cohort_id"?: string | null,"id"?: never,"module_id"?: string | null,"row_id": string,"table_name": string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"position"?: number,"slug": string,"updated_at"?: string
                   }
                   Update: {
-                    "action"?: string,"actor"?: string | null,"at"?: string,"changes"?: NonNullable<Json>,"cohort_id"?: string | null,"id"?: never,"module_id"?: string | null,"row_id"?: string,"table_name"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"position"?: number,"slug"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"change_log": {
+                  Row: {
+                    "action": string,"actor": string | null,"at": string,"changes": NonNullable<Json>,"cohort_id": string | null,"content_id": string | null,"id": number,"module_id": string | null,"row_id": string,"table_name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"actor"?: string | null,"at"?: string,"changes": NonNullable<Json>,"cohort_id"?: string | null,"content_id"?: string | null,"id"?: never,"module_id"?: string | null,"row_id": string,"table_name": string
+                  }
+                  Update: {
+                    "action"?: string,"actor"?: string | null,"at"?: string,"changes"?: NonNullable<Json>,"cohort_id"?: string | null,"content_id"?: string | null,"id"?: never,"module_id"?: string | null,"row_id"?: string,"table_name"?: string
                   }
                   Relationships: [
                     
@@ -56,6 +70,176 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"content_attachments": {
+                  Row: {
+                    "content_id": string,"created_at": string,"file_name": string | null,"file_path": string | null,"id": string,"position": number,"title": string,"url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_id": string,"created_at"?: string,"file_name"?: string | null,"file_path"?: string | null,"id"?: string,"position"?: number,"title": string,"url"?: string | null
+                  }
+                  Update: {
+                    "content_id"?: string,"created_at"?: string,"file_name"?: string | null,"file_path"?: string | null,"id"?: string,"position"?: number,"title"?: string,"url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_attachments_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"content_cohorts": {
+                  Row: {
+                    "cohort_id": string,"content_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cohort_id": string,"content_id": string
+                  }
+                  Update: {
+                    "cohort_id"?: string,"content_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_cohorts_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_cohorts_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"content_faculty": {
+                  Row: {
+                    "content_id": string,"faculty_id": string,"position": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_id": string,"faculty_id": string,"position"?: number
+                  }
+                  Update: {
+                    "content_id"?: string,"faculty_id"?: string,"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_faculty_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_faculty_faculty_id_fkey"
+      columns: ["faculty_id"]
+isOneToOne: false
+      referencedRelation: "faculty"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_faculty_faculty_id_fkey"
+      columns: ["faculty_id"]
+isOneToOne: false
+      referencedRelation: "public_teachers"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"content_progress": {
+                  Row: {
+                    "completed_at": string | null,"content_id": string,"percent": number,"position_seconds": number,"started_at": string,"status": Database["public"]['Enums']["progress_status"],"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "completed_at"?: string | null,"content_id": string,"percent"?: number,"position_seconds"?: number,"started_at"?: string,"status"?: Database["public"]['Enums']["progress_status"],"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "completed_at"?: string | null,"content_id"?: string,"percent"?: number,"position_seconds"?: number,"started_at"?: string,"status"?: Database["public"]['Enums']["progress_status"],"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_progress_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_progress_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"content_search": {
+                  Row: {
+                    "content_id": string,"vector": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_id": string,"vector": unknown
+                  }
+                  Update: {
+                    "content_id"?: string,"vector"?: unknown
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_search_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: true
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"content_topics": {
+                  Row: {
+                    "content_id": string,"topic_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_id": string,"topic_id": string
+                  }
+                  Update: {
+                    "content_id"?: string,"topic_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_topics_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_topics_topic_id_fkey"
+      columns: ["topic_id"]
+isOneToOne: false
+      referencedRelation: "topics"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contents": {
+                  Row: {
+                    "archived_at": string | null,"available_from": string | null,"category_id": string,"citation": string | null,"created_at": string,"description": string | null,"duration_seconds": number | null,"file_name": string | null,"file_path": string | null,"id": string,"kind": Database["public"]['Enums']["content_kind"],"published_at": string | null,"slug": string,"status": Database["public"]['Enums']["content_status"],"thumbnail_url": string | null,"title": string,"updated_at": string,"url": string | null,"video_id": string | null,"video_provider": string | null,"video_status": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"available_from"?: string | null,"category_id": string,"citation"?: string | null,"created_at"?: string,"description"?: string | null,"duration_seconds"?: number | null,"file_name"?: string | null,"file_path"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["content_kind"],"published_at"?: string | null,"slug": string,"status"?: Database["public"]['Enums']["content_status"],"thumbnail_url"?: string | null,"title": string,"updated_at"?: string,"url"?: string | null,"video_id"?: string | null,"video_provider"?: string | null,"video_status"?: string | null
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"available_from"?: string | null,"category_id"?: string,"citation"?: string | null,"created_at"?: string,"description"?: string | null,"duration_seconds"?: number | null,"file_name"?: string | null,"file_path"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["content_kind"],"published_at"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["content_status"],"thumbnail_url"?: string | null,"title"?: string,"updated_at"?: string,"url"?: string | null,"video_id"?: string | null,"video_provider"?: string | null,"video_status"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contents_category_id_fkey"
+      columns: ["category_id"]
+isOneToOne: false
+      referencedRelation: "categories"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"enrollments": {
                   Row: {
@@ -126,6 +310,38 @@ isOneToOne: false
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_contents": {
+                  Row: {
+                    "content_id": string,"module_id": string,"note": string | null,"phase": Database["public"]['Enums']["module_phase"],"position": number,"requirement": Database["public"]['Enums']["requirement_level"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_id": string,"module_id": string,"note"?: string | null,"phase"?: Database["public"]['Enums']["module_phase"],"position"?: number,"requirement"?: Database["public"]['Enums']["requirement_level"]
+                  }
+                  Update: {
+                    "content_id"?: string,"module_id"?: string,"note"?: string | null,"phase"?: Database["public"]['Enums']["module_phase"],"position"?: number,"requirement"?: Database["public"]['Enums']["requirement_level"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_contents_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_contents_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_contents_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
       referencedColumns: ["id"]
     }
                   ]
@@ -461,6 +677,52 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"topic_notes": {
+                  Row: {
+                    "origin": string,"topic_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "origin"?: string,"topic_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "origin"?: string,"topic_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "topic_notes_topic_id_fkey"
+      columns: ["topic_id"]
+isOneToOne: true
+      referencedRelation: "topics"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"topics": {
+                  Row: {
+                    "archived_at": string | null,"category_id": string,"created_at": string,"description": string | null,"id": string,"merged_into": string | null,"name": string,"slug": string,"synonyms": (string)[],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"category_id": string,"created_at"?: string,"description"?: string | null,"id"?: string,"merged_into"?: string | null,"name": string,"slug": string,"synonyms"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"category_id"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"merged_into"?: string | null,"name"?: string,"slug"?: string,"synonyms"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "topics_category_id_fkey"
+      columns: ["category_id"]
+isOneToOne: false
+      referencedRelation: "categories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "topics_merged_into_fkey"
+      columns: ["merged_into"]
+isOneToOne: false
+      referencedRelation: "topics"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -511,6 +773,12 @@ isOneToOne: false
 "can_view_profile":
 { Args: { "p_user_id": string }; Returns: boolean
                            },
+"content_cohort_access":
+{ Args: { "p_content_id": string,"p_coord_only": boolean }; Returns: boolean
+                           },
+"content_readable":
+{ Args: { "p_content_id": string }; Returns: boolean
+                           },
 "coordinates":
 { Args: { "p_cohort_id": string }; Returns: boolean
                            },
@@ -529,6 +797,18 @@ isOneToOne: false
 "is_enrolled":
 { Args: { "p_cohort_id": string }; Returns: boolean
                            },
+"is_staff":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"library_file_readable":
+{ Args: { "p_path": string }; Returns: boolean
+                           },
+"library_tsquery":
+{ Args: { "p_query": string }; Returns: unknown
+                           },
+"merge_topics":
+{ Args: { "p_from": string,"p_into": string }; Returns: number
+                           },
 "module_file_readable":
 { Args: { "p_path": string }; Returns: boolean
                            },
@@ -541,12 +821,26 @@ isOneToOne: false
 "needs_terms_acceptance":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"progress_visible":
+{ Args: { "p_user_id": string }; Returns: boolean
+                           },
+"refresh_content_search":
+{ Args: { "p_content_id": string }; Returns: undefined
+                           },
 "resource_readable":
 { Args: { "p_resource_id": string }; Returns: boolean
+                           },
+"search_library":
+{ Args: { "p_query": string }; Returns: {
+              "content_id": string,"rank": number
+            }[]
+                           },
+"search_normalize":
+{ Args: { "p_text": string }; Returns: string
                            }
           }
           Enums: {
-            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_status": "rascunho"|"publicado"|"arquivado","day_period": "manha"|"tarde"|"noite"|"dia_todo","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio"
+            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","day_period": "manha"|"tarde"|"noite"|"dia_todo","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -662,7 +956,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_status": ["rascunho", "publicado", "arquivado"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"]
+            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"]
           }
         }
 } as const
