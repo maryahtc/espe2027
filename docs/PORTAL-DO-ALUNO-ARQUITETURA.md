@@ -1168,7 +1168,32 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
   o projeto `portal-aluno`). Fica para depois: criar o projeto na Vercel, configurar a planilha (conta de serviço e
   login Google) e só então marcar a Turma 2027. Até lá a caixa "Exibir no portal público" continua desmarcada.
 
-**Próximo passo:** proposta da Etapa 4 (Temas + Biblioteca) para aprovação.
+**Etapa 4 · Parte 1 — Temas e Biblioteca (aplicada em 12/10/2026, aguardando aprovação)**
+- Decisões (Maryah): progresso individual visível para admin e coordenação da turma; conteúdo novo para todas as
+  turmas por padrão (com restrição opcional); PDFs: ver e baixar; vídeo concluído aos 90% e marca d'água com o e-mail
+  (Parte 2); aulas já gravadas tratadas depois.
+- Migração `20261010120000_biblioteca` (só aditiva): `categories` (áreas), `topics` (temas, sinônimos, arquivar,
+  juntar), `topic_notes` (origem; só admin/coordenação), `contents`, `content_topics`, `content_faculty`,
+  `content_attachments`, `content_cohorts` (vazio = todas as turmas), `module_contents`, `content_progress`,
+  `content_search` (busca em português, sem acento, por título, temas+sinônimos, professores, área, descrição e
+  referência); `merge_topics()`; bucket privado `library-files`; coluna nova `change_log.content_id`. Publicado não se
+  exclui (arquiva); rascunho nunca publicado pode ser excluído. Vídeo: campos prontos, envio na Parte 2 (Bunny).
+- Migração `20261010120100_taxonomia_inicial` (só inclusão, autorizada): 7 áreas e 27 temas aprovados, com
+  sinônimos e origem. Pendente: "inteligência" (M1). Não cadastrados: Lu do Ateliê Oral, Mock-up, Cimentação adesiva,
+  Restaurações provisórias, Seleção de cor, área Periodontia.
+- Aluno: `/biblioteca` (busca, área, tema, tipo, professor, módulo, situação; faixas Continuar, Para o próximo
+  módulo, Novidades), `/biblioteca/[conteúdo]` (abrir/baixar PDF por link temporário, link externo, materiais
+  complementares, referência, temas, módulos e relacionados, marcar como concluído), `/biblioteca/temas` e
+  `/biblioteca/temas/[tema]`; no módulo, os conteúdos ligados aparecem em Antes / Durante e depois.
+- Admin: `/admin/temas` (áreas e temas: criar, editar, sinônimos, origem, arquivar, juntar), `/admin/conteudos`
+  (lista por situação, novo, editor com dados, arquivo, temas, professores, materiais, turmas, módulos, publicar,
+  arquivar, pré-visualizar, histórico) e bloco "Biblioteca" no editor do módulo.
+- Testes: banco 132 (96 + 36 novos) local e CI; unitários 31 (24 + 7); E2E local 51/51 + regressões 48/48, 58/58,
+  26/26; build com e sem Supabase.
+- Produção: as duas migrações aplicadas; conferido só por leitura que turmas, módulos, dias, atividades, docentes,
+  perfis, termos, observações e o histórico anterior ficaram idênticos. 0 conteúdos (nada de teste em produção).
+
+**Próximo passo:** aprovação da Parte 1; depois Parte 2 (vídeos com o Bunny).
 
 ## N. Decisões
 
