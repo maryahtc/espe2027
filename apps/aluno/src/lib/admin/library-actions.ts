@@ -374,3 +374,56 @@ export async function unlinkModule(_: ActionState, fd: FormData): Promise<Action
     return 'Vínculo retirado.'
   })
 }
+
+// ─── Vídeo (Bunny Stream) ──────────────────────────────────────────────────────────────────────────
+export type VideoTicket = { endpoint: string; libraryId: string; videoId: string; signature: string; expires: number }
+
+/**
+ * Prepara o envio do vídeo: cria o vídeo no Bunny (ou reaproveita um envio interrompido) e devolve o bilhete
+ * assinado para o navegador enviar direto ao Bunny. A chave da API nunca sai do servidor.
+ * `trocar` = novo vídeo no lugar do atual (o antigo continua guardado no Bunny; nada é apagado).
+ */
+export async function prepareVideoUpload(contentId: string, trocar = false): Promise<VideoTicket | { erro: string }> {
+  try {
+    const db = await admin()
+    if (!UUID.test(contentId)) return { erro: 'Conteúdo inválido.' }
+    const { videoConfig, createUpload } = await import('@/lib/video/bunny')
+    const cfg = videoConfig()
+    if (!cfg) return { erro: 'O Bunny ainda não está configurado neste ambiente.' }
+    const { data: c } = await db.from('contents').select('title, kind, video_id, video_status').eq('id', contentId).single()
+    if (!c || c.kind !== 'video') return { erro: 'Este conteúdo não é uma videoaula.' }
+    const resume = !trocar && c.video_id && c.video_status === 'enviando' ? c.video_id : null
+    const ticket = await createUpload(cfg, c.title, resume)
+    if (ticket.videoId !== c.video_id) {
+      const { error } = await db
+        .from('contents')
+        .update({ video_provider: 'bunny', video_id: ticket.videoId, video_status: 'enviando', thumbnail_url: null })
+        .eq('id', contentId)
+      if (error) return { erro: 'Não foi possível registrar o vídeo.' }
+    }
+    return ticket
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : 'Não foi possível preparar o envio.' }
+  }
+}
+
+/** Fim do envio pelo navegador: o Bunny passa a processar. */
+export async function markVideoUploaded(contentId: string): Promise<ActionState> {
+  return run(async (db) => {
+    if (!UUID.test(contentId)) throw new Error('Conteúdo inválido.')
+    const { error } = await db.from('contents').update({ video_status: 'processando' }).eq('id', contentId).eq('video_status', 'enviando')
+    fail(error)
+    return 'Vídeo enviado. O Bunny está processando; a situação atualiza sozinha.'
+  })
+}
+
+/** Consulta o Bunny e grava situação, duração e capa (só quando mudou). */
+export async function refreshVideo(contentId: string): Promise<{ status: string | null; encodeProgress: number | null } | { erro: string }> {
+  try {
+    const db = await admin()
+    const { refreshVideoState } = await import('@/lib/video/refresh')
+    return await refreshVideoState(db, contentId)
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : 'Não foi possível consultar o vídeo.' }
+  }
+}
