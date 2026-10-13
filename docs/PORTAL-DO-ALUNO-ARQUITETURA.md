@@ -1317,6 +1317,37 @@ Autorizada em 13/10/2026, conforme a arquitetura aprovada.
   seguem a data escolhida e não há "Entendi" (nada é gravado).
 - Dados fictícios de avisos removidos (`demo/admin-content.ts`). Nenhum aviso de teste em produção.
 
+### Marco — ETAPA 5 (INÍCIO DO ALUNO) CONCLUÍDA (13/10/2026)
+
+Parte 2 aprovada pela Maryah em 13/10/2026; com isso a Etapa 5 está oficialmente concluída. Estado final, separando
+**código publicado** de **banco de produção**:
+
+| Parte | Código no portal de produção | Banco de produção |
+|---|---|---|
+| 1 · Início real | Publicado e em uso: Início sem dados fictícios, momentos da turma, janela de preparação de 30 dias, pendências, próximas atividades, "depois do módulo", "continuar", obrigatórios conforme o momento do módulo, pré-visualização do admin por data, aviso "Protótipo" só nas telas ainda fictícias | Sem migração, sem alteração |
+| 2 · Avisos | Publicado e em uso: Admin → Avisos, Coordenação → Avisos, avisos no Início com "Entendi" (comuns) e importantes fixos até a data final | Migração `20261013120000_avisos` aplicada (só aditiva: `announcements`, `announcement_dismissals`, `sp_today()`, regras de acesso). Conferência antes/depois: 29 das 30 tabelas existentes idênticas; só `schema_info` mudou (versão). Tabelas novas vazias — nenhum aviso de teste em produção |
+
+- Verificação da publicação (13/10/2026): `/api/saude` em produção informa o banco na versão `20261013120000_avisos`.
+  Conferência definitiva do último envio: card do projeto `portal-aluno` na Vercel.
+- Testes ao fechar (todos fora da produção): banco 159 · unitários 65 · E2E local: Início 41, Avisos 30;
+  regressões fluxos 48, parte3 58, gestão 26, biblioteca 51, acompanhamento 21 · build com e sem Supabase.
+
+**Pendências futuras já previstas (não bloqueiam):**
+
+| Pendência | Onde entra |
+|---|---|
+| Atalho "Registrar caso" e casos recentes no Início | Etapa 6 (Meus casos) |
+| Marcar entrega como "entregue" (hoje o portal mostra só o prazo) | Junto de casos e produção (Etapas 6–9), a decidir na proposta |
+| "Para você" — recomendações a partir dos casos e dificuldades | Etapa 9 (Produção + recomendações) |
+| Painel inicial do Admin com números reais | Etapa 11 (junto dos painéis) |
+| Aviso por e-mail / notificações | MVP 2 |
+| Vínculo de conteúdo com um dia específico do módulo | Não previsto agora (decidido em 13/10/2026: durante o módulo contam Antes + Durante) |
+| Publicação do portal público, configuração real do Bunny, tema "inteligência", envio em lote de aulas gravadas | Pendências das Etapas 3–4, mantidas |
+| Proteção de produção e backups | Etapa 11b, obrigatória antes do go-live |
+
+**Próximo passo:** apresentar à Maryah a proposta de arquitetura e experiência da Etapa 6 (Meus casos) e aguardar
+aprovação antes de qualquer implementação.
+
 
 ## N. Decisões
 
