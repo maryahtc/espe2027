@@ -1,6 +1,7 @@
 import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import type { HistoryEntry } from '@/lib/admin/academic'
+import { refreshPendingVideos, refreshVideoState } from '@/lib/video/refresh'
 import { CONTENT_COLS, type ContentRow, loadAttachments, loadTaxonomy, toContent } from '@/lib/library/load'
 import type { AttachmentVM, CategoryVM, ContentVM, TopicVM } from '@/lib/library/model'
 
@@ -14,6 +15,7 @@ async function client() {
 export async function adminContents(): Promise<ContentVM[]> {
   const supabase = await createSupabaseServerClient()
   if (!supabase) return []
+  await refreshPendingVideos(supabase)
   const { data, error } = await supabase.from('contents').select(CONTENT_COLS).order('updated_at', { ascending: false })
   if (error) throw new Error(error.message)
   return (data as unknown as ContentRow[]).map((r) => toContent(r))
@@ -35,6 +37,7 @@ export type AdminContentPage = {
 export async function loadAdminContent(id: string): Promise<AdminContentPage | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null
   const supabase = await client()
+  await refreshVideoState(supabase, id).catch(() => undefined)
   const { data: row } = await supabase.from('contents').select(CONTENT_COLS).eq('id', id).maybeSingle()
   if (!row) return null
   const [attachments, { categories, topics }, { data: faculty }, { data: cohorts }, { data: modules }, history] = await Promise.all([

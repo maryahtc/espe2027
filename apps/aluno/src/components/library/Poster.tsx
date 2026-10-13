@@ -2,7 +2,7 @@ import { cn } from '@portal/ui/cn'
 import { IconDoc, IconPlay } from '@portal/ui/icons'
 
 /** O mínimo para desenhar a capa (conteúdo real ou da prévia). */
-export type PosterData = { slug: string; video: boolean; category: string; minutes: number | null; progress?: number | null; label?: string | null }
+export type PosterData = { slug: string; video: boolean; category: string; minutes: number | null; progress?: number | null; label?: string | null; image?: string | null }
 
 /** Posição da luz de cada capa, estável por conteúdo (sem imagens inventadas). */
 function lightFor(slug: string) {
@@ -22,7 +22,11 @@ export function Poster({ item, size = 'md', className }: { item: PosterData; siz
     <span
       className={cn('relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl bg-black ring-1 ring-white/10', className)}
       style={{
-        backgroundImage: `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,${video ? 0.1 : 0.07}), transparent 55%), repeating-linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,0.035) 31px 32px)`,
+        backgroundImage: item.image
+          ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url("${item.image.replace(/"/g, '')}")`
+          : `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,${video ? 0.1 : 0.07}), transparent 55%), repeating-linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,0.035) 31px 32px)`,
+        backgroundSize: item.image ? 'cover' : undefined,
+        backgroundPosition: item.image ? 'center' : undefined,
       }}
     >
       <span className="eyebrow absolute top-3.5 left-4 text-[10px] text-white/60">{item.category}</span>

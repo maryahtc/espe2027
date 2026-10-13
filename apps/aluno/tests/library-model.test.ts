@@ -37,6 +37,7 @@ function item(id: string, over: Partial<ContentVM> = {}): ContentVM {
     fileName: null,
     videoId: null,
     videoStatus: null,
+    thumbnailUrl: null,
     durationSeconds: null,
     availableFrom: null,
     status: 'publicado',
@@ -55,7 +56,7 @@ const a = item('a', { topics: [{ id: 't1', name: 'Adesão', slug: 'adesao' }], p
 const b = item('b', { kind: 'video', categoryId: 'c2', topics: [{ id: 't2', name: 'Marketing', slug: 'marketing-odontologico' }], faculty: [{ id: 'f1', name: 'Thiago', honorific: null }] })
 const c = item('c', {
   topics: [{ id: 't1', name: 'Adesão', slug: 'adesao' }],
-  progress: { status: 'concluido', percent: 100, completedAt: 'x', updatedAt: 'x' },
+  progress: { status: 'concluido', percent: 100, positionSeconds: 0, completedAt: 'x', updatedAt: 'x' },
   modules: [{ moduleId: 'm1', cohortId: 'k', number: 4, title: 'Módulo 4', theme: null, phase: 'antes', requirement: 'obrigatorio', position: 0, note: null }],
   publishedAt: '2027-02-01T00:00:00Z',
 })

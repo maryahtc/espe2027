@@ -4,8 +4,9 @@ import { type ContentVM, facultyNames, isReleased, KIND_LABEL, minutes } from '@
 import { Poster, type PosterData } from './Poster'
 
 export function posterOf(c: ContentVM): PosterData {
-  const pending = c.kind === 'video' && !c.videoId
+  const pending = c.kind === 'video' && c.videoStatus !== 'pronto'
   return {
+    image: c.thumbnailUrl,
     slug: c.slug,
     video: c.kind === 'video',
     category: c.category,

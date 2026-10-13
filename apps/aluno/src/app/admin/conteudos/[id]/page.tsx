@@ -7,6 +7,8 @@ import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { AddPanel, Block, Check, Editable, Input, Select, TextArea } from '@/components/admin/academic/ui'
 import { HistoryList } from '@/components/admin/library/History'
 import { LibraryUpload } from '@/components/admin/library/LibraryUpload'
+import { VideoUpload } from '@/components/admin/library/VideoUpload'
+import { videoConfig } from '@/lib/video/bunny'
 import { requireUser } from '@/lib/auth/session'
 import { moduleLabel } from '@/lib/academic/model'
 import { loadAdminContent } from '@/lib/admin/library'
@@ -113,12 +115,18 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
             <Input label="Horário" name="liberar_hora" type="time" defaultValue={release.t} />
           </div>
         </ActionForm>
-        {c.kind === 'video' ? (
-          <p className="rounded-2xl border border-dashed border-rule-strong px-4 py-3 text-sm text-muted">
-            Vídeo: o envio direto para o Bunny e o player protegido chegam na Parte 2. Até lá, a capa mostra “vídeo em preparação”.
-          </p>
-        ) : null}
       </Block>
+
+      {c.kind === 'video' ? (
+        <Block index="02" title="Vídeo" hint="Vai direto do seu navegador para o Bunny. Duração e capa chegam sozinhas quando o processamento termina. O aluno assiste por link assinado, com marca d'água do e-mail.">
+          {c.thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- capa vinda do Bunny (CDN próprio)
+            <img src={c.thumbnailUrl} alt="" className="aspect-video w-full max-w-sm rounded-xl object-cover ring-1 ring-white/10" />
+          ) : null}
+          {c.durationSeconds ? <p className="num text-sm text-muted">Duração: {Math.round(c.durationSeconds / 60)} min</p> : null}
+          <VideoUpload contentId={c.id} status={c.videoStatus} configured={Boolean(videoConfig())} />
+        </Block>
+      ) : null}
 
       {hasFile ? (
         <Block index="02" title="Arquivo principal" hint="PDF ou slides. Vai direto para o armazenamento privado; o aluno abre por link temporário e pode baixar.">

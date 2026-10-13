@@ -5,7 +5,7 @@ import type { ContentStatus, ModulePhase, RequirementLevel } from '@/lib/academi
 import type { AttachmentVM, CategoryVM, ContentKind, ContentVM, ProgressStatus, TopicVM } from './model'
 
 export const CONTENT_COLS = `id, kind, title, slug, description, category_id, citation, url, file_path, file_name, video_id,
-  video_status, duration_seconds, available_from, status, published_at, updated_at,
+  video_status, thumbnail_url, duration_seconds, available_from, status, published_at, updated_at,
   categories(name),
   content_topics(topics(id, name, slug)),
   content_faculty(position, faculty(id, display_name, honorific)),
@@ -25,6 +25,7 @@ export type ContentRow = {
   file_name: string | null
   video_id: string | null
   video_status: string | null
+  thumbnail_url: string | null
   duration_seconds: number | null
   available_from: string | null
   status: ContentStatus
@@ -44,7 +45,7 @@ export type ContentRow = {
   }>
 }
 
-type ProgressRow = { content_id: string; status: ProgressStatus; percent: number; completed_at: string | null; updated_at: string }
+type ProgressRow = { content_id: string; status: ProgressStatus; percent: number; position_seconds: number; completed_at: string | null; updated_at: string }
 
 export function toContent(r: ContentRow, progress?: ProgressRow): ContentVM {
   return {
@@ -61,6 +62,7 @@ export function toContent(r: ContentRow, progress?: ProgressRow): ContentVM {
     fileName: r.file_name,
     videoId: r.video_id,
     videoStatus: r.video_status,
+    thumbnailUrl: r.thumbnail_url,
     durationSeconds: r.duration_seconds,
     availableFrom: r.available_from,
     status: r.status,
@@ -91,7 +93,7 @@ export function toContent(r: ContentRow, progress?: ProgressRow): ContentVM {
       }))
       .sort((a, b) => (a.number ?? 999) - (b.number ?? 999)),
     progress: progress
-      ? { status: progress.status, percent: progress.percent, completedAt: progress.completed_at, updatedAt: progress.updated_at }
+      ? { status: progress.status, percent: progress.percent, positionSeconds: progress.position_seconds, completedAt: progress.completed_at, updatedAt: progress.updated_at }
       : null,
   }
 }
@@ -133,7 +135,7 @@ export const loadLibrary = cache(async (userId: string | null, cohortId: string 
   const [{ data, error }, { data: progress }] = await Promise.all([
     supabase.from('contents').select(CONTENT_COLS).eq('status', 'publicado').order('published_at', { ascending: false }),
     userId
-      ? supabase.from('content_progress').select('content_id, status, percent, completed_at, updated_at').eq('user_id', userId)
+      ? supabase.from('content_progress').select('content_id, status, percent, position_seconds, completed_at, updated_at').eq('user_id', userId)
       : Promise.resolve({ data: [] as ProgressRow[] }),
   ])
   if (error) throw new Error(`Falha ao carregar a biblioteca: ${error.message}`)

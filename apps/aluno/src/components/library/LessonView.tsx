@@ -7,6 +7,7 @@ import { type AttachmentVM, type ContentVM, facultyNames, KIND_LABEL, minutes, P
 import { posterOf, releaseLabel } from './ContentCard'
 import { Poster } from './Poster'
 import { ProgressButton } from './ProgressButton'
+import { VideoPlayer } from './VideoPlayer'
 
 /**
  * Página de um conteúdo da biblioteca. `preview` = pré-visualização do painel (sem gravar progresso).
@@ -18,7 +19,10 @@ export function LessonView({
   related,
   preview = false,
   backHref = '/biblioteca',
+  video = null,
 }: {
+  /** Player assinado (só quando o vídeo está pronto e o Bunny configurado). */
+  video?: { src: string; watermark: string } | null
   item: ContentVM
   attachments: AttachmentVM[]
   related: ContentVM[]
@@ -38,7 +42,18 @@ export function LessonView({
 
       <div className="mt-6 grid gap-10 lg:grid-cols-12">
         <div className="min-w-0 lg:col-span-8">
-          <Poster item={posterOf(item)} size="lg" />
+          {video ? (
+            <VideoPlayer
+              src={video.src}
+              contentId={item.id}
+              watermark={video.watermark}
+              startAt={item.progress && item.progress.status !== 'concluido' ? item.progress.positionSeconds : 0}
+              preview={preview}
+              title={item.title}
+            />
+          ) : (
+            <Poster item={posterOf(item)} size="lg" />
+          )}
           <p className="eyebrow mt-6">
             {KIND_LABEL[item.kind]} · {item.category}
             {release ? <span className="text-signal"> · {release}</span> : null}
@@ -53,8 +68,13 @@ export function LessonView({
           ) : null}
 
           <div className="mt-5 flex flex-wrap items-start gap-3">
-            {item.kind === 'video' && !item.videoId ? (
-              <p className="glass rounded-full px-4 py-2.5 text-sm text-muted">O vídeo desta aula entra em breve.</p>
+            {item.kind === 'video' && !video ? (
+              <p className="glass rounded-full px-4 py-2.5 text-sm text-muted">
+                {item.videoStatus === 'processando' ? 'O vídeo está sendo preparado. Volte em alguns minutos.' : 'O vídeo desta aula entra em breve.'}
+              </p>
+            ) : null}
+            {video && item.progress && item.progress.status !== 'concluido' && item.progress.positionSeconds > 5 ? (
+              <p className="self-center text-sm text-muted">Continua de onde você parou · {item.progress.percent}%</p>
             ) : null}
             {item.filePath ? (
               <>

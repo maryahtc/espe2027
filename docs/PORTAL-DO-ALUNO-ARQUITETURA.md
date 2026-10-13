@@ -1193,7 +1193,28 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
 - Produção: as duas migrações aplicadas; conferido só por leitura que turmas, módulos, dias, atividades, docentes,
   perfis, termos, observações e o histórico anterior ficaram idênticos. 0 conteúdos (nada de teste em produção).
 
-**Próximo passo:** aprovação da Parte 1; depois Parte 2 (vídeos com o Bunny).
+**Etapa 4 · Parte 2 — vídeos (pronta em modo simulado em 13/10/2026; aguardando conta Bunny e aprovação)**
+- Referência: a plataforma usada como guia pela Maryah (comunidade Smooth+) também usa Bunny Stream.
+- Custos combinados: desenvolvimento ≈ US$ 0–1/mês; com alunos ≈ US$ 52–66/mês no total (Supabase Pro 25 + Vercel Pro
+  20 + Bunny 7–21). Conferir tabelas oficiais antes de contratar.
+- Camada única `apps/aluno/src/lib/video/bunny.ts` (trocar de provedor = trocar este arquivo): cria o vídeo, assina o
+  envio TUS (SHA256 library+apiKey+expires+videoId), consulta situação/duração/capa e assina o player
+  (SHA256 tokenKey+videoId+expires, validade 4 h). Chaves só no servidor.
+- Admin: bloco "Vídeo" no editor — envio direto do navegador ao Bunny (TUS, retoma se cair, barra de progresso),
+  situação atualizada sozinha (consulta a cada 10 s e ao abrir o painel), capa e duração automáticas; trocar vídeo
+  mantém o antigo guardado no Bunny (nada é apagado). Sem webhook: nenhuma chave secreta de banco no servidor.
+- Aluno: player do Bunny com link assinado, marca d'água com o e-mail (muda de canto a cada 25 s; tela cheia do quadro
+  inteiro para a marca continuar visível), "continua de onde você parou", progresso salvo a cada ~15 s/pausa/fim,
+  concluído aos 90% (rever não desfaz). Sem player enquanto o vídeo processa.
+- CSP: libera só o player (`iframe.mediadelivery.net`), o envio (`video.bunnycdn.com`) e as capas (`*.b-cdn.net`).
+- Sem migração nesta parte (campos já criados na Parte 1). Produção não alterada.
+- Testes: unitários 38 (31 + 7: assinaturas conforme a documentação, situação, regra dos 90%); E2E com Bunny simulado
+  que confere as mesmas assinaturas: 21/21 (duas rodadas) + biblioteca 51/51 + regressões 48/48, 58/58, 26/26.
+- Pendente (Maryah, guiado): conta Bunny (teste grátis), bibliotecas `portal-aluno-teste` e `portal-aluno`,
+  "Embed view token authentication" e domínios permitidos, chaves como segredo (teste no ambiente do agente + liberar
+  na rede `video.bunnycdn.com` e `*.mediadelivery.net`; produção só na Vercel); depois teste real com um vídeo curto.
+
+**Próximo passo:** criar a conta Bunny (guiado) para o teste real da Parte 2; depois Parte 3 (acompanhamento).
 
 ## N. Decisões
 

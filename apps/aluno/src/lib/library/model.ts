@@ -64,6 +64,7 @@ export type ContentVM = {
   fileName: string | null
   videoId: string | null
   videoStatus: string | null
+  thumbnailUrl: string | null
   durationSeconds: number | null
   availableFrom: string | null
   status: ContentStatus
@@ -73,7 +74,7 @@ export type ContentVM = {
   faculty: FacultyMini[]
   cohortIds: string[]
   modules: ModuleLink[]
-  progress: { status: ProgressStatus; percent: number; completedAt: string | null; updatedAt: string } | null
+  progress: { status: ProgressStatus; percent: number; positionSeconds: number; completedAt: string | null; updatedAt: string } | null
 }
 
 export type ProgressFilter = 'nao-iniciado' | 'em-andamento' | 'concluido'
