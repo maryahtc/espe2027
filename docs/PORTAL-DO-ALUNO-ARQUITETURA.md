@@ -1345,8 +1345,14 @@ Parte 2 aprovada pela Maryah em 13/10/2026; com isso a Etapa 5 está oficialment
 | Publicação do portal público, configuração real do Bunny, tema "inteligência", envio em lote de aulas gravadas | Pendências das Etapas 3–4, mantidas |
 | Proteção de produção e backups | Etapa 11b, obrigatória antes do go-live |
 
-**Próximo passo:** apresentar à Maryah a proposta de arquitetura e experiência da Etapa 6 (Meus casos) e aguardar
-aprovação antes de qualquer implementação.
+### Etapa 6 — Meus casos (proposta em revisão, 13/10/2026)
+
+Arquitetura aprovada conceitualmente em 13/10/2026, com ajustes (registro com 4 essenciais; caso ≠ procedimento;
+exclusão lógica para o aluno e definitiva só administrativa). Versão ajustada, registro rápido final e catálogo inicial
+de procedimentos em [`ETAPA-6-MEUS-CASOS.md`](./ETAPA-6-MEUS-CASOS.md); rascunho do termo de uso v1.0 em
+[`TERMO-DE-USO-v1-RASCUNHO.md`](./TERMO-DE-USO-v1-RASCUNHO.md) (não publicado). **Nada implementado.**
+
+**Próximo passo:** revisão da Maryah (e da coordenação clínica, para o catálogo) e aprovação antes de implementar.
 
 
 ## N. Decisões
