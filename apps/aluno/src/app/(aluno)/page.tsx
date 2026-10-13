@@ -3,6 +3,7 @@ import { IconArrowRight } from '@portal/ui/icons'
 import { ModuleRuler } from '@portal/ui/module-ruler'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { AnnouncementCard } from '@/components/announcements/AnnouncementCard'
 import { HomeSection } from '@/components/home/HomeSection'
 import { NextModuleHero } from '@/components/home/NextModuleHero'
 import { LibraryRow } from '@/components/modules/LibraryRow'
@@ -74,6 +75,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       <Greeting date={today} name={name} />
+
+      {home.announcements.length ? (
+        <section id="avisos" aria-label="Avisos" className="reveal space-y-3">
+          {home.announcements.map((a) => (
+            <AnnouncementCard key={a.id} item={a} dismissable={!home.preview} />
+          ))}
+        </section>
+      ) : null}
 
       {moment === 'antes-inicio' ? (
         <div role="note" className="glass reveal rounded-2xl p-5 sm:p-6">

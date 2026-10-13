@@ -840,7 +840,7 @@ Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima
 | 8 | **Mapa de tratamento** | Montar um plano de 5 consultas, reordenar, marcar realizada | — |
 | 9 | **Produção + recomendações** | Ver a produção mudar após registrar; ver recomendações coerentes | — |
 | 10 | **Workflows**: motor, player, editor estruturado + mapa, validação, versões, "explorar no workflow" | Montar sozinha o workflow "Alteração estética anterior" e usá‑lo como aluno | — |
-| 11 | **Painel da coordenação** | Ver a turma de teste; conferir o que aparece em agregados × casos individuais; ver o registro de auditoria | — |
+| 11 | **Painel da coordenação** + **revisão do painel inicial do Admin** (hoje com dados fictícios: substituir por números reais — alunos, módulos, biblioteca, avisos, pendências de cadastro) | Ver a turma de teste; conferir o que aparece em agregados × casos individuais; ver o registro de auditoria; abrir o Admin e conferir que todos os números do painel inicial são reais | — |
 | 11b | **Proteção de produção e backups** (obrigatória, detalhada em M.3) | Restaurar um backup na homologação; ver o CI recusar um seed apontado para produção | Conta Backblaze B2; projeto de homologação; Supabase Pro |
 | 12 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas | Uso real | Domínio; termo revisado (LGPD) |
 | 13 | **Lançamento MVP 1** → MVP 2 em etapas do mesmo tamanho | — | — |
@@ -1286,7 +1286,37 @@ Parte 1 (sem banco novo, **sem migração; banco de produção não alterado**):
   por momento, faixa só nas telas fictícias, prévia do admin) · regressões fluxos 48, parte3 58 (verificação da Início
   atualizada para a regra dos 30 dias), gestão 26, biblioteca 51, acompanhamento 21 · build com e sem Supabase.
 
-**Próximo passo:** apresentar a Parte 1 à Maryah e aguardar aprovação antes da Parte 2 (Avisos).
+**Parte 1 aprovada e concluída em 13/10/2026.** Interpretações confirmadas: próximo módulo fora da janela de 30 dias não
+conta obrigatórios (sem contador); durante o módulo contam Antes + Durante, sem vínculo de conteúdo com dia específico.
+
+Pendência registrada no roadmap (13/10/2026): o **painel inicial do Admin** ainda usa dados fictícios e não tinha etapa
+de revisão; passa a fazer parte da **Etapa 11** (ver tabela em M). O aviso "Protótipo" da tela aponta para essa etapa.
+
+### Etapa 5 · Parte 2 — Avisos (13/10/2026)
+
+Autorizada em 13/10/2026, conforme a arquitetura aprovada.
+
+- **Banco** — migração `20261013120000_avisos` (só aditiva: 2 tabelas novas, 1 função, gatilhos e regras de acesso):
+  - `announcements`: turma (ou nula = todas as turmas), título (até 120), texto (até 1000), assinatura, link (só `https://`
+    ou página do portal `/…`) com texto, importante, exibir de/até (datas de São Paulo), situação
+    rascunho/publicado/arquivado, datas de publicação e arquivamento, autor. Histórico "de → para" no `change_log`.
+  - `announcement_dismissals`: "Entendi" (aluno, aviso, quando).
+  - `sp_today()`: hoje no fuso de São Paulo, usado na regra de leitura.
+- **Regras no banco (RLS)**:
+  - admin lê e escreve tudo, inclusive "todas as turmas";
+  - coordenação lê e escreve só os avisos da turma que coordena, nunca "todas" e nunca move aviso para outra turma;
+  - aluno lê só o publicado, da sua turma ou "para todas", e só dentro do período;
+  - "Entendi" só em aviso comum que a pessoa consegue ler, e só em nome próprio;
+  - aviso que já foi publicado não pode ser excluído (arquiva-se); só rascunho que nunca foi ao ar é excluído.
+- **Admin → Avisos** (o protótipo virou real): lista com "como o aluno vê", filtros por situação (No ar, Programado,
+  Rascunho, Encerrado, Arquivado), novo aviso (nasce rascunho), página do aviso com publicar/arquivar/restaurar,
+  excluir rascunho, edição e histórico. Turma: qualquer uma ou "Todas as turmas".
+- **Coordenação → Avisos** (novo, em `/coordenacao/avisos`): o mesmo, só para a(s) turma(s) que coordena.
+- **Início do aluno**: avisos ativos logo abaixo da saudação, importantes primeiro (destacados, sem "Entendi"); comuns
+  com "Entendi". Um aviso dispensado que vira importante volta a aparecer. Na pré-visualização do admin, os avisos
+  seguem a data escolhida e não há "Entendi" (nada é gravado).
+- Dados fictícios de avisos removidos (`demo/admin-content.ts`). Nenhum aviso de teste em produção.
+
 
 ## N. Decisões
 

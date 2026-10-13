@@ -2,6 +2,8 @@ import 'server-only'
 import { cohortEvents, cohortModules, currentCohort, loadModuleDetail, type ModuleLibraryItem, type ResourceVM, today as realToday, viewerCohorts } from '@/lib/academic/load'
 import { assignStates, type CohortVM, courseMonth, focusModule, type ModuleVM } from '@/lib/academic/model'
 import type { AuthState } from '@/lib/auth/session'
+import { loadHomeAnnouncements } from '@/lib/announcements/load'
+import { activeAnnouncements, type AnnouncementVM } from '@/lib/announcements/model'
 import { loadLibrary } from '@/lib/library/load'
 import { isReleased, type ContentVM } from '@/lib/library/model'
 import { agenda, type AgendaItem, homeMoment, type HomeMoment, inPrepWindow, pending, type Pending, PREP_WINDOW_DAYS, recentlyFinished, requiredSoFar } from './model'
@@ -26,6 +28,8 @@ export type HomeData = {
   after: { module: ModuleVM; library: ModuleLibraryItem[] } | null
   continuing: ContentVM[]
   required: { done: number; total: number }
+  /** Avisos ativos hoje: importantes primeiro; comuns com "Entendi" já dados ficam de fora. */
+  announcements: AnnouncementVM[]
   /** Pré-visualização do admin (outra data e/ou turma): nada é gravado. */
   preview: { date: string; cohort: string } | null
 }
@@ -55,11 +59,12 @@ export async function loadHome(auth: AuthState | null | 'previa', preview: HomeP
   const userId = auth && auth !== 'previa' ? auth.userId : null
 
   const finished = recentlyFinished(modules, today)
-  const [events, detail, afterDetail, library] = await Promise.all([
+  const [events, detail, afterDetail, library, notices] = await Promise.all([
     cohortEvents(cohort.id, modules.map((m) => m.id)),
     focus ? loadModuleDetail(focus.id, modules) : Promise.resolve(null),
     finished ? loadModuleDetail(finished.id, modules) : Promise.resolve(null),
     loadLibrary(userId, cohort.id),
+    loadHomeAnnouncements(cohort.id, userId),
   ])
 
   // Só o que o aluno veria: publicado e já liberado (a RLS garante isso ao aluno; admin/coordenação veem mais).
@@ -103,6 +108,8 @@ export async function loadHome(auth: AuthState | null | 'previa', preview: HomeP
       .sort((a, b) => (b.progress?.updatedAt ?? '').localeCompare(a.progress?.updatedAt ?? ''))
       .slice(0, 3),
     required: requiredSoFar(library.filter((c) => visible.has(c.id)), modules, today),
+    // Na prévia, os "Entendi" de quem está vendo não escondem nada: mostra o que a turma vê naquela data.
+    announcements: activeAnnouncements(notices.list, { cohortId: cohort.id, today, dismissed: preview ? new Set() : notices.dismissed }),
     preview: preview ? { date: today, cohort: cohort.name } : null,
   }
 }

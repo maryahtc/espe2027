@@ -9,7 +9,59 @@ export type Database = {
   
   "public": {
           Tables: {
-            "categories": {
+            "announcement_dismissals": {
+                  Row: {
+                    "announcement_id": string,"dismissed_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "announcement_id": string,"dismissed_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "announcement_id"?: string,"dismissed_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "announcement_dismissals_announcement_id_fkey"
+      columns: ["announcement_id"]
+isOneToOne: false
+      referencedRelation: "announcements"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "announcement_dismissals_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"announcements": {
+                  Row: {
+                    "archived_at": string | null,"body": string,"cohort_id": string | null,"created_at": string,"created_by": string | null,"id": string,"important": boolean,"link_label": string | null,"link_url": string | null,"published_at": string | null,"signature": string | null,"status": Database["public"]['Enums']["content_status"],"title": string,"updated_at": string,"visible_from": string,"visible_until": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"body": string,"cohort_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"important"?: boolean,"link_label"?: string | null,"link_url"?: string | null,"published_at"?: string | null,"signature"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"title": string,"updated_at"?: string,"visible_from": string,"visible_until": string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"body"?: string,"cohort_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"important"?: boolean,"link_label"?: string | null,"link_url"?: string | null,"published_at"?: string | null,"signature"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"title"?: string,"updated_at"?: string,"visible_from"?: string,"visible_until"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "announcements_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "announcements_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"categories": {
                   Row: {
                     "archived_at": string | null,"created_at": string,"id": string,"name": string,"position": number,"slug": string,"updated_at": string
                   }
@@ -837,6 +889,9 @@ isOneToOne: false
                            },
 "search_normalize":
 { Args: { "p_text": string }; Returns: string
+                           },
+"sp_today":
+{ Args: Record<PropertyKey, never>; Returns: string
                            }
           }
           Enums: {

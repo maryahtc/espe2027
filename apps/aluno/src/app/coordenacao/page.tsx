@@ -18,6 +18,14 @@ export default function CoordinationPage() {
         </span>
         <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
       </Link>
+      <Link href="/coordenacao/avisos" className="glass glass-interactive group mb-8 flex items-center justify-between gap-4 rounded-2xl p-5">
+        <span>
+          <span className="eyebrow block text-[10px]">Disponível</span>
+          <span className="mt-1 block text-lg font-light">Avisos da turma</span>
+          <span className="mt-1 block text-sm text-muted">Criar, publicar e arquivar recados que aparecem no Início dos alunos da sua turma.</span>
+        </span>
+        <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+      </Link>
       <EmptyState stage="Etapa 11" title="O que vai existir aqui">
         <ul className="list-disc space-y-1 pl-5">
           <li>Casos registrados, procedimentos e evolução mensal</li>
