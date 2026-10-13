@@ -159,21 +159,43 @@ describe('próximas atividades', () => {
   })
 })
 
-describe('depois do módulo e obrigatórios até aqui', () => {
+describe('depois do módulo e obrigatórios até agora', () => {
   it('último módulo concluído há até 30 dias', () => {
     expect(recentlyFinished(course('2027-02-20'), '2027-02-20')?.id).toBe('m1')
     expect(recentlyFinished(course('2027-03-16'), '2027-03-16')).toBeNull()
     expect(recentlyFinished(course('2027-03-25'), '2027-03-25')?.id).toBe('m2')
   })
 
-  it('obrigatórios dos módulos concluídos e do módulo em foco', () => {
-    const ms = course('2027-02-20')
-    const contents = [
-      { id: 'a', progress: { status: 'concluido' }, modules: [{ moduleId: 'm1', requirement: 'obrigatorio' }] },
-      { id: 'b', progress: null, modules: [{ moduleId: 'm2', requirement: 'obrigatorio' }] },
-      { id: 'c', progress: null, modules: [{ moduleId: 'm3', requirement: 'obrigatorio' }] },
-      { id: 'd', progress: null, modules: [{ moduleId: 'm1', requirement: 'recomendado' }] },
-    ]
-    expect(requiredSoFar(contents, ms, 'm2')).toEqual({ done: 1, total: 2 })
+  const c = (id: string, moduleId: string, phase: string, done = false, requirement = 'obrigatorio') => ({
+    id,
+    progress: done ? { status: 'concluido' } : null,
+    modules: [{ moduleId, requirement, phase }],
+  })
+  const contents = [
+    c('m1-antes', 'm1', 'antes', true),
+    c('m1-durante', 'm1', 'durante'),
+    c('m1-depois', 'm1', 'depois'),
+    c('m1-recomendado', 'm1', 'antes', false, 'recomendado'),
+    c('m2-antes', 'm2', 'antes'),
+    c('m2-durante', 'm2', 'durante'),
+    c('m2-depois', 'm2', 'depois'),
+    c('m3-antes', 'm3', 'antes'),
+  ]
+  const so = (today: string) => requiredSoFar(contents, course(today), today)
+
+  it('antes do módulo, fora da janela: nada conta (ninguém aparece devendo)', () => {
+    expect(so('2026-10-13')).toEqual({ done: 0, total: 0 })
+  })
+  it('antes do módulo, dentro da janela: só os obrigatórios de Antes', () => {
+    expect(so('2027-01-20')).toEqual({ done: 1, total: 1 })
+  })
+  it('durante o módulo: Antes e Durante (Depois ainda não)', () => {
+    expect(so('2027-02-12')).toEqual({ done: 1, total: 2 })
+  })
+  it('depois do módulo: Antes, Durante e Depois; o próximo fora da janela não conta', () => {
+    expect(so('2027-02-14')).toEqual({ done: 1, total: 3 })
+  })
+  it('depois do módulo, com o próximo dentro da janela: soma o Antes do próximo', () => {
+    expect(so('2027-02-20')).toEqual({ done: 1, total: 4 })
   })
 })

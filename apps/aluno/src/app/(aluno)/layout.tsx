@@ -33,7 +33,8 @@ export default async function StudentLayout({ children }: { children: React.Reac
       <div className="flex min-h-dvh">
         <StudentSidebar viewer={viewer} />
         <div className="min-w-0 flex-1">
-          <PreviewBanner />
+          {/* Sem Supabase (modo prévia) tudo é fictício; com banco, o aviso fica só nas telas ainda fictícias. */}
+          {!auth ? <PreviewBanner /> : null}
           <StudentTopBar viewer={viewer} />
           <main id="conteudo" className="mx-auto w-full max-w-[1120px] px-4 pt-6 pb-28 sm:px-6 lg:px-12 lg:pt-10 lg:pb-20">
             {children}

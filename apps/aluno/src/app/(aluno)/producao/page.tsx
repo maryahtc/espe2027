@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { cases } from '@/demo/cases'
 import { byMonth, byProcedure } from '@/demo/production'
 import { monthShort } from '@/lib/dates'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export const metadata: Metadata = { title: 'Minha produção' }
 
@@ -18,6 +19,7 @@ export default function ProductionPage() {
 
   return (
     <>
+      <PrototypeNotice etapa="Etapa 9 (Produção)" />
       <PageTitle eyebrow="Clínica" title="Minha produção" lead="Sua exposição clínica até aqui. Só você e a coordenação veem estes números." />
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Período">

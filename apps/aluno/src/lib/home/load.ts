@@ -102,7 +102,7 @@ export async function loadHome(auth: AuthState | null | 'previa', preview: HomeP
       .filter((c) => c.progress?.status === 'iniciado' && visible.has(c.id))
       .sort((a, b) => (b.progress?.updatedAt ?? '').localeCompare(a.progress?.updatedAt ?? ''))
       .slice(0, 3),
-    required: requiredSoFar(library.filter((c) => visible.has(c.id)), modules, focus?.id ?? null),
+    required: requiredSoFar(library.filter((c) => visible.has(c.id)), modules, today),
     preview: preview ? { date: today, cohort: cohort.name } : null,
   }
 }

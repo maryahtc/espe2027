@@ -10,6 +10,7 @@ import { caseById, cases } from '@/demo/cases'
 import { modules } from '@/demo/data'
 import { library } from '@/demo/library'
 import { day, formatDayMonth, monthShort, year } from '@/lib/dates'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export function generateStaticParams() {
   return cases.map((c) => ({ id: c.id }))
@@ -47,6 +48,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
 
   return (
     <article>
+      <PrototypeNotice etapa="Etapa 6 (Meus casos)" />
       <Link href="/casos" className="text-sm text-muted hover:text-ink">
         ← Meus casos
       </Link>

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { WorkflowPlayer } from '@/components/workflow/Player'
 import { draftWorkflow } from '@/demo/workflows'
 import { enumeratePaths, resolvePath } from '@/lib/workflow'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export function generateStaticParams() {
   return enumeratePaths(draftWorkflow.graph).map((caminho) => ({ caminho }))
@@ -17,6 +18,7 @@ export default async function DraftPreviewPage({ params }: { params: Promise<{ c
   if (!resolved) notFound()
   return (
     <>
+      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-md border border-ink bg-sunken px-4 py-3 text-sm">
         <span>
           <strong>Pré-visualização como aluno</strong> · rascunho, não publicado

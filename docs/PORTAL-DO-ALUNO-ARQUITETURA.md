@@ -1272,10 +1272,19 @@ Parte 1 (sem banco novo, **sem migração; banco de produção não alterado**):
   com a data em que a preparação passa a aparecer.
 - Pré-visualização do admin: Admin → Turma → "Pré-visualizar" abre `/?turma=<id>&data=AAAA-MM-DD`, com faixa de aviso;
   só leitura (usa o progresso de quem está vendo). Para alunos e coordenação os parâmetros são ignorados.
-- Testes (todos fora da produção): unitários 55 (11 novos) · E2E local `home` 34 (antes do início, fora/dentro da janela,
-  durante o módulo, depois do módulo, turma encerrada, sem turma, rascunhos invisíveis, sem dado fictício, prévia do
-  admin) · regressões fluxos 48, parte3 58 (verificação da Início atualizada para a regra dos 30 dias), gestão 26,
-  biblioteca 51, acompanhamento 21 · build com e sem Supabase.
+- Obrigatórios "até agora" conforme o momento de cada módulo (ajuste pedido em 13/10/2026), para o aluno nunca
+  aparecer devendo o que ainda não deveria ter feito: módulo concluído → Antes, Durante e Depois; em andamento → Antes e
+  Durante; próximo módulo → só Antes, e só dentro da janela de 30 dias; módulos futuros não contam. Fora da janela, sem
+  nada a contar, a contagem não aparece.
+- Aviso de protótipo (ajuste pedido em 13/10/2026): a faixa global "Prévia · dados fictícios" só aparece no modo sem
+  Supabase (quando tudo é fictício). Com banco, as áreas reais não têm faixa; as telas ainda fictícias mostram no topo
+  "Protótipo · esta tela ainda usa dados fictícios — a versão real chega na Etapa N": Casos (lista, detalhe, novo) →
+  Etapa 6; Produção → Etapa 9; Workflows (aluno e Admin) → Etapa 10; Admin → Avisos → Etapa 5 · Parte 2; painel
+  inicial do Admin (sem etapa definida). Componente `components/shell/PrototypeNotice.tsx`.
+- Testes (todos fora da produção): unitários 59 (15 novos) · E2E local `home` 41 (antes do início, fora/dentro da
+  janela, durante o módulo, depois do módulo, turma encerrada, sem turma, rascunhos invisíveis, contagem de obrigatórios
+  por momento, faixa só nas telas fictícias, prévia do admin) · regressões fluxos 48, parte3 58 (verificação da Início
+  atualizada para a regra dos 30 dias), gestão 26, biblioteca 51, acompanhamento 21 · build com e sem Supabase.
 
 **Próximo passo:** apresentar a Parte 1 à Maryah e aguardar aprovação antes da Parte 2 (Avisos).
 

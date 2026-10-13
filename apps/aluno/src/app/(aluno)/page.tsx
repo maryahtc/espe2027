@@ -249,7 +249,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {home.required.total ? (
               <>
                 {' '}
-                · <span className="num text-ink">{home.required.done}</span>/<span className="num">{home.required.total}</span> obrigatórios da biblioteca
+                · <span className="num text-ink">{home.required.done}</span>/<span className="num">{home.required.total}</span> obrigatórios da biblioteca até agora
               </>
             ) : null}
           </p>

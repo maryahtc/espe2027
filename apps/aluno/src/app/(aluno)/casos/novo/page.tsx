@@ -4,6 +4,7 @@ import { PageTitle } from '@portal/ui/section'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { DEMO_TODAY, nextModule } from '@/demo/data'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export const metadata: Metadata = { title: 'Registrar caso' }
 
@@ -21,6 +22,7 @@ const chip =
 export default function NewCasePage() {
   return (
     <div data-novo className="max-w-3xl">
+      <PrototypeNotice etapa="Etapa 6 (Meus casos)" />
       <style>{modeCss}</style>
       <Link href="/casos" className="text-sm text-muted hover:text-ink">
         ← Meus casos

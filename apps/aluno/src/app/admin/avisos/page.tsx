@@ -4,12 +4,14 @@ import { StatusPill } from '@portal/ui/tag'
 import type { Metadata } from 'next'
 import { LifecycleTabs } from '@/components/admin/Lifecycle'
 import { adminNotices, countBy } from '@/demo/admin-content'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export const metadata: Metadata = { title: 'Avisos' }
 
 export default function AdminNoticesPage() {
   return (
     <div data-lc-root="avisos">
+      <PrototypeNotice etapa="Etapa 5 · Parte 2 (Avisos)" />
       <PageTitle eyebrow="Especialização" title="Avisos" lead="Recados curtos que aparecem no Início da turma durante o período escolhido." />
       <LifecycleTabs name="avisos" counts={countBy(adminNotices)} />
       <ul className="space-y-3">

@@ -6,10 +6,12 @@ import { adminGroups } from '@/config/nav'
 import { adminOverview, attention, shortcuts } from '@/demo/admin'
 import { DEMO_TODAY, nextModule } from '@/demo/data'
 import { relativeDays } from '@/lib/dates'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export default function AdminHome() {
   return (
     <>
+      <PrototypeNotice />
       <PageTitle eyebrow={`Administração · ${adminOverview.cohort}`} title="O que você quer cadastrar?" />
 
       {/* As seis ações principais: o caminho mais curto para cada cadastro. */}

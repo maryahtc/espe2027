@@ -7,6 +7,7 @@ import { CaseCover } from '@/components/cases/CaseCover'
 import { nextSession, sortedCases } from '@/demo/cases'
 import { DEMO_TODAY } from '@/demo/data'
 import { day, monthShort, relativeDays } from '@/lib/dates'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export const metadata: Metadata = { title: 'Meus casos' }
 
@@ -26,6 +27,7 @@ export default function CasesPage() {
   const count = (s: string) => list.filter((c) => c.status === s).length
   return (
     <div data-cases>
+      <PrototypeNotice etapa="Etapa 6 (Meus casos)" />
       <style>{filterCss}</style>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageTitle eyebrow="Clínica" title="Meus casos" lead="Seus pacientes da especialização, identificados por iniciais. Fotos completas e planejamento ficam no Smile Cloud." />

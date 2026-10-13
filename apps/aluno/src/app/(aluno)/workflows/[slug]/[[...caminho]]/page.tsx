@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { WorkflowPlayer } from '@/components/workflow/Player'
 import { workflowBySlug, workflows } from '@/demo/workflows'
 import { enumeratePaths, resolvePath } from '@/lib/workflow'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export function generateStaticParams() {
   return workflows.flatMap((w) => enumeratePaths(w.graph).map((caminho) => ({ slug: w.slug, caminho })))
@@ -23,6 +24,7 @@ export default async function WorkflowPage({ params }: { params: Params }) {
   if (!workflow || !resolved) notFound()
   return (
     <>
+      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
       <Link href="/workflows" className="text-sm text-muted hover:text-ink">
         ← Workflow clínico
       </Link>

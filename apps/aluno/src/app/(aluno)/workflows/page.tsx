@@ -3,12 +3,14 @@ import { PageTitle } from '@portal/ui/section'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { workflows } from '@/demo/workflows'
+import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 
 export const metadata: Metadata = { title: 'Workflow clínico' }
 
 export default function WorkflowsPage() {
   return (
     <>
+      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
       <PageTitle
         eyebrow="Pensar"
         title="Workflow clínico"

@@ -137,13 +137,25 @@ export function recentlyFinished(modules: ModuleVM[], today: string): ModuleVM |
   return done.sort((a, b) => (b.end ?? '').localeCompare(a.end ?? ''))[0] ?? null
 }
 
-/** Obrigatórios da biblioteca nos módulos já concluídos e no módulo em foco: concluídos / total. */
+/**
+ * Obrigatórios da biblioteca "até aqui", conforme o momento de cada módulo — o aluno nunca aparece devendo algo
+ * que ainda não deveria ter feito:
+ * - módulo concluído: fases Antes, Durante e Depois;
+ * - módulo em andamento: Antes e Durante;
+ * - próximo módulo: só Antes, e só dentro da janela de preparação (30 dias); fora dela, não conta;
+ * - módulos futuros: não contam.
+ */
 export function requiredSoFar(
-  contents: Array<{ id: string; progress: { status: string } | null; modules: Array<{ moduleId: string; requirement: string }> }>,
+  contents: Array<{ id: string; progress: { status: string } | null; modules: Array<{ moduleId: string; requirement: string; phase: string }> }>,
   modules: ModuleVM[],
-  focusId: string | null,
+  today: string,
 ): { done: number; total: number } {
-  const relevant = new Set(modules.filter((m) => m.state === 'done' || m.id === focusId).map((m) => m.id))
-  const req = contents.filter((c) => c.modules.some((l) => relevant.has(l.moduleId) && l.requirement === 'obrigatorio'))
+  const phasesOf = new Map<string, string[]>()
+  for (const m of modules) {
+    if (m.state === 'done') phasesOf.set(m.id, ['antes', 'durante', 'depois'])
+    else if (m.state === 'ongoing') phasesOf.set(m.id, ['antes', 'durante'])
+    else if (m.state === 'next' && inPrepWindow(m, today)) phasesOf.set(m.id, ['antes'])
+  }
+  const req = contents.filter((c) => c.modules.some((l) => l.requirement === 'obrigatorio' && phasesOf.get(l.moduleId)?.includes(l.phase)))
   return { done: req.filter((c) => c.progress?.status === 'concluido').length, total: req.length }
 }

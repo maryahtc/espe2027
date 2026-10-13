@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: { default: 'Coordenação', template:
 
 /** Área da coordenação (leitura): só coordenação e admin. */
 export default async function CoordinationLayout({ children }: { children: React.ReactNode }) {
-  await requireUser(['coordenacao', 'admin'])
+  const auth = await requireUser(['coordenacao', 'admin'])
   return (
     <>
-      <PreviewBanner />
+      {!auth ? <PreviewBanner /> : null}
       <header className="flex h-16 items-center gap-6 border-b border-rule bg-surface px-4 sm:px-8">
         <Logo href="/coordenacao" />
         <span className="eyebrow text-signal">Coordenação</span>
