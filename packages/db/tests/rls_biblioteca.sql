@@ -325,6 +325,24 @@ begin
 end
 $$;
 
+-- ── Acompanhamento (Parte 3): a coordenação vê alunos e progresso só da própria turma ──
+do $$
+declare n int; m int;
+begin
+  perform pg_temp.entrar('00000000-0000-4000-a000-0000000000c0');
+  select count(*) into n from public.enrollments e join public.profiles p on p.id = e.user_id
+   where e.role_in_cohort = 'aluno' and e.user_id in ('00000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-00000000000b');
+  select count(*) into m from public.content_progress where user_id = '00000000-0000-4000-a000-00000000000b';
+  reset role;
+  insert into resultados (teste, passou) values ('Acompanhamento: coordenação lista só os alunos (e o progresso) da própria turma', n = 1 and m = 0);
+
+  perform pg_temp.entrar('00000000-0000-4000-a000-00000000000a');
+  select count(*) into n from public.enrollments where user_id <> '00000000-0000-4000-a000-00000000000a';
+  reset role;
+  insert into resultados (teste, passou) values ('Acompanhamento: aluno não vê a lista nem o progresso dos colegas', n = 0);
+end
+$$;
+
 select ordem, teste, passou from resultados order by ordem;
 
 rollback;

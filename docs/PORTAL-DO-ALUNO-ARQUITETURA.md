@@ -1193,7 +1193,7 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
 - Produção: as duas migrações aplicadas; conferido só por leitura que turmas, módulos, dias, atividades, docentes,
   perfis, termos, observações e o histórico anterior ficaram idênticos. 0 conteúdos (nada de teste em produção).
 
-**Etapa 4 · Parte 2 — vídeos (pronta em modo simulado em 13/10/2026; aguardando conta Bunny e aprovação)**
+**Etapa 4 · Parte 2 — vídeos (aprovada em 13/10/2026, validada em modo simulado)**
 - Referência: a plataforma usada como guia pela Maryah (comunidade Smooth+) também usa Bunny Stream.
 - Custos combinados: desenvolvimento ≈ US$ 0–1/mês; com alunos ≈ US$ 52–66/mês no total (Supabase Pro 25 + Vercel Pro
   20 + Bunny 7–21). Conferir tabelas oficiais antes de contratar.
@@ -1214,7 +1214,24 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
   "Embed view token authentication" e domínios permitidos, chaves como segredo (teste no ambiente do agente + liberar
   na rede `video.bunnycdn.com` e `*.mediadelivery.net`; produção só na Vercel); depois teste real com um vídeo curto.
 
-**Próximo passo:** criar a conta Bunny (guiado) para o teste real da Parte 2; depois Parte 3 (acompanhamento).
+- Decisão (13/10/2026): conta, bibliotecas, chaves e teste com vídeo real ficam para perto da entrada dos conteúdos
+  reais (para não iniciar o teste grátis antes da hora). **A primeira turma começa em fevereiro de 2027**; novembro de
+  2026 é só prazo interno de preparação.
+
+**Etapa 4 · Parte 3 — acompanhamento do progresso (pronta em 13/10/2026, aguardando aprovação)**
+- Admin: "Acompanhamento → Progresso na biblioteca" (`/admin/acompanhamento`), todas as turmas. Coordenação:
+  `/coordenacao/biblioteca` (card na visão da turma), só a(s) turma(s) que coordena. Mesma tela para os dois.
+- Visão da turma: alunos ativos, conteúdos disponíveis (publicados, liberados, para a turma), conclusão média,
+  obrigatórios por módulo (quantos concluíram todos; módulo em andamento/próximo em destaque), tabela por aluno
+  (concluídos, em andamento, obrigatórios do módulo em foco, última atividade) e por conteúdo (concluíram, assistindo,
+  não começaram). Detalhe de um aluno (por módulo, com obrigatoriedade) e de um conteúdo (situação de cada aluno).
+  Planilha CSV (Excel em português; proteção contra fórmulas). Atalho no editor do conteúdo.
+- Turma padrão: a em andamento hoje; senão a próxima a começar.
+- Sem migração: as regras de acesso da Parte 1 já limitavam a coordenação à própria turma. Testes de banco +2.
+- Testes: banco 134; unitários 44 (+6 do cálculo e da planilha); E2E acompanhamento 21/21 + vídeo 21/21 +
+  biblioteca 51/51 + regressões 48/48, 58/58, 26/26. Produção não alterada.
+
+**Próximo passo:** aprovação da Parte 3 (fecha a Etapa 4).
 
 ## N. Decisões
 

@@ -291,7 +291,25 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
         </AddPanel>
       </Block>
 
-      <Block index="08" title="Histórico" hint="Quem alterou, quando e o que mudou (últimas 40 alterações).">
+      <Block index="08" title="Acompanhamento" hint="Quem concluiu, quem está assistindo e quem ainda não começou, por turma.">
+        {c.status === 'publicado' ? (
+          <ul className="flex flex-wrap gap-2">
+            {cohorts
+              .filter((t) => !c.cohortIds.length || c.cohortIds.includes(t.id))
+              .map((t) => (
+                <li key={t.id}>
+                  <Link href={`/admin/acompanhamento?turma=${t.id}&conteudo=${c.id}`} className="glass inline-flex min-h-9 items-center rounded-full px-3.5 text-sm hover:text-ink">
+                    {t.name} →
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">Disponível depois de publicar.</p>
+        )}
+      </Block>
+
+      <Block index="09" title="Histórico" hint="Quem alterou, quando e o que mudou (últimas 40 alterações).">
         <HistoryList history={history} />
       </Block>
     </div>

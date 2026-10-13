@@ -200,6 +200,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
     label: 'Acompanhamento',
     sections: [
       {
+        slug: 'acompanhamento',
+        label: 'Progresso na biblioteca',
+        summary: 'Quem concluiu, quem está assistindo e quem não começou',
+        icon: 'chart',
+        stage: 'Etapa 4',
+        details: ['Por turma, por aluno, por conteúdo e por módulo', 'Planilha para baixar'],
+      },
+      {
         slug: 'producao',
         label: 'Produção da turma',
         summary: 'Procedimentos, lacunas e dificuldades',
