@@ -1207,7 +1207,9 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
   inteiro para a marca continuar visível), "continua de onde você parou", progresso salvo a cada ~15 s/pausa/fim,
   concluído aos 90% (rever não desfaz). Sem player enquanto o vídeo processa.
 - CSP: libera só o player (`iframe.mediadelivery.net`), o envio (`video.bunnycdn.com`) e as capas (`*.b-cdn.net`).
-- Sem migração nesta parte (campos já criados na Parte 1). Produção não alterada.
+- Banco de produção: sem migração e sem alteração de dados (campos já criados na Parte 1). Código: publicado no portal
+  de produção pela publicação automática da Vercel; fica inativo até as chaves do Bunny serem cadastradas (o Admin mostra
+  "Bunny ainda não configurado").
 - Testes: unitários 38 (31 + 7: assinaturas conforme a documentação, situação, regra dos 90%); E2E com Bunny simulado
   que confere as mesmas assinaturas: 21/21 (duas rodadas) + biblioteca 51/51 + regressões 48/48, 58/58, 26/26.
 - Pendente (Maryah, guiado): conta Bunny (teste grátis), bibliotecas `portal-aluno-teste` e `portal-aluno`,
@@ -1218,7 +1220,7 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
   reais (para não iniciar o teste grátis antes da hora). **A primeira turma começa em fevereiro de 2027**; novembro de
   2026 é só prazo interno de preparação.
 
-**Etapa 4 · Parte 3 — acompanhamento do progresso (pronta em 13/10/2026, aguardando aprovação)**
+**Etapa 4 · Parte 3 — acompanhamento do progresso (aprovada em 13/10/2026)**
 - Admin: "Acompanhamento → Progresso na biblioteca" (`/admin/acompanhamento`), todas as turmas. Coordenação:
   `/coordenacao/biblioteca` (card na visão da turma), só a(s) turma(s) que coordena. Mesma tela para os dois.
 - Visão da turma: alunos ativos, conteúdos disponíveis (publicados, liberados, para a turma), conclusão média,
@@ -1229,9 +1231,30 @@ novas preservam os dados existentes. Os 78 testes de banco e os E2E rodam só no
 - Turma padrão: a em andamento hoje; senão a próxima a começar.
 - Sem migração: as regras de acesso da Parte 1 já limitavam a coordenação à própria turma. Testes de banco +2.
 - Testes: banco 134; unitários 44 (+6 do cálculo e da planilha); E2E acompanhamento 21/21 + vídeo 21/21 +
-  biblioteca 51/51 + regressões 48/48, 58/58, 26/26. Produção não alterada.
+  biblioteca 51/51 + regressões 48/48, 58/58, 26/26 (todos fora da produção).
+- Banco de produção: sem migração e sem alteração de dados. Código: publicado no portal de produção pela publicação
+  automática da Vercel (branch `claude/upbeat-bohr-8heral`).
 
-**Próximo passo:** aprovação da Parte 3 (fecha a Etapa 4).
+### Marco — ETAPA 4 (TEMAS E BIBLIOTECA) CONCLUÍDA (13/10/2026)
+
+Aprovada pela Maryah em 13/10/2026. Estado final, separando **código publicado** de **banco de produção**:
+
+| Parte | Código no portal de produção | Banco de produção |
+|---|---|---|
+| 1 · Temas e biblioteca | Publicado e em uso | Migrações `20261010120000_biblioteca` e `20261010120100_taxonomia_inicial` aplicadas (só aditivas); 7 áreas e 27 temas; 0 conteúdos (nada de teste em produção) |
+| 2 · Vídeos (Bunny) | Publicado, **inativo** até as chaves do Bunny serem cadastradas | Sem migração, sem alteração |
+| 3 · Acompanhamento | Publicado e em uso (Admin e coordenação) | Sem migração, sem alteração |
+
+- Verificação da publicação (13/10/2026): o portal em produção responde com a política de segurança nova da Parte 2
+  (`frame-src iframe.mediadelivery.net`, `connect-src video.bunnycdn.com`) e o `/api/saude` informa o banco na versão
+  `20261010120100_taxonomia_inicial`. Conferência definitiva do último envio: card do projeto `portal-aluno` na Vercel.
+- Pendências conscientes (não bloqueiam): conta Bunny real, bibliotecas, chaves e teste com vídeo real — perto da entrada
+  dos conteúdos reais; tema "inteligência" (M1) pendente de esclarecimento; aulas já gravadas (envio em lote) a tratar.
+- Testes ao fechar: banco 134 · unitários 44 · E2E local: biblioteca 51, vídeo 21 (Bunny simulado), acompanhamento 21,
+  regressões 48/58/26 — todos fora da produção.
+
+**Próximo passo:** revisar com a Maryah o que está previsto para a Etapa 5 (Início do aluno) e aprovar a arquitetura
+antes de qualquer implementação.
 
 ## N. Decisões
 
