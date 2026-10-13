@@ -1,7 +1,7 @@
 import { ButtonLink } from '@portal/ui/button'
 import { IconArrowRight } from '@portal/ui/icons'
 import { ACTIVITY_LABEL, type ModuleVM, sessionTime } from '@/lib/academic/model'
-import { day, daysBetween, formatRange, weekday, weekdayShort } from '@/lib/dates'
+import { day, daysBetween, formatDayMonth, formatRange, weekday, weekdayShort } from '@/lib/dates'
 
 /**
  * O elemento dominante da Início: uma superfície de vidro escuro com o número do módulo em grande escala.
@@ -10,17 +10,22 @@ import { day, daysBetween, formatRange, weekday, weekdayShort } from '@/lib/date
 export function NextModuleHero({
   module,
   today,
-  preparationCount,
-  requiredCount,
+  prep,
+  windowOpens,
 }: {
   module: ModuleVM & { start: string; end: string }
   today: string
-  /** Itens publicados de "antes do módulo" (o acompanhamento de conclusão chega com a biblioteca). */
-  preparationCount: number
-  requiredCount: number
+  /**
+   * Preparação do módulo — só dentro da janela de 30 dias (ou durante o módulo). Fora dela é null:
+   * nome, data e contagem continuam, sem sensação de pendência.
+   */
+  prep: { count: number; required: { done: number; total: number } } | null
+  /** Fora da janela: quando a preparação passa a aparecer. */
+  windowOpens: string | null
 }) {
   const inDays = daysBetween(today, module.start)
   const ongoing = module.state === 'ongoing'
+  const todayIndex = module.days.findIndex((d) => d.date === today)
   return (
     <section aria-labelledby="proximo-modulo" className="glass glass-sheen reveal relative overflow-hidden rounded-[28px]">
       {/* Luz atrás do número — o único "brilho" da tela */}
@@ -75,21 +80,35 @@ export function NextModuleHero({
             <ButtonLink href={`/modulos/${module.id}`}>
               Ver programação <IconArrowRight size={16} />
             </ButtonLink>
-            <ButtonLink href="#preparacao" variant="secondary">
-              {preparationCount > 0 ? (
-                <>
-                  Preparação · <span className="num text-signal">{preparationCount}</span> {preparationCount === 1 ? 'item' : 'itens'}
-                </>
-              ) : (
-                'Preparação'
-              )}
-            </ButtonLink>
+            {prep ? (
+              <ButtonLink href="#preparacao" variant="secondary">
+                {prep.count > 0 ? (
+                  <>
+                    Preparação · <span className="num text-signal">{prep.count}</span> {prep.count === 1 ? 'item' : 'itens'}
+                  </>
+                ) : (
+                  'Preparação'
+                )}
+              </ButtonLink>
+            ) : null}
           </div>
         </div>
 
         <aside aria-label="Contagem e dias do módulo" className="flex flex-col border-t border-rule pt-8 lg:col-span-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12">
           {ongoing ? (
-            <p className="text-sm leading-tight text-muted">Acontecendo agora</p>
+            todayIndex >= 0 ? (
+              <p className="flex items-baseline gap-3">
+                <span className="text-sm leading-tight text-muted">
+                  Hoje é o
+                  <br />
+                  dia
+                </span>
+                <span className="num text-6xl leading-none font-extralight text-ink sm:text-7xl">{todayIndex + 1}</span>
+                <span className="text-sm leading-tight text-muted">de {module.days.length}</span>
+              </p>
+            ) : (
+              <p className="text-sm leading-tight text-muted">Acontecendo agora</p>
+            )
           ) : (
             <p className="flex items-baseline gap-3">
               <span className="num text-6xl leading-none font-extralight text-ink sm:text-7xl">{inDays}</span>
@@ -100,22 +119,36 @@ export function NextModuleHero({
               </span>
             </p>
           )}
-          <p className="mt-6 flex justify-between text-xs text-muted">
-            <span>Preparação obrigatória</span>
-            <span className="num text-ink">{requiredCount ? `${requiredCount} ${requiredCount === 1 ? 'item' : 'itens'}` : '—'}</span>
-          </p>
+          {prep ? (
+            <p className="mt-6 flex justify-between text-xs text-muted">
+              <span>Preparação obrigatória</span>
+              <span className="num text-ink">{prep.required.total ? `${prep.required.done} de ${prep.required.total} concluídos` : '—'}</span>
+            </p>
+          ) : windowOpens ? (
+            <p className="mt-6 text-xs text-muted">
+              A preparação aparece aqui a partir de <span className="num text-ink">{formatDayMonth(windowOpens)}</span>.
+            </p>
+          ) : null}
 
           <ol className="mt-10 space-y-1">
             {module.days.map((d) => {
               const kinds = [...new Set(d.sessions.map((s) => ACTIVITY_LABEL[s.type]))]
+              const isToday = d.date === today
               return (
-                <li key={d.id} className="flex items-start gap-4 rounded-xl px-2 py-3 transition-colors hover:bg-white/[0.04]">
+                <li
+                  key={d.id}
+                  aria-current={isToday ? 'date' : undefined}
+                  className={`flex items-start gap-4 rounded-xl px-2 py-3 transition-colors hover:bg-white/[0.04] ${isToday ? 'bg-white/[0.05] ring-1 ring-white/10' : ''}`}
+                >
                   <span className="w-9 shrink-0 text-center">
                     <span className="eyebrow block text-[10px]">{weekdayShort(d.date)}</span>
                     <span className="num block text-2xl leading-tight font-light">{day(d.date)}</span>
                   </span>
                   <span className="min-w-0 pt-0.5 text-sm">
-                    <span className="block text-ink">{kinds.length ? kinds.join(' · ') : 'Programação em definição'}</span>
+                    <span className="block text-ink">
+                      {isToday ? <span className="mr-1.5 font-semibold text-signal">Hoje ·</span> : null}
+                      {kinds.length ? kinds.join(' · ') : 'Programação em definição'}
+                    </span>
                     {d.sessions.length ? (
                       <span className="num block text-xs text-muted">
                         {[...new Set(d.sessions.map((s) => sessionTime(s)))].join(' · ')}

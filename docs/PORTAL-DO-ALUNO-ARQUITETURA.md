@@ -1253,8 +1253,31 @@ Aprovada pela Maryah em 13/10/2026. Estado final, separando **código publicado*
 - Testes ao fechar: banco 134 · unitários 44 · E2E local: biblioteca 51, vídeo 21 (Bunny simulado), acompanhamento 21,
   regressões 48/58/26 — todos fora da produção.
 
-**Próximo passo:** revisar com a Maryah o que está previsto para a Etapa 5 (Início do aluno) e aprovar a arquitetura
-antes de qualquer implementação.
+### Etapa 5 · Parte 1 — Início real do aluno (13/10/2026)
+
+Proposta da Etapa 5 aprovada em 13/10/2026. Decisões: (1) coordenação publica avisos só para a própria turma; admin
+para qualquer turma ou todas; (2) "Entendi" só para avisos comuns, importantes ficam até a data final; (3) blocos
+fictícios "Para você" e "Clínica" saem da Início e só voltam nas etapas deles; (4) entregas: só o prazo, sem ação de
+"entregue"; (5) próximas atividades: 30 dias, no máximo 5; (6) o próximo módulo aparece sempre; pendências de preparação
+só nos 30 dias anteriores ao módulo (ou durante), sem sensação de atraso antes disso.
+
+Parte 1 (sem banco novo, **sem migração; banco de produção não alterado**):
+- Regras puras em `apps/aluno/src/lib/home/model.ts` (momento da turma, janela de 30 dias, pendências, agenda,
+  "depois do módulo", obrigatórios até aqui) e montagem em `lib/home/load.ts`. A Início não importa mais nada de `@/demo`.
+- Ordem: saudação → boas-vindas (antes do início da turma) ou "Especialização concluída" (turma encerrada) → próximo
+  módulo (nome, data, contagem; durante o módulo, "Hoje é o dia X de Y" e o dia destacado) → O que fazer agora →
+  Preparação (só na janela; biblioteca + recursos do módulo) → Depois do módulo (até 30 dias após o fim) → Próximas
+  atividades → Continuar (conteúdos iniciados) → Sua especialização (régua, módulos e obrigatórios da biblioteca).
+- Fora da janela, "O que fazer agora" mostra só prazos da turma que vencem em até 14 dias; sem nada, uma mensagem calma
+  com a data em que a preparação passa a aparecer.
+- Pré-visualização do admin: Admin → Turma → "Pré-visualizar" abre `/?turma=<id>&data=AAAA-MM-DD`, com faixa de aviso;
+  só leitura (usa o progresso de quem está vendo). Para alunos e coordenação os parâmetros são ignorados.
+- Testes (todos fora da produção): unitários 55 (11 novos) · E2E local `home` 34 (antes do início, fora/dentro da janela,
+  durante o módulo, depois do módulo, turma encerrada, sem turma, rascunhos invisíveis, sem dado fictício, prévia do
+  admin) · regressões fluxos 48, parte3 58 (verificação da Início atualizada para a regra dos 30 dias), gestão 26,
+  biblioteca 51, acompanhamento 21 · build com e sem Supabase.
+
+**Próximo passo:** apresentar a Parte 1 à Maryah e aguardar aprovação antes da Parte 2 (Avisos).
 
 ## N. Decisões
 
