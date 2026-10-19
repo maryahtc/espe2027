@@ -1,5 +1,6 @@
+import { ButtonLink } from '@portal/ui/button'
 import { EmptyState } from '@portal/ui/empty-state'
-import { IconArrowRight } from '@portal/ui/icons'
+import { IconArrowRight, IconPlus } from '@portal/ui/icons'
 import { ModuleRuler } from '@portal/ui/module-ruler'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
@@ -217,6 +218,44 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </HomeSection>
       ) : null}
 
+      {home.cases ? (
+        <HomeSection id="casos" index={idx()} title="Meus casos" note="O que você atende na clínica.">
+          <div className="flex flex-wrap items-center gap-4">
+            {home.cases.canRegister ? (
+              <ButtonLink href="/casos/novo">
+                <IconPlus size={16} /> Registrar caso
+              </ButtonLink>
+            ) : null}
+            <Link href="/casos" className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline">
+              Ver todos <IconArrowRight size={15} />
+            </Link>
+          </div>
+          {home.cases.recent.length ? (
+            <ul className="mt-4 divide-y divide-rule">
+              {home.cases.recent.map((c) => (
+                <li key={c.id}>
+                  <Link href={`/casos/${c.id}`} className="group flex items-center justify-between gap-4 py-3">
+                    <span className="flex min-w-0 items-baseline gap-3">
+                      <span className="num text-xl font-light">{c.patientLabel}</span>
+                      <span className="min-w-0 text-sm">
+                        <span className="block font-semibold group-hover:underline">{c.headline}</span>
+                        <span className="block text-xs text-muted">
+                          {c.status === 'concluido' ? 'Concluído' : 'Em andamento'}
+                          {c.lastActivityOn ? ` · último registro ${relativeDays(today, c.lastActivityOn)}` : ''}
+                        </span>
+                      </span>
+                    </span>
+                    <IconArrowRight size={15} className="shrink-0 text-muted" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-muted">Nenhum caso ainda. O registro leva menos de um minuto.</p>
+          )}
+        </HomeSection>
+      ) : null}
+
       {home.continuing.length ? (
         <HomeSection id="continuar" index={idx()} title="Continuar" note="Conteúdos que você começou.">
           <ul className="divide-y divide-rule">
@@ -312,6 +351,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <Link href="/biblioteca" className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline">
             Biblioteca <IconArrowRight size={15} />
           </Link>
+          {home.cases?.canRegister ? (
+            <Link href="/casos/novo" className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline">
+              Registrar caso <IconArrowRight size={15} />
+            </Link>
+          ) : null}
         </div>
       </HomeSection>
     </div>

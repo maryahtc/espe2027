@@ -1,6 +1,8 @@
 import { PageTitle } from '@portal/ui/section'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { getAuth } from '@/lib/auth/session'
 import { cases } from '@/demo/cases'
 import { byMonth, byProcedure } from '@/demo/production'
 import { monthShort } from '@/lib/dates'
@@ -10,7 +12,9 @@ export const metadata: Metadata = { title: 'Minha produção' }
 
 const FILTERS = ['Toda a especialização', 'Últimos 3 meses', 'Este semestre']
 
-export default function ProductionPage() {
+/** Escondida até a Etapa 9: com banco (alunos reais), não existe; só a prévia sem banco mostra o protótipo. */
+export default async function ProductionPage() {
+  if ((await getAuth()) !== 'previa') notFound()
   const total = byProcedure.reduce((n, p) => n + p.count, 0)
   const categories = new Set(byProcedure.filter((p) => p.count > 0 && p.category !== 'Outros').map((p) => p.category)).size
   const max = Math.max(...byProcedure.map((p) => p.count))

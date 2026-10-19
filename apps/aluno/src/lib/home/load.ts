@@ -3,6 +3,8 @@ import { cohortEvents, cohortModules, currentCohort, loadModuleDetail, type Modu
 import { assignStates, type CohortVM, courseMonth, focusModule, type ModuleVM } from '@/lib/academic/model'
 import type { AuthState } from '@/lib/auth/session'
 import { loadHomeAnnouncements } from '@/lib/announcements/load'
+import { canRegister, loadMyCases, loadStepOptions } from '@/lib/cases/load'
+import { caseHeadline } from '@/lib/cases/model'
 import { activeAnnouncements, type AnnouncementVM } from '@/lib/announcements/model'
 import { loadLibrary } from '@/lib/library/load'
 import { isReleased, type ContentVM } from '@/lib/library/model'
@@ -30,6 +32,8 @@ export type HomeData = {
   required: { done: number; total: number }
   /** Avisos ativos hoje: importantes primeiro; comuns com "Entendi" já dados ficam de fora. */
   announcements: AnnouncementVM[]
+  /** Meus casos no Início: atalho "Registrar caso" (aluno em turma ativa) e os 2 casos mais recentes. Fora da prévia. */
+  cases: { canRegister: boolean; recent: Array<{ id: string; patientLabel: string; headline: string; status: 'em_andamento' | 'concluido'; lastActivityOn: string | null }> } | null
   /** Pré-visualização do admin (outra data e/ou turma): nada é gravado. */
   preview: { date: string; cohort: string } | null
 }
@@ -66,6 +70,17 @@ export async function loadHome(auth: AuthState | null | 'previa', preview: HomeP
     loadLibrary(userId, cohort.id),
     loadHomeAnnouncements(cohort.id, userId),
   ])
+  // Casos: só do próprio aluno e fora da pré-visualização (que mostra o que a turma vê, não os casos de quem prevê).
+  const cases =
+    userId && !preview
+      ? await Promise.all([loadMyCases(userId), loadStepOptions(), canRegister(cohort.id)]).then(([mine, options, allowed]) => ({
+          canRegister: allowed,
+          recent: mine
+            .filter((c) => !c.removed && c.cohortId === cohort.id)
+            .slice(0, 2)
+            .map((c) => ({ id: c.id, patientLabel: c.patientLabel, headline: caseHeadline(c, options), status: c.status, lastActivityOn: c.lastActivityOn })),
+        }))
+      : null
 
   // Só o que o aluno veria: publicado e já liberado (a RLS garante isso ao aluno; admin/coordenação veem mais).
   const visible = new Set(library.filter((c) => isReleased(c)).map((c) => c.id))
@@ -110,6 +125,7 @@ export async function loadHome(auth: AuthState | null | 'previa', preview: HomeP
     required: requiredSoFar(library.filter((c) => visible.has(c.id)), modules, today),
     // Na prévia, os "Entendi" de quem está vendo não escondem nada: mostra o que a turma vê naquela data.
     announcements: activeAnnouncements(notices.list, { cohortId: cohort.id, today, dismissed: preview ? new Set() : notices.dismissed }),
+    cases: cases && (cases.canRegister || cases.recent.length) ? cases : null,
     preview: preview ? { date: today, cohort: cohort.name } : null,
   }
 }

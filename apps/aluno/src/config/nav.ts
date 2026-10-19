@@ -48,11 +48,9 @@ export const studentNav: NavArea[] = [
     label: 'Clínica',
     href: '/casos',
     icon: 'tooth',
-    match: ['/casos', '/producao'],
-    children: [
-      { label: 'Meus casos', href: '/casos', match: ['/casos'] },
-      { label: 'Minha produção', href: '/producao', match: ['/producao'] },
-    ],
+    match: ['/casos'],
+    // "Minha produção" volta na Etapa 9 (decisão de 13/10/2026: nenhum número fictício para alunos reais).
+    children: [{ label: 'Meus casos', href: '/casos', match: ['/casos'] }],
   },
 ]
 

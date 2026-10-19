@@ -1,6 +1,6 @@
 # Etapa 6 — Meus casos · arquitetura final e catálogo inicial (para revisão)
 
-> Situação: **arquitetura e catálogo aprovados (13/10/2026, ajuste final dos clareamentos). Parte 1 implementada em 19/10/2026.**
+> Situação: **arquitetura e catálogo aprovados (13/10/2026, ajuste final dos clareamentos). Parte 1 implementada e aplicada em produção em 19/10/2026; Parte 2 implementada em 19/10/2026.**
 > Decisões da Maryah já incorporadas (13/10/2026): registro rápido com 4 essenciais; caso ≠ procedimento; exclusão
 > lógica para o aluno e exclusão definitiva só administrativa; catálogo validado antes de entrar em produção;
 > coordenação lê os casos da própria turma com auditoria; só foto de capa; supervisor informativo; conteúdos

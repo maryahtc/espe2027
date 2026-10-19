@@ -1387,7 +1387,35 @@ etapas; "Outro procedimento" só experiência; sinônimos só para busca).
   assinatura idêntica à da migração. Casos, registros, auditoria e vínculos com temas vazios. Auth, Storage e portal
   normais (`/api/saude` com o banco em `20261019120100_catalogo_procedimentos`).
 
-**Próximo passo:** a Maryah confere Admin → Procedimentos logada como admin. A Parte 2 só começa com autorização.
+Parte 1 conferida pela Maryah em produção e concluída em 19/10/2026.
+
+### Etapa 6 · Parte 2 — registro rápido e Meus casos (19/10/2026)
+
+Sem migração (usa a estrutura da Parte 1). Nada de foto de capa, leitura pela coordenação/admin, auditoria visual ou
+exclusão definitiva (Parte 3).
+
+- **Registro rápido** (`/casos/novo`, celular primeiro): "Novo caso" ou "Caso em andamento"; essenciais paciente/código,
+  data, procedimento (um toque na etapa: "Laminado cerâmico · Cimentação") e quantidade (− / +). Atalhos com as etapas
+  mais usadas pelo aluno, busca por nome e sinônimos, lista completa por categoria; várias linhas na mesma consulta;
+  dentes opcionais em quadrantes FDI (a quantidade acompanha os dentes marcados); módulo automático pela data,
+  corrigível; "Completar depois" recolhido (título, supervisor informativo, Smile Cloud, dificuldade com temas
+  sugeridos sem IA, facilidade, faria diferente). Recusa nome, CPF e telefone já no formulário (mesmas regras do banco);
+  avisa quando o código já tem caso em andamento ("registrar nele?"). Botão "Salvar registro" fixo acima do menu.
+- **Página do caso**: confirmação "Registrado ✓" com "Registrar outro neste caso" e conteúdos relacionados; andamento
+  por tratamento (etapas somadas, ✓ da etapa que conclui, dentes ainda sem a etapa final); linha do tempo por consulta;
+  editar cada registro (data, quantidade, dentes, módulo, observação/descrição), excluir e restaurar registro;
+  completar/editar dados opcionais e temas (até 3); concluir/reabrir; excluir/restaurar o caso (exclusão lógica);
+  turma encerrada somente leitura. Conteúdos relacionados: temas da dificuldade ∪ temas ligados aos procedimentos.
+- **Meus casos**: cartões reais, filtros Todos · Em andamento · Concluídos · Excluídos, busca pelo código (ignora
+  pontuação).
+- **Início**: seção "Meus casos" com "Registrar caso" e os 2 casos recentes; atalho no rodapé.
+- **"Minha produção"** fora do menu e indisponível com banco até a Etapa 9 (só a prévia sem banco mostra o protótipo).
+- **Correção geral de formulários** (`ActionForm`): o React 19 limpava o formulário ao fim de toda ação, inclusive com
+  erro, e a pessoa perdia o que digitou. Agora o formulário só volta aos valores salvos depois de sucesso.
+- Testes (fora da produção): banco 199 · unitários 81 (11 novos) · E2E local `casos` 44 no formato celular
+  (registro de caso novo em ~7 s e de 2 procedimentos com dentes em ~13 s com ritmo humano simulado).
+
+**Próximo passo:** relatório da Parte 2 à Maryah. A Parte 3 só começa com autorização.
 
 
 ## N. Decisões

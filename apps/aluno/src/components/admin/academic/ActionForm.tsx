@@ -2,7 +2,7 @@
 
 import { Button, type ButtonVariant } from '@portal/ui/button'
 import { cn } from '@portal/ui/cn'
-import { type ReactNode, useActionState } from 'react'
+import { type ReactNode, startTransition, useActionState, useEffect, useRef } from 'react'
 import type { ActionState } from '@/lib/admin/academic-actions'
 
 /**
@@ -34,11 +34,20 @@ export function ActionForm({
   silent?: boolean
 }) {
   const [state, formAction, pending] = useActionState(action, undefined)
+  const formRef = useRef<HTMLFormElement>(null)
+  // O React 19 limpa o formulário ao fim de toda ação, inclusive quando ela devolve erro — e a pessoa perderia o que
+  // digitou. Aqui o envio é manual (sem limpeza automática) e o formulário só volta aos valores salvos depois de sucesso.
+  useEffect(() => {
+    if (state?.aviso && !state.erro) formRef.current?.reset()
+  }, [state])
   return (
     <form
-      action={formAction}
+      ref={formRef}
       onSubmit={(e) => {
-        if (confirmText && !window.confirm(confirmText)) e.preventDefault()
+        e.preventDefault()
+        if (confirmText && !window.confirm(confirmText)) return
+        const data = new FormData(e.currentTarget)
+        startTransition(() => formAction(data))
       }}
       className={cn(row ? 'flex flex-wrap items-end gap-3' : 'space-y-4', className)}
     >
