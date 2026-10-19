@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { CaseCover } from '@/components/cases/CaseCover'
 import { studentArea } from '@/lib/academic/student'
 import { requireUser } from '@/lib/auth/session'
-import { canRegister, loadMyCases, loadStepOptions } from '@/lib/cases/load'
+import { canRegister, coverUrls, loadMyCases, loadStepOptions } from '@/lib/cases/load'
 import { type CaseFilter, caseHeadline, caseProcedures, filterCases } from '@/lib/cases/model'
 import { formatDayMonth, relativeDays } from '@/lib/dates'
 
@@ -30,6 +30,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
   const filter = FILTERS.find((f) => f.key === situacao)?.key ?? null
   const [all, options, allowed] = await Promise.all([loadMyCases(auth.userId), loadStepOptions(), canRegister(area.cohort.id)])
   const list = filterCases(all, filter, q)
+  const covers = await coverUrls(list.map((c) => c.coverPath), true)
   const count = (f: CaseFilter | null) => filterCases(all, f, '').length
   const href = (f: CaseFilter | null) => `/casos${f ? `?situacao=${f}` : ''}`
 
@@ -76,7 +77,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
               <li key={c.id} data-caso={c.patientLabel}>
                 <Link href={`/casos/${c.id}`} className="glass glass-interactive group flex h-full flex-col overflow-hidden rounded-[22px]">
                   <span className="relative block">
-                    <CaseCover item={{ patient: c.patientLabel }} className="aspect-[16/9]" />
+                    <CaseCover item={{ patient: c.patientLabel }} src={c.coverPath ? covers.get(c.coverPath) : null} className="aspect-[16/9]" />
                     <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5">
                       <span className="num text-4xl leading-none font-light tracking-tight text-white">{c.patientLabel}</span>
                       {c.removed ? (

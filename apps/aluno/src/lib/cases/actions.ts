@@ -263,3 +263,50 @@ export async function setRecordRemoved(_: ActionState, fd: FormData): Promise<Ac
     return remove ? 'Registro excluído (pode ser restaurado).' : 'Registro restaurado.'
   })
 }
+
+// ─── Foto de capa (privada) ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Envia ou troca a foto de capa. Só o dono, em turma ativa. O servidor reencoda (sem metadados), grava capa e
+ * miniatura na pasta do caso e apaga a anterior. Exige a confirmação de que a foto não mostra o rosto inteiro.
+ */
+export async function uploadCover(_: ActionState, fd: FormData): Promise<ActionState> {
+  return run(async ({ auth, db }) => {
+    const caseId = id(fd)
+    if (fd.get('semRosto') !== 'on') throw new Error('Confirme que a foto não mostra o rosto inteiro do paciente.')
+    const file = fd.get('foto')
+    if (!(file instanceof Blob) || !file.size) throw new Error('Escolha uma foto.')
+    const { data: own } = await db.from('clinical_cases').select('id, cover_path').eq('id', caseId).eq('owner_id', auth.userId).maybeSingle()
+    if (!own) throw new Error('Caso não encontrado.')
+    const { processCover, miniPath } = await import('./cover')
+    const { full, mini } = await processCover(Buffer.from(await file.arrayBuffer()))
+    const path = `${auth.userId}/${caseId}/${Date.now()}.webp`
+    const bucket = db.storage.from('case-covers')
+    const up1 = await bucket.upload(path, full, { contentType: 'image/webp', upsert: false })
+    if (up1.error) throw new Error('Não foi possível enviar a foto (caso de turma encerrada ou sem permissão).')
+    const up2 = await bucket.upload(miniPath(path), mini, { contentType: 'image/webp', upsert: false })
+    const { error, count } = up2.error
+      ? { error: up2.error, count: 0 }
+      : await db.from('clinical_cases').update({ cover_path: path, cover_updated_at: new Date().toISOString() }, { count: 'exact' }).eq('id', caseId)
+    if (error || !count) {
+      await bucket.remove([path, miniPath(path)])
+      throw new Error('Não foi possível salvar a foto.')
+    }
+    if (own.cover_path) await bucket.remove([own.cover_path, miniPath(own.cover_path)])
+    return 'Foto de capa salva (sem dados de localização ou da câmera).'
+  })
+}
+
+export async function removeCover(_: ActionState, fd: FormData): Promise<ActionState> {
+  return run(async ({ auth, db }) => {
+    const caseId = id(fd)
+    const { data: own } = await db.from('clinical_cases').select('cover_path').eq('id', caseId).eq('owner_id', auth.userId).maybeSingle()
+    if (!own?.cover_path) return 'Sem foto de capa.'
+    const { miniPath } = await import('./cover')
+    const { error, count } = await db.from('clinical_cases').update({ cover_path: null, cover_updated_at: new Date().toISOString() }, { count: 'exact' }).eq('id', caseId)
+    fail(error)
+    if (!count) throw new Error('Este caso não pode ser alterado.')
+    await db.storage.from('case-covers').remove([own.cover_path, miniPath(own.cover_path)])
+    return 'Foto de capa removida.'
+  })
+}

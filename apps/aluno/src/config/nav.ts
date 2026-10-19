@@ -180,6 +180,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
         ],
       },
       {
+        slug: 'casos',
+        label: 'Casos',
+        summary: 'Casos dos alunos, por turma — leitura auditada',
+        icon: 'tooth',
+        stage: 'Etapa 6',
+        details: ['Leitura dos casos de qualquer turma, com auditoria de cada abertura', 'Exclusão definitiva só de caso já excluído pelo aluno, com motivo'],
+      },
+      {
         slug: 'workflows',
         label: 'Workflows clínicos',
         summary: 'Árvores de raciocínio: perguntas, caminhos e conteúdos',

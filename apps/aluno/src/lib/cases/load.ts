@@ -53,7 +53,7 @@ export async function activeStepOptions(): Promise<StepOption[]> {
   return (await loadStepOptions()).filter((o) => o.active)
 }
 
-type CaseRow = {
+export type CaseRow = {
   id: string
   cohort_id: string
   patient_label: string
@@ -67,14 +67,15 @@ type CaseRow = {
   difficulty_text: string | null
   ease_text: string | null
   do_differently_text: string | null
+  cover_path: string | null
   removed_at: string | null
   created_at: string
 }
-const CASE_COLS = `id, cohort_id, patient_label, title, status, started_on, last_activity_on, concluded_on, supervisor_faculty_id,
-  smile_cloud_url, difficulty_text, ease_text, do_differently_text, removed_at, created_at`
-const RECORD_COLS = 'id, case_id, step_id, procedure_id, performed_on, quantity, teeth, module_id, module_auto, note, other_description, removed_at, created_at'
+export const CASE_COLS = `id, cohort_id, patient_label, title, status, started_on, last_activity_on, concluded_on, supervisor_faculty_id,
+  smile_cloud_url, difficulty_text, ease_text, do_differently_text, cover_path, removed_at, created_at`
+export const RECORD_COLS = 'id, case_id, step_id, procedure_id, performed_on, quantity, teeth, module_id, module_auto, note, other_description, removed_at, created_at'
 
-type RecordRow = {
+export type RecordRow = {
   id: string
   case_id: string
   step_id: string
@@ -90,7 +91,7 @@ type RecordRow = {
   created_at: string
 }
 
-const toRecord = (r: RecordRow): RecordVM => ({
+export const toRecord = (r: RecordRow): RecordVM => ({
   id: r.id,
   stepId: r.step_id,
   procedureId: r.procedure_id,
@@ -105,7 +106,7 @@ const toRecord = (r: RecordRow): RecordVM => ({
   createdAt: r.created_at,
 })
 
-function toCase(c: CaseRow, records: RecordVM[], topicIds: string[]): CaseVM {
+export function toCase(c: CaseRow, records: RecordVM[], topicIds: string[]): CaseVM {
   return {
     id: c.id,
     cohortId: c.cohort_id,
@@ -120,6 +121,7 @@ function toCase(c: CaseRow, records: RecordVM[], topicIds: string[]): CaseVM {
     difficulty: c.difficulty_text,
     ease: c.ease_text,
     differently: c.do_differently_text,
+    coverPath: c.cover_path,
     removed: !!c.removed_at,
     createdAt: c.created_at,
     topicIds,
@@ -142,8 +144,8 @@ export const loadMyCases = cache(async (userId: string): Promise<CaseVM[]> => {
 })
 
 /**
- * Um caso do próprio aluno. A leitura pela coordenação/admin (com auditoria) entra na Parte 3:
- * aqui, caso de outra pessoa → null.
+ * Um caso do próprio aluno. Caso de outra pessoa → null (a leitura pela coordenação/admin, com auditoria,
+ * fica em lib/cases/staff.ts e nunca passa por aqui).
  */
 export async function loadMyCase(id: string, userId: string): Promise<CaseVM | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null
@@ -192,7 +194,8 @@ export async function loadRegistration(auth: AuthState, cohortId: string) {
 
 /**
  * Conteúdos relacionados ao caso: temas da dificuldade ∪ temas ligados aos procedimentos do caso.
- * Só o que o aluno pode ver e já está liberado. Vazio quando não há vínculo.
+ * Só o que é da turma do caso e já está liberado. Vazio quando não há vínculo. `userId` = de quem é o progresso
+ * mostrado (o dono do caso — também na leitura da coordenação/admin).
  */
 export async function relatedContents(c: CaseVM, userId: string, limit = 6): Promise<ContentVM[]> {
   const supabase = await client()
@@ -202,7 +205,26 @@ export async function relatedContents(c: CaseVM, userId: string, limit = 6): Pro
   if (!topics.size) return []
   const library = await loadLibrary(userId, c.cohortId)
   return library
-    .filter((x) => isReleased(x) && x.topics.some((t) => topics.has(t.id)))
+    .filter((x) => isReleased(x) && (!x.cohortIds.length || x.cohortIds.includes(c.cohortId)) && x.topics.some((t) => topics.has(t.id)))
     .sort((a, b) => b.topics.filter((t) => topics.has(t.id)).length - a.topics.filter((t) => topics.has(t.id)).length)
     .slice(0, limit)
+}
+
+/**
+ * Links temporários (10 min) das fotos de capa — o bucket é privado e o Storage só assina para quem pode ler o caso
+ * (a mesma regra do banco). `mini` = miniatura das listas. Sem Storage/bucket (ou sem permissão) → sem foto.
+ */
+export async function coverUrls(paths: Array<string | null | undefined>, mini = false): Promise<Map<string, string>> {
+  const wanted = [...new Set(paths.filter((p): p is string => !!p))]
+  const out = new Map<string, string>()
+  if (!wanted.length) return out
+  try {
+    const supabase = await client()
+    const files = wanted.map((p) => (mini ? p.replace(/\.webp$/, '-mini.webp') : p))
+    const { data } = await supabase.storage.from('case-covers').createSignedUrls(files, 600)
+    for (const [i, d] of (data ?? []).entries()) if (d.signedUrl && !d.error) out.set(wanted[i]!, d.signedUrl)
+  } catch {
+    // Foto é opcional: falha no Storage nunca derruba a página.
+  }
+  return out
 }

@@ -8,10 +8,11 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { CaseCover } from '@/components/cases/CaseCover'
+import { CoverUpload } from '@/components/cases/CoverUpload'
 import { cohortModules, loadFaculty } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { saveCaseDetails, setCaseRemoved, setCaseStatus, setRecordRemoved, updateRecord } from '@/lib/cases/actions'
-import { canRegister, loadMyCase, loadStepOptions, relatedContents } from '@/lib/cases/load'
+import { canRegister, coverUrls, loadMyCase, loadStepOptions, relatedContents } from '@/lib/cases/load'
 import { caseHeadline, type RecordVM, type StepOption, suggestTopics, timeline, treatmentSummary } from '@/lib/cases/model'
 import { formatDayMonth, formatLongDay, year } from '@/lib/dates'
 import { loadTaxonomy } from '@/lib/library/load'
@@ -46,12 +47,13 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const [{ id }, { registrado }] = await Promise.all([params, searchParams])
   const c = await loadMyCase(id, auth.userId)
   if (!c) notFound()
-  const [options, modules, faculty, taxonomy, writable] = await Promise.all([
+  const [options, modules, faculty, taxonomy, writable, covers] = await Promise.all([
     loadStepOptions(),
     cohortModules(c.cohortId),
     loadFaculty(),
     loadTaxonomy(),
     canRegister(c.cohortId),
+    coverUrls([c.coverPath]),
   ])
   const help = await relatedContents(c, auth.userId)
   const byStep = new Map(options.map((o) => [o.stepId, o]))
@@ -116,7 +118,12 @@ export default async function CasePage({ params, searchParams }: { params: Promi
       ) : null}
 
       <header className="glass glass-sheen mt-6 grid overflow-hidden rounded-[26px] md:grid-cols-12">
-        <CaseCover item={{ patient: c.patientLabel }} overlay={false} className="aspect-[16/7] md:col-span-4 md:aspect-auto md:min-h-64" />
+        <CaseCover
+          item={{ patient: c.patientLabel }}
+          src={c.coverPath ? covers.get(c.coverPath) : null}
+          overlay={false}
+          className="aspect-[16/7] md:col-span-4 md:aspect-auto md:min-h-64"
+        />
         <div className="flex flex-col justify-between gap-8 p-6 sm:p-8 md:col-span-8 lg:p-10">
           <div>
             <p className="eyebrow">Paciente</p>
@@ -154,6 +161,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               </ActionForm>
             ) : null}
           </div>
+          {editable ? <CoverUpload caseId={c.id} hasCover={!!c.coverPath} /> : null}
           {!writable ? <p className="text-xs text-muted">Turma encerrada: o caso fica disponível só para consulta.</p> : null}
         </div>
       </header>

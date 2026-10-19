@@ -18,6 +18,14 @@ export default function CoordinationPage() {
         </span>
         <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
       </Link>
+      <Link href="/coordenacao/casos" className="glass glass-interactive group mb-8 flex items-center justify-between gap-4 rounded-2xl p-5">
+        <span>
+          <span className="eyebrow block text-[10px]">Disponível</span>
+          <span className="mt-1 block text-lg font-light">Casos da turma</span>
+          <span className="mt-1 block text-sm text-muted">Casos clínicos dos alunos, somente leitura. Cada caso aberto fica registrado na auditoria.</span>
+        </span>
+        <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+      </Link>
       <Link href="/coordenacao/avisos" className="glass glass-interactive group mb-8 flex items-center justify-between gap-4 rounded-2xl p-5">
         <span>
           <span className="eyebrow block text-[10px]">Disponível</span>
@@ -32,7 +40,6 @@ export default function CoordinationPage() {
           <li>Procedimentos pouco realizados pela turma</li>
           <li>Dificuldades mais relatadas, por tema</li>
           <li>Alunos com pouca exposição clínica</li>
-          <li>Caso individual com identificador do paciente (iniciais/código), com registro de acesso</li>
         </ul>
       </EmptyState>
     </>

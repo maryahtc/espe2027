@@ -1106,6 +1106,9 @@ isOneToOne: false
 "can_view_profile":
 { Args: { "p_user_id": string }; Returns: boolean
                            },
+"case_file_case":
+{ Args: { "p_path": string }; Returns: string
+                           },
 "case_readable":
 { Args: { "p_case_id": string }; Returns: boolean
                            },

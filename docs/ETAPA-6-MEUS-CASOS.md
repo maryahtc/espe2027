@@ -303,3 +303,10 @@ Os números também poderão ser vistos por categoria, por mês (data de cada re
 Rascunho técnico da nova versão em [`docs/TERMO-DE-USO-v1-RASCUNHO.md`](./TERMO-DE-USO-v1-RASCUNHO.md) — para revisão
 da Maryah e validação jurídica. **Não publicado**: a versão em vigor continua a `0.1-provisorio`. A publicação (nova
 versão no banco, com novo aceite de todos) só acontece com autorização expressa e antes de alunos reais registrarem casos.
+
+## 12. Andamento
+- Parte 1 (banco, catálogo, Admin → Procedimentos): aplicada em produção e concluída.
+- Parte 2 (registro rápido, Meus casos, página do caso, Início): concluída em 19/10/2026.
+- Parte 3 (foto de capa privada, Coordenação → Casos da turma, Admin → Casos, auditoria, exclusão definitiva):
+  implementada e testada fora da produção; migração `20261020120000_casos_capa` aguardando autorização para produção.
+  Detalhes e a tabela "o que cada perfil faz" em `PORTAL-DO-ALUNO-ARQUITETURA.md` (Etapa 6 · Parte 3).

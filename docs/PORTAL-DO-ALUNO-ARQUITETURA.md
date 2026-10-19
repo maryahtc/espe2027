@@ -1420,6 +1420,57 @@ exclusão definitiva (Parte 3).
 **Pendência antes do piloto (Etapa 12):** restringir o link do caso ao **domínio oficial do Smile Cloud** — por ora a
 validação aceita qualquer `https://` (decisão de 19/10/2026, para não bloquear a Etapa 6).
 
+### Etapa 6 · Parte 3 — foto de capa, leitura da coordenação/admin, auditoria e exclusão definitiva (19/10/2026)
+
+Migração `20261020120000_casos_capa` (só aditiva): função `case_file_case` (caso a que um arquivo pertence, pelo
+caminho), restrição na coluna `cover_path` (só aponta para a pasta do próprio caso; tabela ainda vazia em produção),
+bucket **privado** `case-covers` (5 MB, só WebP) e 4 regras de acesso aos arquivos. O catálogo não muda.
+**Ainda não aplicada em produção** — aguarda autorização, com verificação antes/depois. Sem ela o portal funciona
+normalmente; só a foto de capa não salva.
+
+- **Foto de capa (opcional, só o aluno dono, turma ativa)**: na página do caso, "Adicionar foto de capa". Orientação:
+  foto intraoral ou do sorriso, sem o rosto inteiro; serve só para reconhecer o caso (documentação clínica no Smile
+  Cloud). Salvar exige marcar "Confirmo que a foto não mostra o rosto inteiro…". Trocar apaga a anterior; "Remover
+  foto" apaga os arquivos.
+- **Tratamento da imagem**: o celular reduz a foto antes de enviar (até 2000 px); o servidor confere o formato
+  (JPG, PNG, WebP, HEIC, AVIF; até 4 MB), corrige a orientação e **reencoda em WebP** — 1600 px + miniatura de 480 px —
+  **sem nenhum metadado** (EXIF, GPS, câmera, data). O arquivo original nunca é gravado.
+- **Privacidade da foto**: bucket privado; a foto só aparece por **link temporário de 10 min**, gerado no servidor
+  para quem pode ler o caso (dono, coordenação da turma, admin). Endereço público não abre.
+- **Coordenação → Casos da turma** (`/coordenacao/casos`): só a(s) turma(s) que coordena; alunos com nº de casos, em
+  andamento, concluídos, registros e último registro → casos do aluno → caso em leitura (capa, andamento, linha do
+  tempo, reflexão, temas, conteúdos relacionados com a situação do aluno em cada um). Casos excluídos pelo aluno não
+  aparecem. Nenhum formulário ou botão de edição.
+- **Admin → Casos** (`/admin/casos`, menu Clínica): a mesma leitura para **qualquer turma** (seletor), inclusive casos
+  excluídos pelo aluno (marcados); auditoria recente da turma e auditoria de cada caso.
+- **Auditoria**: cada abertura de um caso individual por coordenação/admin grava quem, quando, turma e aluno, **antes**
+  de qualquer dado do caso sair do banco (sem permissão → "não encontrado" e nada é gravado). Listar não grava. Nunca
+  guarda conteúdo clínico. O aluno não vê a auditoria.
+- **Exclusão definitiva** (só admin, só caso já excluído pelo aluno): motivo obrigatório + digitar o código do
+  paciente + confirmação. Apaga a foto (capa e miniatura) e depois caso, registros e temas; grava na auditoria quem,
+  quando, motivo, aluno, turma, nº de registros e se havia foto.
+- **Isolamento** (conferido no banco, no Storage e nas telas): colegas não veem casos nem fotos uns dos outros;
+  coordenação só da própria turma; docente informado como supervisor — mesmo com login — não ganha acesso; nem
+  coordenação nem admin conseguem alterar caso, registro ou foto do aluno (o banco recusa).
+- **Conteúdos relacionados**: os da página do caso agora se limitam aos conteúdos da turma do caso (vale para o aluno e
+  para a leitura da coordenação/admin).
+- Testes (fora da produção): banco 204 (5 novos da capa) · unitários 85 (4 novos: imagem sem EXIF/GPS, orientação,
+  tamanhos, recusa de não-foto e de arquivo grande) · E2E local `capa-staff` 70 + regressão das demais suítes.
+
+#### O que cada perfil faz em Casos (Etapa 6 completa)
+
+| | Aluno (dono) | Coordenação | Admin |
+|---|---|---|---|
+| Registrar caso/procedimento | ✓ (turma ativa) | — | — |
+| Ver casos | Só os próprios (inclusive excluídos, em "Excluídos") | Só da própria turma, sem os excluídos pelo aluno | Todas as turmas, inclusive excluídos |
+| Editar, concluir/reabrir | ✓ (turma ativa) | — | — |
+| Excluir / restaurar (lógico) | ✓ | — | — |
+| Foto de capa | Enviar, trocar, remover | Ver | Ver |
+| Conteúdos relacionados | ✓ (com o próprio progresso) | ✓ (com a situação do aluno) | ✓ (com a situação do aluno) |
+| Auditoria | — | (gera ao abrir um caso) | Vê por turma e por caso |
+| Exclusão definitiva | — | — | Só de caso já excluído pelo aluno, com motivo e confirmação |
+| Turma encerrada | Só consulta | Só leitura | Só leitura |
+
 
 ## N. Decisões
 

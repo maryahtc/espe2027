@@ -12,7 +12,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${videoThumbs}`,
+  // Fotos de capa dos casos: links temporários do Storage privado do próprio projeto Supabase.
+  `img-src 'self' data: blob: ${videoThumbs}${supabaseUrl ? ` ${supabaseUrl}` : ''}`,
   `frame-src ${videoEmbed} https://player.mediadelivery.net`,
   "font-src 'self'",
   `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ''} ${videoApi}`,
@@ -25,6 +26,8 @@ const csp = [
 /** Portal do Aluno: nunca indexado por buscadores; cabeçalhos de segurança em todas as rotas. */
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Foto de capa: o navegador reduz antes de enviar; o servidor aceita até 4 MB e reencoda (limite da Vercel: 4,5 MB).
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
   async headers() {
     return [
       {

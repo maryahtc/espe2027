@@ -53,6 +53,8 @@ export type CaseVM = {
   difficulty: string | null
   ease: string | null
   differently: string | null
+  /** Caminho da foto de capa no Storage privado (nunca um endereço público). */
+  coverPath: string | null
   removed: boolean
   createdAt: string
   topicIds: string[]

@@ -23,6 +23,9 @@ export default async function CoordinationLayout({ children }: { children: React
           <Link href="/coordenacao/biblioteca" className="text-muted hover:text-ink">
             Progresso na biblioteca
           </Link>
+          <Link href="/coordenacao/casos" className="text-muted hover:text-ink">
+            Casos da turma
+          </Link>
           <Link href="/coordenacao/avisos" className="text-muted hover:text-ink">
             Avisos
           </Link>
