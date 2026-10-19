@@ -842,7 +842,7 @@ Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima
 | 10 | **Workflows**: motor, player, editor estruturado + mapa, validação, versões, "explorar no workflow" | Montar sozinha o workflow "Alteração estética anterior" e usá‑lo como aluno | — |
 | 11 | **Painel da coordenação** + **revisão do painel inicial do Admin** (hoje com dados fictícios: substituir por números reais — alunos, módulos, biblioteca, avisos, pendências de cadastro) | Ver a turma de teste; conferir o que aparece em agregados × casos individuais; ver o registro de auditoria; abrir o Admin e conferir que todos os números do painel inicial são reais | — |
 | 11b | **Proteção de produção e backups** (obrigatória, detalhada em M.3) | Restaurar um backup na homologação; ver o CI recusar um seed apontado para produção | Conta Backblaze B2; projeto de homologação; Supabase Pro |
-| 12 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas | Uso real | Domínio; termo revisado (LGPD) |
+| 12 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas; restringir o link do Smile Cloud ao domínio oficial (pendência de 19/10/2026) | Uso real | Domínio; termo revisado (LGPD) |
 | 13 | **Lançamento MVP 1** → MVP 2 em etapas do mesmo tamanho | — | — |
 
 **Prazo:** hoje é outubro de 2026 e a turma começa em fevereiro de 2027 (~4 meses). A estimativa de 3–4 meses
@@ -1415,7 +1415,10 @@ exclusão definitiva (Parte 3).
 - Testes (fora da produção): banco 199 · unitários 81 (11 novos) · E2E local `casos` 44 no formato celular
   (registro de caso novo em ~7 s e de 2 procedimentos com dentes em ~13 s com ritmo humano simulado).
 
-**Próximo passo:** relatório da Parte 2 à Maryah. A Parte 3 só começa com autorização.
+**Parte 2 aprovada e concluída em 19/10/2026** (fluxo de registro de casos aprovado pela Maryah).
+
+**Pendência antes do piloto (Etapa 12):** restringir o link do caso ao **domínio oficial do Smile Cloud** — por ora a
+validação aceita qualquer `https://` (decisão de 19/10/2026, para não bloquear a Etapa 6).
 
 
 ## N. Decisões
