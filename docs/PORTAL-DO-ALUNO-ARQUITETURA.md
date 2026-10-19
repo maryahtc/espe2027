@@ -1352,7 +1352,35 @@ exclusão lógica para o aluno e definitiva só administrativa). Versão ajustad
 de procedimentos em [`ETAPA-6-MEUS-CASOS.md`](./ETAPA-6-MEUS-CASOS.md); rascunho do termo de uso v1.0 em
 [`TERMO-DE-USO-v1-RASCUNHO.md`](./TERMO-DE-USO-v1-RASCUNHO.md) (não publicado). **Nada implementado.**
 
-**Próximo passo:** revisão da Maryah (e da coordenação clínica, para o catálogo) e aprovação antes de implementar.
+Arquitetura e catálogo aprovados em 13/10/2026 (ajuste final: clareamentos só experiência, sem etapa de
+"Finalização"; endodontia, cirurgia e implantes incluídos; dente/sítio para implantes e enxertos; provisórios como
+etapas; "Outro procedimento" só experiência; sinônimos só para busca).
+
+### Etapa 6 · Parte 1 — banco, catálogo, regras e Admin → Procedimentos (19/10/2026)
+
+- **Migração `20261019120000_casos`** (só aditiva): tipos `count_unit`, `procedure_kind`, `case_status`; catálogo
+  `procedure_categories`, `procedures`, `procedure_steps` (unidade, conclui — no máximo uma por procedimento —, exige
+  descrição), `procedure_topics`; casos `clinical_cases`, `performed_procedures` (etapa, procedimento, data, quantidade,
+  dentes FDI, módulo automático pela data, descrição normalizada do "Outro", exclusão lógica), `case_difficulty_topics`
+  (até 3), `case_access_grants` (estrutura, sem tela), `audit_log`; funções `case_readable`, `case_writable`,
+  `can_register_cases`, `module_for_date`, `suggest_topics`, `log_case_view`, `purge_case`; visão
+  `active_performed_procedures` (base da Produção). Foto de capa: coluna prevista, armazenamento na Parte 3.
+- **Migração `20261019120100_catalogo_procedimentos`**: catálogo aprovado, sem acréscimos — 12 categorias,
+  41 procedimentos, 56 etapas; sem vínculos com temas (o admin define).
+- **Regras no banco**: catálogo lido por todos, alterado só pelo admin; caso e registros só do dono, em turma ativa;
+  coordenação lê os não removidos da própria turma; admin lê todos; ninguém apaga diretamente; exclusão definitiva
+  só por `purge_case` (admin, caso já removido, com motivo, auditada); abertura de caso por coordenação/admin auditada;
+  identificação do paciente e textos recusam nome, CPF e telefone; turma encerrada somente leitura.
+- **Admin → Procedimentos** (substitui a tela "em breve"): lista por categoria com as etapas, unidade, ✓ e uso;
+  página do procedimento com "como aparece no registro", dados, etapas (criar, editar, desativar, apagar só sem
+  registros), temas relacionados, "descrições frequentes" do "Outro procedimento" e histórico.
+- Testes (fora da produção): banco 199 (40 novos) · unitários 70 · E2E local `procedimentos` 21.
+- **Produção:** migrações ainda **não aplicadas** — em 19/10/2026 o banco de produção não respondia (verificação de
+  saúde: "No active services available"; o portal informava o banco indisponível). Aplicação pendente de o projeto
+  voltar a responder, com a conferência de dados antes/depois de costume.
+
+**Próximo passo:** aplicar as duas migrações em produção quando o banco voltar e apresentar o relatório da Parte 1.
+A Parte 2 só começa com autorização.
 
 
 ## N. Decisões

@@ -8,6 +8,8 @@ const LABEL: Record<string, string> = {
   requirement: 'obrigatoriedade', note: 'nota', position: 'ordem', name: 'nome', synonyms: 'sinônimos', origin: 'origem',
   body: 'texto', signature: 'assinatura', link_url: 'link', link_label: 'texto do link', important: 'importante',
   visible_from: 'exibir de', visible_until: 'exibir até', cohort_id: 'turma',
+  unit: 'unidade', completes: 'conclui', requires_description: 'exige descrição', active: 'ativo',
+  slug: 'identificador', archived_at: 'arquivada em',
 }
 
 function describe(e: HistoryEntry): string {
@@ -18,6 +20,8 @@ function describe(e: HistoryEntry): string {
   return Object.keys(e.changes)
     .map((k) => {
       if (k === 'cohort_id') return 'turma alterada'
+      if (k === 'category_id' && ['Procedimento', 'Etapa'].includes(e.table)) return 'categoria alterada'
+      if (k === 'procedure_id') return 'procedimento alterado'
       const c = e.changes[k] as { de?: unknown; para?: unknown }
       return `${LABEL[k] ?? k}: ${fmt(c?.de)} → ${fmt(c?.para)}`
     })

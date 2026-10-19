@@ -171,14 +171,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
       {
         slug: 'procedimentos',
         label: 'Procedimentos',
-        summary: 'Lista, categorias e unidade de contagem',
+        summary: 'Procedimentos, etapas clínicas e unidade de contagem',
         icon: 'tooth',
         action: 'Novo procedimento',
         stage: 'Etapa 6',
         details: [
-          'Nome, categoria e sinônimos ("faceta cerâmica" → Laminado cerâmico)',
-          'Unidade de contagem: dente, peça, arcada ou caso',
-          'A lista inicial será definida com a coordenação clínica',
+          'Procedimento (tratamento) × etapa clínica, com a etapa que conclui',
+          'Unidade de contagem por etapa: dente, peça, arcada ou caso',
+          'Sinônimos só para a busca',
         ],
       },
       {

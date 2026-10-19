@@ -1,6 +1,6 @@
 # Etapa 6 — Meus casos · arquitetura final e catálogo inicial (para revisão)
 
-> Situação: **arquitetura aprovada em 13/10/2026; catálogo (procedimento × etapa clínica) em validação. Nada implementado.**
+> Situação: **arquitetura e catálogo aprovados (13/10/2026, ajuste final dos clareamentos). Parte 1 implementada em 19/10/2026.**
 > Decisões da Maryah já incorporadas (13/10/2026): registro rápido com 4 essenciais; caso ≠ procedimento; exclusão
 > lógica para o aluno e exclusão definitiva só administrativa; catálogo validado antes de entrar em produção;
 > coordenação lê os casos da própria turma com auditoria; só foto de capa; supervisor informativo; conteúdos
@@ -240,11 +240,11 @@ Unidades aprovadas: preparo = **dente**; cimentação/restauração indireta = *
 | Placa oclusal | **Instalação (peça) ✓** | placa miorrelaxante, placa de bruxismo |
 | Ajuste oclusal | **Ajuste (caso) ✓** | desgaste seletivo |
 
-### K. Clareamento e manchas
+### K. Clareamento e manchas (ajuste aprovado: clareamentos só experiência)
 | Procedimento | Etapas (unidade) | Sinônimos principais |
 |---|---|---|
-| Clareamento de consultório | Sessão (caso) · **Finalização (caso) ✓** | clareamento, branqueamento |
-| Clareamento caseiro supervisionado | **Entrega e orientação (caso) ✓** | clareamento de moldeira |
+| Clareamento de consultório | Sessão (caso) — *só experiência* | clareamento, branqueamento |
+| Clareamento caseiro supervisionado | Entrega e orientação (caso) — *só experiência* | clareamento de moldeira |
 | Clareamento interno | Sessão (dente) — *só experiência* | dente não vital, walking bleach |
 | Microabrasão / infiltração resinosa | dente ✓ | mancha branca, infiltrante |
 

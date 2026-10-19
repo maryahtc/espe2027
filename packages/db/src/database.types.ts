@@ -61,6 +61,78 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"audit_log": {
+                  Row: {
+                    "action": string,"actor": string | null,"at": string,"cohort_id": string | null,"details": NonNullable<Json>,"entity": string,"entity_id": string | null,"id": number,"owner_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"actor"?: string | null,"at"?: string,"cohort_id"?: string | null,"details"?: NonNullable<Json>,"entity": string,"entity_id"?: string | null,"id"?: never,"owner_id"?: string | null
+                  }
+                  Update: {
+                    "action"?: string,"actor"?: string | null,"at"?: string,"cohort_id"?: string | null,"details"?: NonNullable<Json>,"entity"?: string,"entity_id"?: string | null,"id"?: never,"owner_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"case_access_grants": {
+                  Row: {
+                    "case_id": string,"created_at": string,"expires_at": string | null,"granted_by": string,"grantee_id": string,"id": string,"reason": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_id": string,"created_at"?: string,"expires_at"?: string | null,"granted_by"?: string,"grantee_id": string,"id"?: string,"reason": string
+                  }
+                  Update: {
+                    "case_id"?: string,"created_at"?: string,"expires_at"?: string | null,"granted_by"?: string,"grantee_id"?: string,"id"?: string,"reason"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "case_access_grants_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "clinical_cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_access_grants_granted_by_fkey"
+      columns: ["granted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_access_grants_grantee_id_fkey"
+      columns: ["grantee_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"case_difficulty_topics": {
+                  Row: {
+                    "case_id": string,"created_at": string,"owner_id": string,"source": string,"topic_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_id": string,"created_at"?: string,"owner_id": string,"source"?: string,"topic_id": string
+                  }
+                  Update: {
+                    "case_id"?: string,"created_at"?: string,"owner_id"?: string,"source"?: string,"topic_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "case_difficulty_topics_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "clinical_cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_difficulty_topics_topic_id_fkey"
+      columns: ["topic_id"]
+isOneToOne: false
+      referencedRelation: "topics"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"categories": {
                   Row: {
                     "archived_at": string | null,"created_at": string,"id": string,"name": string,"position": number,"slug": string,"updated_at": string
@@ -88,6 +160,44 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"clinical_cases": {
+                  Row: {
+                    "cohort_id": string,"concluded_on": string | null,"cover_path": string | null,"cover_updated_at": string | null,"created_at": string,"difficulty_text": string | null,"do_differently_text": string | null,"ease_text": string | null,"id": string,"last_activity_on": string | null,"owner_id": string,"patient_label": string,"removed_at": string | null,"smile_cloud_url": string | null,"started_on": string | null,"status": Database["public"]['Enums']["case_status"],"supervisor_faculty_id": string | null,"title": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cohort_id": string,"concluded_on"?: string | null,"cover_path"?: string | null,"cover_updated_at"?: string | null,"created_at"?: string,"difficulty_text"?: string | null,"do_differently_text"?: string | null,"ease_text"?: string | null,"id"?: string,"last_activity_on"?: string | null,"owner_id"?: string,"patient_label": string,"removed_at"?: string | null,"smile_cloud_url"?: string | null,"started_on"?: string | null,"status"?: Database["public"]['Enums']["case_status"],"supervisor_faculty_id"?: string | null,"title"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "cohort_id"?: string,"concluded_on"?: string | null,"cover_path"?: string | null,"cover_updated_at"?: string | null,"created_at"?: string,"difficulty_text"?: string | null,"do_differently_text"?: string | null,"ease_text"?: string | null,"id"?: string,"last_activity_on"?: string | null,"owner_id"?: string,"patient_label"?: string,"removed_at"?: string | null,"smile_cloud_url"?: string | null,"started_on"?: string | null,"status"?: Database["public"]['Enums']["case_status"],"supervisor_faculty_id"?: string | null,"title"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "clinical_cases_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_cases_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_cases_supervisor_faculty_id_fkey"
+      columns: ["supervisor_faculty_id"]
+isOneToOne: false
+      referencedRelation: "faculty"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_cases_supervisor_faculty_id_fkey"
+      columns: ["supervisor_faculty_id"]
+isOneToOne: false
+      referencedRelation: "public_teachers"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"cohort_events": {
                   Row: {
@@ -623,6 +733,130 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"performed_procedures": {
+                  Row: {
+                    "case_id": string,"cohort_id": string,"created_at": string,"id": string,"module_auto": boolean,"module_id": string | null,"note": string | null,"other_description": string | null,"other_description_norm": string | null,"owner_id": string,"performed_on": string,"procedure_id": string,"quantity": number,"removed_at": string | null,"step_id": string,"teeth": (number)[],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_id": string,"cohort_id": string,"created_at"?: string,"id"?: string,"module_auto"?: boolean,"module_id"?: string | null,"note"?: string | null,"other_description"?: string | null,"other_description_norm"?: string | null,"owner_id": string,"performed_on": string,"procedure_id": string,"quantity": number,"removed_at"?: string | null,"step_id": string,"teeth"?: (number)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "case_id"?: string,"cohort_id"?: string,"created_at"?: string,"id"?: string,"module_auto"?: boolean,"module_id"?: string | null,"note"?: string | null,"other_description"?: string | null,"other_description_norm"?: string | null,"owner_id"?: string,"performed_on"?: string,"procedure_id"?: string,"quantity"?: number,"removed_at"?: string | null,"step_id"?: string,"teeth"?: (number)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "performed_procedures_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "clinical_cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_procedure_id_fkey"
+      columns: ["procedure_id"]
+isOneToOne: false
+      referencedRelation: "procedures"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_step_id_fkey"
+      columns: ["step_id"]
+isOneToOne: false
+      referencedRelation: "procedure_steps"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"procedure_categories": {
+                  Row: {
+                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"position": number,"slug": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"position"?: number,"slug": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"position"?: number,"slug"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"procedure_steps": {
+                  Row: {
+                    "active": boolean,"completes": boolean,"created_at": string,"id": string,"name": string,"position": number,"procedure_id": string,"requires_description": boolean,"slug": string,"synonyms": (string)[],"unit": Database["public"]['Enums']["count_unit"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"completes"?: boolean,"created_at"?: string,"id"?: string,"name": string,"position"?: number,"procedure_id": string,"requires_description"?: boolean,"slug": string,"synonyms"?: (string)[],"unit": Database["public"]['Enums']["count_unit"],"updated_at"?: string
+                  }
+                  Update: {
+                    "active"?: boolean,"completes"?: boolean,"created_at"?: string,"id"?: string,"name"?: string,"position"?: number,"procedure_id"?: string,"requires_description"?: boolean,"slug"?: string,"synonyms"?: (string)[],"unit"?: Database["public"]['Enums']["count_unit"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "procedure_steps_procedure_id_fkey"
+      columns: ["procedure_id"]
+isOneToOne: false
+      referencedRelation: "procedures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"procedure_topics": {
+                  Row: {
+                    "created_at": string,"procedure_id": string,"topic_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"procedure_id": string,"topic_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"procedure_id"?: string,"topic_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "procedure_topics_procedure_id_fkey"
+      columns: ["procedure_id"]
+isOneToOne: false
+      referencedRelation: "procedures"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "procedure_topics_topic_id_fkey"
+      columns: ["topic_id"]
+isOneToOne: false
+      referencedRelation: "topics"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"procedures": {
+                  Row: {
+                    "active": boolean,"category_id": string,"created_at": string,"id": string,"kind": Database["public"]['Enums']["procedure_kind"],"name": string,"position": number,"slug": string,"synonyms": (string)[],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"category_id": string,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["procedure_kind"],"name": string,"position"?: number,"slug": string,"synonyms"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "active"?: boolean,"category_id"?: string,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["procedure_kind"],"name"?: string,"position"?: number,"slug"?: string,"synonyms"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "procedures_category_id_fkey"
+      columns: ["category_id"]
+isOneToOne: false
+      referencedRelation: "procedure_categories"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "created_at": string,"deactivated_at": string | null,"display_name": string | null,"full_name": string,"id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string
@@ -778,7 +1012,51 @@ isOneToOne: false
                 }
           }
           Views: {
-            "public_modules": {
+            "active_performed_procedures": {
+                  Row: {
+                    "case_id": string | null,"category_id": string | null,"cohort_id": string | null,"completes": boolean | null,"id": string | null,"kind": Database["public"]['Enums']["procedure_kind"] | null,"module_id": string | null,"owner_id": string | null,"performed_on": string | null,"procedure_id": string | null,"quantity": number | null,"step_id": string | null,"teeth": (number)[] | null,"unit": Database["public"]['Enums']["count_unit"] | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "performed_procedures_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "clinical_cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "public_modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_procedure_id_fkey"
+      columns: ["procedure_id"]
+isOneToOne: false
+      referencedRelation: "procedures"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "performed_procedures_step_id_fkey"
+      columns: ["step_id"]
+isOneToOne: false
+      referencedRelation: "procedure_steps"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "procedures_category_id_fkey"
+      columns: ["category_id"]
+isOneToOne: false
+      referencedRelation: "procedure_categories"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"public_modules": {
                   Row: {
                     "description": string | null,"ends_on": string | null,"id": string | null,"number": number | null,"position": number | null,"staff_ids": (string)[] | null,"starts_on": string | null,"theme": string | null,"title": string | null
                   }
@@ -822,8 +1100,17 @@ isOneToOne: false
 "bootstrap_first_admin":
 { Args: { "p_email": string }; Returns: string
                            },
+"can_register_cases":
+{ Args: { "p_cohort_id": string }; Returns: boolean
+                           },
 "can_view_profile":
 { Args: { "p_user_id": string }; Returns: boolean
+                           },
+"case_readable":
+{ Args: { "p_case_id": string }; Returns: boolean
+                           },
+"case_writable":
+{ Args: { "p_case_id": string }; Returns: boolean
                            },
 "content_cohort_access":
 { Args: { "p_content_id": string,"p_coord_only": boolean }; Returns: boolean
@@ -839,6 +1126,9 @@ isOneToOne: false
                            },
 "current_terms_version_id":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"has_personal_identifier":
+{ Args: { "p_text": string }; Returns: boolean
                            },
 "health":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -858,11 +1148,17 @@ isOneToOne: false
 "library_tsquery":
 { Args: { "p_query": string }; Returns: unknown
                            },
+"log_case_view":
+{ Args: { "p_case_id": string }; Returns: boolean
+                           },
 "merge_topics":
 { Args: { "p_from": string,"p_into": string }; Returns: number
                            },
 "module_file_readable":
 { Args: { "p_path": string }; Returns: boolean
+                           },
+"module_for_date":
+{ Args: { "p_cohort_id": string,"p_date": string }; Returns: string
                            },
 "module_full_access":
 { Args: { "p_module_id": string }; Returns: boolean
@@ -875,6 +1171,9 @@ isOneToOne: false
                            },
 "progress_visible":
 { Args: { "p_user_id": string }; Returns: boolean
+                           },
+"purge_case":
+{ Args: { "p_case_id": string,"p_reason": string }; Returns: string
                            },
 "refresh_content_search":
 { Args: { "p_content_id": string }; Returns: undefined
@@ -892,10 +1191,21 @@ isOneToOne: false
                            },
 "sp_today":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"suggest_topics":
+{ Args: { "p_limit"?: number,"p_text": string }; Returns: {
+              "name": string,"topic_id": string
+            }[]
+                           },
+"valid_patient_label":
+{ Args: { "p_label": string }; Returns: boolean
+                           },
+"valid_teeth":
+{ Args: { "p_teeth": (number)[] }; Returns: boolean
                            }
           }
           Enums: {
-            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","day_period": "manha"|"tarde"|"noite"|"dia_todo","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio"
+            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1011,7 +1321,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"]
+            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"]
           }
         }
 } as const
