@@ -1377,12 +1377,17 @@ etapas; "Outro procedimento" só experiência; sinônimos só para busca).
 - Testes (fora da produção): banco 199 (40 novos) · unitários 70 · E2E local `procedimentos` 21; regressões avisos 30,
   Início 41 (verificações de data passaram a ser calculadas a partir de hoje), fluxos 48, parte3 58, gestão 26,
   biblioteca 51, acompanhamento 21 · build com Supabase.
-- **Produção:** migrações ainda **não aplicadas** — em 19/10/2026 o banco de produção não respondia (verificação de
-  saúde: "No active services available"; o portal informava o banco indisponível). Aplicação pendente de o projeto
-  voltar a responder, com a conferência de dados antes/depois de costume.
+- **Produção (19/10/2026, autorizada pela Maryah):** o projeto ficou pausado/indisponível e foi reativado por ela;
+  verificação só de leitura antes (banco saudável, versão `avisos`, 32 tabelas íntegras; a única diferença desde 13/10
+  era uma aluna convidada normalmente em 13/10). Aplicadas **só** `20261019120000_casos` e
+  `20261019120100_catalogo_procedimentos`. Conferência depois: das 32 tabelas existentes, 30 idênticas; `schema_info`
+  mudou só a versão; `change_log` só ganhou 109 inserções do catálogo (as 476 linhas antigas idênticas). Criados 9
+  tabelas com RLS e 19 políticas (123 no total), 3 tipos, 15 funções e a visão `active_performed_procedures`
+  (security invoker); nada acessível sem login. Catálogo: 12 categorias, 41 procedimentos, 56 etapas (29 concluem),
+  assinatura idêntica à da migração. Casos, registros, auditoria e vínculos com temas vazios. Auth, Storage e portal
+  normais (`/api/saude` com o banco em `20261019120100_catalogo_procedimentos`).
 
-**Próximo passo:** aplicar as duas migrações em produção quando o banco voltar e apresentar o relatório da Parte 1.
-A Parte 2 só começa com autorização.
+**Próximo passo:** a Maryah confere Admin → Procedimentos logada como admin. A Parte 2 só começa com autorização.
 
 
 ## N. Decisões
