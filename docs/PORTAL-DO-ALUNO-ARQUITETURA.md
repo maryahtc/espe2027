@@ -1374,7 +1374,9 @@ etapas; "Outro procedimento" só experiência; sinônimos só para busca).
 - **Admin → Procedimentos** (substitui a tela "em breve"): lista por categoria com as etapas, unidade, ✓ e uso;
   página do procedimento com "como aparece no registro", dados, etapas (criar, editar, desativar, apagar só sem
   registros), temas relacionados, "descrições frequentes" do "Outro procedimento" e histórico.
-- Testes (fora da produção): banco 199 (40 novos) · unitários 70 · E2E local `procedimentos` 21.
+- Testes (fora da produção): banco 199 (40 novos) · unitários 70 · E2E local `procedimentos` 21; regressões avisos 30,
+  Início 41 (verificações de data passaram a ser calculadas a partir de hoje), fluxos 48, parte3 58, gestão 26,
+  biblioteca 51, acompanhamento 21 · build com Supabase.
 - **Produção:** migrações ainda **não aplicadas** — em 19/10/2026 o banco de produção não respondia (verificação de
   saúde: "No active services available"; o portal informava o banco indisponível). Aplicação pendente de o projeto
   voltar a responder, com a conferência de dados antes/depois de costume.
