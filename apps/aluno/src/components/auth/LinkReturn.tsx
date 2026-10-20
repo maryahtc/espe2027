@@ -7,18 +7,30 @@ import { FormMessage } from './forms'
 
 const EXPIRED = 'Este link expirou ou já foi usado. Peça um novo.'
 
-/** Lê a sessão do fragmento (#…), apaga-o do endereço e entrega ao servidor. */
+/** Lê a sessão do fragmento (#…) ou o código (?code=…), apaga-os do endereço e entrega ao servidor. */
 export function LinkReturn() {
   const [state, action] = useActionState(establishSessionFromLink, undefined)
   const [linkError, setLinkError] = useState<string | null>(null)
 
   useEffect(() => {
     const fragment = new URLSearchParams(window.location.hash.slice(1))
+    const query = new URLSearchParams(window.location.search)
     window.history.replaceState(null, '', window.location.pathname)
+    const code = query.get('code')
+    if (code && !fragment.get('error') && !query.get('error')) {
+      const data = new FormData()
+      data.set('code', code)
+      startTransition(() => action(data))
+      return
+    }
     const access = fragment.get('access_token')
     const refresh = fragment.get('refresh_token')
-    if (fragment.get('error') || !access || !refresh) {
+    if (query.get('error')) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- resultado lido uma única vez do endereço
+      setLinkError(EXPIRED)
+      return
+    }
+    if (fragment.get('error') || !access || !refresh) {
       setLinkError(fragment.get('error') ? EXPIRED : 'Link inválido.')
       return
     }

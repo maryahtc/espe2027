@@ -11,6 +11,7 @@
     "./types": "./src/database.types.ts",
     "./proxy": "./src/proxy.ts",
     "./admin": "./src/admin.ts",
+    "./email-links": "./src/email-links.ts",
     "./cookies": "./src/cookies.ts"
   },
   "scripts": {

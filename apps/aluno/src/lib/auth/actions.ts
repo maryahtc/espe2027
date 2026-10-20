@@ -1,5 +1,6 @@
 'use server'
 
+import { createSupabaseEmailLinkClient } from '@portal/db/email-links'
 import { createSupabaseServerClient } from '@portal/db/server'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -56,7 +57,8 @@ export async function signOut(): Promise<never> {
 export async function requestPasswordReset(_: FormState, formData: FormData): Promise<FormState> {
   const email = text(formData, 'email').toLowerCase()
   if (!email.includes('@')) return { erro: 'Informe um e-mail válido.', email }
-  const supabase = await client()
+  // Link no formato do fragmento (abre em qualquer aparelho), não PKCE — ver createSupabaseEmailLinkClient.
+  const supabase = createSupabaseEmailLinkClient() ?? (await client())
   const origin = (await headers()).get('origin')
   const { error } = await supabase.auth.resetPasswordForEmail(email, origin ? { redirectTo: `${origin}/auth/retorno` } : undefined)
   if (error?.status === 429) return { erro: 'Muitos pedidos seguidos. Aguarde alguns minutos e tente de novo.' }
@@ -84,6 +86,15 @@ export async function confirmEmailLink(_: FormState, formData: FormData): Promis
  * servidor valida com o Auth antes de gravar os cookies.
  */
 export async function establishSessionFromLink(_: FormState, formData: FormData): Promise<FormState> {
+  // Formato PKCE (?code=…): links de recuperação pedidos antes desta correção. Só funciona no mesmo navegador
+  // em que o link foi pedido (o verificador fica num cookie). PKCE só sai do "Esqueci minha senha" → recuperação.
+  const code = text(formData, 'code')
+  if (code) {
+    const supabase = await client()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) return { erro: 'Este link expirou ou foi aberto em outro aparelho ou navegador. Peça um novo link.' }
+    redirect('/definir-senha?motivo=recuperacao')
+  }
   const accessToken = text(formData, 'access_token')
   const refreshToken = text(formData, 'refresh_token')
   const type = text(formData, 'type')
