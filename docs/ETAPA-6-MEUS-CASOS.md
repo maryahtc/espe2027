@@ -308,5 +308,5 @@ versão no banco, com novo aceite de todos) só acontece com autorização expre
 - Parte 1 (banco, catálogo, Admin → Procedimentos): aplicada em produção e concluída.
 - Parte 2 (registro rápido, Meus casos, página do caso, Início): concluída em 19/10/2026.
 - Parte 3 (foto de capa privada, Coordenação → Casos da turma, Admin → Casos, auditoria, exclusão definitiva):
-  implementada e testada fora da produção; migração `20261020120000_casos_capa` aguardando autorização para produção.
+  implementada e testada fora da produção; migração `20261020120000_casos_capa` aplicada em produção em 20/10/2026.
   Detalhes e a tabela "o que cada perfil faz" em `PORTAL-DO-ALUNO-ARQUITETURA.md` (Etapa 6 · Parte 3).

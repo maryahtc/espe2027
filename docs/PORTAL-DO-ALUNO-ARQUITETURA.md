@@ -1425,8 +1425,11 @@ validação aceita qualquer `https://` (decisão de 19/10/2026, para não bloque
 Migração `20261020120000_casos_capa` (só aditiva): função `case_file_case` (caso a que um arquivo pertence, pelo
 caminho), restrição na coluna `cover_path` (só aponta para a pasta do próprio caso; tabela ainda vazia em produção),
 bucket **privado** `case-covers` (5 MB, só WebP) e 4 regras de acesso aos arquivos. O catálogo não muda.
-**Ainda não aplicada em produção** — aguarda autorização, com verificação antes/depois. Sem ela o portal funciona
-normalmente; só a foto de capa não salva.
+**Aplicada em produção em 20/10/2026** (autorizada pela Maryah), com verificação somente leitura antes/depois:
+de 46 itens comparados (41 tabelas, buckets, objetos e regras do Storage, regras do banco, contas), 43 idênticos; mudaram
+só os 3 esperados — versão em `schema_info`, +1 bucket (`case-covers`, privado, 5 MB, só WebP; os 2 existentes
+idênticos) e +4 regras do Storage (as 8 existentes idênticas). Catálogo 12/41/56 intacto; 0 casos e 0 arquivos (nenhum
+dado de teste criado). Banco, Auth, REST, Storage e portal saudáveis.
 
 - **Foto de capa (opcional, só o aluno dono, turma ativa)**: na página do caso, "Adicionar foto de capa". Orientação:
   foto intraoral ou do sorriso, sem o rosto inteiro; serve só para reconhecer o caso (documentação clínica no Smile
