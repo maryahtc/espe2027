@@ -40,8 +40,12 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
           initialCaseId={initial}
         />
       ) : (
-        <EmptyState title="Registro só para alunos em turma ativa">
-          Os casos são registrados pelo próprio aluno enquanto a turma está ativa. Turma encerrada fica somente para consulta.
+        <EmptyState title="Esta conta não pode registrar casos agora">
+          {auth.role !== 'aluno'
+            ? `Você entrou com uma conta de ${auth.role === 'admin' ? 'administração' : 'coordenação'}. Os casos são registrados pelo próprio aluno: entre com a conta de aluno para registrar.`
+            : area.cohort.status === 'encerrada'
+              ? 'Sua turma foi encerrada: os casos ficam disponíveis só para consulta.'
+              : 'Sua matrícula nesta turma não está ativa como aluno. Fale com a coordenação para liberar o registro de casos.'}
         </EmptyState>
       )}
     </div>

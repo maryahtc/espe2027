@@ -42,11 +42,9 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
           title="Meus casos"
           lead="Seus pacientes da especialização, identificados por iniciais ou código. Fotos, exames e planejamento ficam no Smile Cloud."
         />
-        {allowed ? (
-          <ButtonLink href="/casos/novo" className="mb-8 md:mb-10">
-            <IconPlus size={18} /> Registrar
-          </ButtonLink>
-        ) : null}
+        <ButtonLink href="/casos/novo" className="mb-8 md:mb-10">
+          <IconPlus size={18} /> Registrar caso
+        </ButtonLink>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -130,11 +128,20 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
       ) : (
         <div className="mt-8">
           <EmptyState title={q ? 'Nenhum caso com esse código' : filter === 'excluidos' ? 'Nenhum caso excluído' : 'Nenhum caso ainda'}>
-            {filter === 'excluidos'
-              ? 'Casos excluídos ficam aqui e podem ser restaurados.'
-              : allowed
-                ? 'Registre o primeiro: paciente (iniciais ou código), data, o que você fez e a quantidade. Leva menos de um minuto.'
-                : 'Os casos são registrados pelo aluno enquanto a turma está ativa.'}
+            {filter === 'excluidos' ? (
+              'Casos excluídos ficam aqui e podem ser restaurados.'
+            ) : q ? (
+              'Confira o código digitado ou limpe a busca.'
+            ) : (
+              <>
+                Registre o primeiro: paciente (iniciais ou código), data, o que você fez e a quantidade. Leva menos de um minuto.
+                <span className="mt-5 block">
+                  <ButtonLink href="/casos/novo">
+                    <IconPlus size={18} /> Registrar primeiro caso
+                  </ButtonLink>
+                </span>
+              </>
+            )}
           </EmptyState>
         </div>
       )}
