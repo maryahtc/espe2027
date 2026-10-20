@@ -7,11 +7,13 @@ import { studentArea } from '@/lib/academic/student'
 import { requireUser } from '@/lib/auth/session'
 import { loadRegistration } from '@/lib/cases/load'
 import { caseHeadline, topOptions } from '@/lib/cases/model'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Registrar' }
 
 /** Registro rápido: o que o aluno fez hoje, em caso novo ou em andamento (meta: 20–30 s no celular). */
 export default async function NewRecordPage({ searchParams }: { searchParams: Promise<{ caso?: string }> }) {
+  await guardStudentPage()
   const auth = await requireUser()
   const area = await studentArea()
   if (!auth || !area) {

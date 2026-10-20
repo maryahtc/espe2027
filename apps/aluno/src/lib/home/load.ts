@@ -10,6 +10,7 @@ import { loadLibrary } from '@/lib/library/load'
 import { isReleased, type ContentVM } from '@/lib/library/model'
 import { agenda, type AgendaItem, homeMoment, type HomeMoment, inPrepWindow, pending, type Pending, PREP_WINDOW_DAYS, recentlyFinished, requiredSoFar } from './model'
 import { addDays } from '@/lib/dates'
+import { getSimulation } from '@/lib/simulation/session'
 
 export type HomePreview = { cohortId: string | null; date: string | null }
 
@@ -41,8 +42,14 @@ export type HomeData = {
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
 /** Lê `?turma=&data=` só para admin; para os demais, ignora. */
-export function parsePreview(auth: AuthState | null | 'previa', sp: Record<string, string | string[] | undefined>): HomePreview | null {
+export async function parsePreview(auth: AuthState | null | 'previa', sp: Record<string, string | string[] | undefined>): Promise<HomePreview | null> {
   if (!auth || auth === 'previa' || auth.role !== 'admin') return null
+  // Na simulação a turma é sempre a simulada; a pré-visualização de outra data (?data=, Etapa 5) continua.
+  const sim = await getSimulation()
+  if (sim) {
+    const d = (Array.isArray(sp.data) ? sp.data[0] : sp.data) ?? null
+    return d && DATE.test(d) ? { cohortId: null, date: d } : null
+  }
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? null
   const cohortId = one(sp.turma)
   const date = one(sp.data)

@@ -1,13 +1,16 @@
 import 'server-only'
 import { cohortEvents, cohortModules, currentCohort, today, viewerCohorts } from './load'
 import { courseMonth } from './model'
+import { getSimulation } from '@/lib/simulation/session'
 
 /** Tudo o que as telas do aluno precisam da turma atual (null = sem turma vinculada). */
 export async function studentArea() {
   const cohort = await currentCohort()
   if (!cohort) return null
   const modules = await cohortModules(cohort.id)
-  return { cohort, modules, cohorts: await viewerCohorts(), today: today(), month: courseMonth(cohort, today()) }
+  // Na simulação, o aluno só tem a turma simulada (sem troca de turma).
+  const cohorts = (await getSimulation()) ? [cohort] : await viewerCohorts()
+  return { cohort, modules, cohorts, today: today(), month: courseMonth(cohort, today()) }
 }
 
 export async function studentCalendar() {

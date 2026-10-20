@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ModuleView } from '@/components/modules/ModuleView'
 import { cohortModules, loadModuleDetail, today } from '@/lib/academic/load'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const detail = await loadModuleDetail((await params).id)
@@ -10,6 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 /** Página do módulo para o aluno: só publicados da própria turma (RLS); rascunhos dão 404. */
 export default async function ModulePage({ params }: { params: Promise<{ id: string }> }) {
+  await guardStudentPage()
   const detail = await loadModuleDetail((await params).id)
   if (!detail || detail.module.status !== 'publicado') notFound()
   const siblings = await cohortModules(detail.module.cohortId)

@@ -5,6 +5,8 @@ import { cohortModules, loadFaculty } from '@/lib/academic/load'
 import type { AuthState } from '@/lib/auth/session'
 import { loadLibrary, loadTaxonomy } from '@/lib/library/load'
 import { type ContentVM, isReleased } from '@/lib/library/model'
+import { getSimulation } from '@/lib/simulation/session'
+import { simCases } from '@/lib/simulation/state'
 import type { CaseVM, ModuleSpan, RecordVM, StepOption } from './model'
 import { normalize } from './model'
 
@@ -131,6 +133,9 @@ export function toCase(c: CaseRow, records: RecordVM[], topicIds: string[]): Cas
 
 /** Casos do próprio aluno (inclusive excluídos, para o filtro "Excluídos"), com os registros. */
 export const loadMyCases = cache(async (userId: string): Promise<CaseVM[]> => {
+  // Simulação: só os casos do rascunho (nunca dados reais).
+  const sim = await getSimulation()
+  if (sim) return simCases(sim.state, sim.cohortVM.id)
   const supabase = await client()
   const [{ data: cases }, { data: records }] = await Promise.all([
     supabase.from('clinical_cases').select(CASE_COLS).eq('owner_id', userId).order('last_activity_on', { ascending: false, nullsFirst: false }),
@@ -149,6 +154,8 @@ export const loadMyCases = cache(async (userId: string): Promise<CaseVM[]> => {
  */
 export async function loadMyCase(id: string, userId: string): Promise<CaseVM | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null
+  const sim = await getSimulation()
+  if (sim) return simCases(sim.state, sim.cohortVM.id).find((c) => c.id === id) ?? null
   const supabase = await client()
   const { data: c } = await supabase.from('clinical_cases').select(`${CASE_COLS}, owner_id`).eq('id', id).maybeSingle()
   if (!c || (c as { owner_id: string }).owner_id !== userId) return null
@@ -161,6 +168,9 @@ export async function loadMyCase(id: string, userId: string): Promise<CaseVM | n
 
 /** Pode registrar nesta turma? (aluno com matrícula ativa numa turma ativa — a mesma regra do banco). */
 export async function canRegister(cohortId: string): Promise<boolean> {
+  // Simulação: como um aluno com matrícula ativa na turma simulada (registra se a turma está ativa).
+  const sim = await getSimulation()
+  if (sim) return cohortId === sim.cohortVM.id && sim.cohortVM.status === 'ativa'
   const supabase = await client()
   const { data } = await supabase.rpc('can_register_cases', { p_cohort_id: cohortId })
   return data === true
@@ -217,7 +227,7 @@ export async function relatedContents(c: CaseVM, userId: string, limit = 6): Pro
 export async function coverUrls(paths: Array<string | null | undefined>, mini = false): Promise<Map<string, string>> {
   const wanted = [...new Set(paths.filter((p): p is string => !!p))]
   const out = new Map<string, string>()
-  if (!wanted.length) return out
+  if (!wanted.length || (await getSimulation())) return out
   try {
     const supabase = await client()
     const files = wanted.map((p) => (mini ? p.replace(/\.webp$/, '-mini.webp') : p))

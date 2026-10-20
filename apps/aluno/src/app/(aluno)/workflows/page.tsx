@@ -4,10 +4,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { workflows } from '@/demo/workflows'
 import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Workflow clínico' }
 
-export default function WorkflowsPage() {
+export default async function WorkflowsPage() {
+  await guardStudentPage()
   return (
     <>
       <PrototypeNotice etapa="Etapa 10 (Workflows)" />

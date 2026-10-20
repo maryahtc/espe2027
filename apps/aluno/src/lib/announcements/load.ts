@@ -1,6 +1,7 @@
 import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import type { HistoryEntry } from '@/lib/admin/academic'
+import { getSimulation } from '@/lib/simulation/session'
 import type { AnnouncementVM } from './model'
 
 const COLS = `id, cohort_id, title, body, signature, link_url, link_label, important, visible_from, visible_until, status,
@@ -50,6 +51,12 @@ function toVM(r: Row): AnnouncementVM {
 export async function loadHomeAnnouncements(cohortId: string, userId: string | null): Promise<{ list: AnnouncementVM[]; dismissed: Set<string> }> {
   const supabase = await createSupabaseServerClient()
   if (!supabase) return { list: [], dismissed: new Set() }
+  const sim = await getSimulation()
+  if (sim) {
+    // Simulação: avisos da turma simulada (ou "todas"); "Entendi" só do rascunho. O período é filtrado no Início.
+    const { data } = await supabase.from('announcements').select(COLS).eq('status', 'publicado').or(`cohort_id.eq.${sim.cohortVM.id},cohort_id.is.null`)
+    return { list: ((data ?? []) as unknown as Row[]).map(toVM), dismissed: new Set(sim.state.dismissed) }
+  }
   const [{ data }, { data: dismissals }] = await Promise.all([
     supabase.from('announcements').select(COLS).eq('status', 'publicado').or(`cohort_id.eq.${cohortId},cohort_id.is.null`),
     userId ? supabase.from('announcement_dismissals').select('announcement_id').eq('user_id', userId) : Promise.resolve({ data: [] }),

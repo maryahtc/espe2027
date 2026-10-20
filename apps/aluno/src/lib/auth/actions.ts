@@ -4,7 +4,8 @@ import { createSupabaseEmailLinkClient } from '@portal/db/email-links'
 import { createSupabaseServerClient } from '@portal/db/server'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { loadAuth, nextStep, requireSignedIn } from './session'
+import { clearSimulation, getSimulation, updateSimulation } from '@/lib/simulation/session'
+import { loadAuth, nextStep, requireSignedIn, safeNext } from './session'
 
 export type FormState = { erro?: string; aviso?: string; email?: string } | undefined
 
@@ -49,6 +50,7 @@ export async function signIn(_: FormState, formData: FormData): Promise<FormStat
 }
 
 export async function signOut(): Promise<never> {
+  await clearSimulation() // sair da conta também descarta qualquer simulação
   const supabase = await createSupabaseServerClient()
   await supabase?.auth.signOut({ scope: 'local' })
   redirect('/entrar?saiu=1')
@@ -111,6 +113,7 @@ export async function setPassword(_: FormState, formData: FormData): Promise<For
   await requireSignedIn()
   const password = typeof formData.get('senha') === 'string' ? (formData.get('senha') as string) : ''
   const confirm = typeof formData.get('confirmacao') === 'string' ? (formData.get('confirmacao') as string) : ''
+  if (await getSimulation()) return { erro: 'Simulação: a senha da conta não muda. Nada foi salvo.' }
   if (!validPassword(password)) return { erro: PASSWORD_RULE }
   if (password !== confirm) return { erro: 'As duas senhas não são iguais.' }
   const supabase = await client()
@@ -127,6 +130,18 @@ export async function acceptTerms(_: FormState, formData: FormData): Promise<For
   const auth = await requireSignedIn()
   if (formData.get('aceito') !== 'sim') return { erro: 'Para continuar, marque que leu e aceita o termo.' }
   const supabase = await client()
+  const sim = await getSimulation()
+  if (sim) {
+    // Simulação: o aceite existe só no rascunho e some ao sair (a conta Admin não é tocada).
+    const { data: current } = await supabase.rpc('current_terms_version_id')
+    if (!current || text(formData, 'versao') !== current) {
+      return { erro: 'O termo foi atualizado enquanto você lia. Recarregue a página para ver a versão vigente.' }
+    }
+    await updateSimulation(sim, (st) => {
+      st.terms = { versionId: current, at: new Date().toISOString() }
+    })
+    redirect(safeNext(formData.get('next')) ?? '/')
+  }
   const { error } = await supabase
     .from('terms_acceptances')
     .insert({ user_id: auth.userId, terms_version_id: text(formData, 'versao') })

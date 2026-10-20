@@ -6,6 +6,7 @@ import { requireUser } from '@/lib/auth/session'
 import { loadAttachments, loadLibrary } from '@/lib/library/load'
 import { relatedContents } from '@/lib/library/model'
 import { playerFor } from '@/lib/library/video'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 async function find(slug: string) {
   const auth = await requireUser()
@@ -20,6 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function ContentPage({ params }: { params: Promise<{ slug: string }> }) {
+  await guardStudentPage()
   const { item, all } = await find((await params).slug)
   if (!item) notFound()
   const [attachments, auth] = await Promise.all([loadAttachments(item.id), requireUser()])

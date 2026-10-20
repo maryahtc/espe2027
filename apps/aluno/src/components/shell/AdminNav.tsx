@@ -59,7 +59,7 @@ function NavList({ onDark = false }: { onDark?: boolean }) {
 
 export function AdminSidebar() {
   return (
-    <aside className="glass-strong sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r lg:flex">
+    <aside className="glass-strong sticky top-[var(--sim-h,0px)] hidden h-[calc(100dvh-var(--sim-h,0px))] w-64 shrink-0 flex-col border-r lg:flex">
       <div className="px-6 pt-7 pb-6">
         <Logo href="/admin" />
         <p className="eyebrow mt-4 text-signal">Administração</p>
@@ -67,7 +67,7 @@ export function AdminSidebar() {
       <nav aria-label="Administração" className="flex-1 overflow-y-auto px-3 pb-6">
         <NavList />
       </nav>
-      <Link href="/" className="glass glass-interactive mx-3 mt-3 rounded-full p-3 text-center text-sm font-semibold">
+      <Link href="/admin/simulacao" className="glass glass-interactive mx-3 mt-3 rounded-full p-3 text-center text-sm font-semibold">
         Ver portal como aluno →
       </Link>
       <SignOutButton className="px-3 pt-1 pb-3 text-center" quiet />
@@ -78,7 +78,7 @@ export function AdminSidebar() {
 /** Celular: cabeçalho com menu recolhível (sem JavaScript: <details>). */
 export function AdminTopBar() {
   return (
-    <header className="glass-strong sticky top-0 z-30 border-b lg:hidden">
+    <header className="glass-strong sticky top-[var(--sim-h,0px)] z-30 border-b lg:hidden">
       <details className="group">
         <summary className="flex h-14 cursor-pointer list-none items-center justify-between px-4 [&::-webkit-details-marker]:hidden">
           <span className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export function AdminTopBar() {
         </summary>
         <nav aria-label="Administração" className="max-h-[75dvh] overflow-y-auto border-t border-rule px-3 pt-3 pb-5">
           <NavList />
-          <Link href="/" className="mt-5 block rounded-md border border-rule p-3 text-center text-sm font-semibold">
+          <Link href="/admin/simulacao" className="mt-5 block rounded-md border border-rule p-3 text-center text-sm font-semibold">
             Ver portal como aluno →
           </Link>
           <SignOutButton className="mt-2 text-center" quiet />

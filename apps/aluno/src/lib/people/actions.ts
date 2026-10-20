@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from '@portal/db/server'
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth/session'
+import { getSimulation } from '@/lib/simulation/session'
 
 export type NameState = { erro?: string; aviso?: string } | undefined
 
@@ -15,6 +16,7 @@ export async function updateMyName(_: NameState, formData: FormData): Promise<Na
   const auth = await requireUser()
   const supabase = await createSupabaseServerClient()
   if (!auth || !supabase) return { erro: 'Banco não configurado neste ambiente.' }
+  if (await getSimulation()) return { erro: 'Simulação: os dados da conta não mudam. Nada foi salvo.' }
   const fullName = clean(formData.get('nome'))
   const displayName = clean(formData.get('exibicao'), 60)
   if (fullName.length < 3) return { erro: 'Informe o nome completo.' }

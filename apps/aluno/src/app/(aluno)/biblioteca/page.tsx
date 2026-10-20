@@ -21,6 +21,7 @@ import {
   parseFilters,
   progressState,
 } from '@/lib/library/model'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Biblioteca' }
 
@@ -28,6 +29,7 @@ const REQ_ORDER = { obrigatorio: 0, recomendado: 1, complementar: 2 } as const
 const select = 'field mt-1.5 block min-h-11 w-full px-3 text-sm'
 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await guardStudentPage()
   const auth = await requireUser()
   const f = parseFilters(await searchParams)
   const cohort = await currentCohort()

@@ -2,10 +2,12 @@ import type { Metadata } from 'next'
 import { CalendarPage } from '@/components/calendar/CalendarPage'
 import { NoCohort } from '@/components/academic/NoCohort'
 import { studentCalendar } from '@/lib/academic/student'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Cronograma' }
 
 export default async function CronogramaPage() {
+  await guardStudentPage()
   const data = await studentCalendar()
   if (!data) return <NoCohort title="Cronograma" />
   const first = data.cohort.startsOn.slice(0, 7)

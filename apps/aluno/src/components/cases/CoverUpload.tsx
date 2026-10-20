@@ -19,7 +19,7 @@ async function shrink(file: File): Promise<Blob> {
  * Foto de capa opcional (só o dono). Orientação explícita e confirmação de que a foto não mostra o rosto inteiro.
  * A foto fica privada: só quem pode ver o caso a enxerga, por link temporário.
  */
-export function CoverUpload({ caseId, hasCover }: { caseId: string; hasCover: boolean }) {
+export function CoverUpload({ caseId, hasCover, simulated = false }: { caseId: string; hasCover: boolean; simulated?: boolean }) {
   const [state, upload, sending] = useActionState<ActionState, FormData>(uploadCover, undefined)
   const [removed, remove, removing] = useActionState<ActionState, FormData>(removeCover, undefined)
   const [preview, setPreview] = useState<string | null>(null)
@@ -27,6 +27,8 @@ export function CoverUpload({ caseId, hasCover }: { caseId: string; hasCover: bo
   const [noFace, setNoFace] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  // Simulação: a foto "salva" fica só nesta tela (nunca sai do navegador nem vai para o Storage).
+  const [local, setLocal] = useState<string | null>(null)
 
   async function pick(file: File | undefined) {
     setError(null)
@@ -64,6 +66,10 @@ export function CoverUpload({ caseId, hasCover }: { caseId: string; hasCover: bo
             type="button"
             disabled={!blob || !noFace || sending}
             onClick={() => {
+              if (simulated) {
+                setLocal(preview)
+                return
+              }
               const fd = new FormData()
               fd.set('id', caseId)
               fd.set('semRosto', noFace ? 'on' : '')
@@ -74,7 +80,12 @@ export function CoverUpload({ caseId, hasCover }: { caseId: string; hasCover: bo
           >
             {sending ? 'Enviando…' : 'Salvar foto'}
           </button>
-          {hasCover ? (
+          {simulated && local ? (
+            <button type="button" onClick={() => setLocal(null)} className="text-xs font-semibold text-muted underline-offset-4 hover:text-ink hover:underline">
+              Remover foto
+            </button>
+          ) : null}
+          {hasCover && !simulated ? (
             <button
               type="button"
               disabled={removing}
@@ -90,6 +101,15 @@ export function CoverUpload({ caseId, hasCover }: { caseId: string; hasCover: bo
             </button>
           ) : null}
         </div>
+        {simulated ? (
+          <p role="note" data-capa-local className="rounded-xl border border-[#ffc21a]/50 px-3 py-2 text-xs text-[#ffc21a]">
+            Simulação: a foto fica só neste navegador e nunca é enviada. Ela some ao recarregar ou sair.
+          </p>
+        ) : null}
+        {simulated && local ? (
+          // eslint-disable-next-line @next/next/no-img-element -- prévia local (blob) da simulação
+          <img src={local} alt="Capa (prévia local da simulação)" data-capa-simulada className="max-h-56 rounded-xl object-cover" />
+        ) : null}
         {error || state?.erro || removed?.erro ? (
           <p role="alert" className="text-xs font-semibold text-danger">
             ⚠ {error ?? state?.erro ?? removed?.erro}

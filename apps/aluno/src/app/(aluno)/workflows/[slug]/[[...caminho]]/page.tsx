@@ -5,6 +5,7 @@ import { WorkflowPlayer } from '@/components/workflow/Player'
 import { workflowBySlug, workflows } from '@/demo/workflows'
 import { enumeratePaths, resolvePath } from '@/lib/workflow'
 import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export function generateStaticParams() {
   return workflows.flatMap((w) => enumeratePaths(w.graph).map((caminho) => ({ slug: w.slug, caminho })))
@@ -18,6 +19,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function WorkflowPage({ params }: { params: Params }) {
+  await guardStudentPage()
   const { slug, caminho = [] } = await params
   const workflow = workflowBySlug(slug)
   const resolved = workflow ? resolvePath(workflow.graph, caminho) : null

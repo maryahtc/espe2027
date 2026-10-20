@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { currentCohort } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { loadLibrary, loadTaxonomy } from '@/lib/library/load'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Temas' }
 
 export default async function TopicsPage() {
+  await guardStudentPage()
   const auth = await requireUser()
   const cohort = await currentCohort()
   const [{ categories, topics }, all] = await Promise.all([loadTaxonomy(), loadLibrary(auth?.userId ?? null, cohort?.id ?? null)])

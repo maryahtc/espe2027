@@ -11,6 +11,7 @@ import { deleteEvent, saveEvent, setCohortPublic, setCohortStatus, updateCohort 
 import { adminModules, listCohorts } from '@/lib/admin/academic'
 import { EVENT_KIND_LABEL } from '@/lib/academic/model'
 import { formatDayMonth, formatRange, year } from '@/lib/dates'
+import { previewHome } from '@/lib/simulation/actions'
 
 export const metadata: Metadata = { title: 'Turma' }
 
@@ -74,11 +75,11 @@ export default async function AdminCohortPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* Pré-visualização da Início do aluno em outra data (só leitura; usa o progresso de quem está vendo). */}
-      <form action="/" method="get" className="glass mb-8 flex flex-wrap items-end gap-3 rounded-2xl p-4 text-sm md:mb-10">
+      {/* Pré-visualização da Início do aluno em outra data — dentro do Modo de simulação desta turma (nada é gravado). */}
+      <form action={previewHome} data-previa className="glass mb-8 flex flex-wrap items-end gap-3 rounded-2xl p-4 text-sm md:mb-10">
         <input type="hidden" name="turma" value={cohort.id} />
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted">Ver a Início do aluno desta turma como em</span>
+          <span className="text-xs text-muted">Ver a Início do aluno desta turma como em (no Modo de simulação)</span>
           <input type="date" name="data" required defaultValue={cohort.startsOn} className="rounded-md border border-rule-strong bg-surface px-3 py-2 text-ink" />
         </label>
         <button type="submit" className="rounded-full border border-rule-strong px-4 py-2 font-semibold hover:bg-white/[0.06]">

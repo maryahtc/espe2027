@@ -14,7 +14,7 @@ export type Viewer = { name: string; initials: string; cohort: string }
 export function StudentSidebar({ viewer }: { viewer: Viewer }) {
   const pathname = usePathname()
   return (
-    <aside className="glass-strong sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r lg:flex">
+    <aside className="glass-strong sticky top-[var(--sim-h,0px)] hidden h-[calc(100dvh-var(--sim-h,0px))] w-64 shrink-0 flex-col border-r lg:flex">
       <div className="px-7 pt-8 pb-10">
         <Logo />
         <p className="eyebrow mt-4">Portal do Aluno</p>
@@ -86,7 +86,7 @@ export function StudentSidebar({ viewer }: { viewer: Viewer }) {
 export function StudentTopBar({ viewer }: { viewer: Viewer }) {
   const pathname = usePathname()
   return (
-    <header className="glass-strong sticky top-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
+    <header className="glass-strong sticky top-[var(--sim-h,0px)] z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
       <Logo variant="short" />
       <Link
         href={profileNav.href}

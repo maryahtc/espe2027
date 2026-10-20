@@ -13,11 +13,13 @@ import { cohortModules, loadFaculty } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { saveCaseDetails, setCaseRemoved, setCaseStatus, setRecordRemoved, updateRecord } from '@/lib/cases/actions'
 import { canRegister, coverUrls, loadMyCase, loadStepOptions, relatedContents } from '@/lib/cases/load'
+import { getSimulation } from '@/lib/simulation/session'
 import { caseHeadline, type RecordVM, type StepOption, suggestTopics, timeline, treatmentSummary } from '@/lib/cases/model'
 import { formatDayMonth, formatLongDay, year } from '@/lib/dates'
 import { loadTaxonomy } from '@/lib/library/load'
 import { KIND_LABEL } from '@/lib/library/model'
 import { unitText } from '@/lib/procedures/model'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Caso' }
 
@@ -42,6 +44,7 @@ const inputCls = 'field mt-1.5 block min-h-11 w-full px-3 text-base'
 const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ registrado?: string }> }) {
+  await guardStudentPage()
   const auth = await requireUser()
   if (!auth) notFound()
   const [{ id }, { registrado }] = await Promise.all([params, searchParams])
@@ -161,7 +164,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               </ActionForm>
             ) : null}
           </div>
-          {editable ? <CoverUpload caseId={c.id} hasCover={!!c.coverPath} /> : null}
+          {editable ? <CoverUpload caseId={c.id} hasCover={!!c.coverPath} simulated={!!(await getSimulation())} /> : null}
           {!writable ? <p className="text-xs text-muted">Turma encerrada: o caso fica disponível só para consulta.</p> : null}
         </div>
       </header>

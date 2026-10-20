@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from '@portal/db/server'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
 import type { CivilDate } from '@/lib/dates'
+import { getSimulation } from '@/lib/simulation/session'
+import { contentVisible, resourceVisible } from '@/lib/simulation/visibility'
 import {
   assignStates,
   type CohortVM,
@@ -197,6 +199,9 @@ export const viewerCohorts = cache(async (): Promise<CohortVM[]> => {
  * recente; senão a mais recente. Admin e coordenação escolhem entre as turmas que podem ver.
  */
 export const currentCohort = cache(async (): Promise<CohortVM | null> => {
+  // Modo de simulação: a turma escolhida pelo Admin, como um aluno matriculado só nela.
+  const sim = await getSimulation()
+  if (sim) return sim.cohortVM
   const list = await viewerCohorts()
   const chosen = (await cookies()).get(COHORT_COOKIE)?.value
   return list.find((c) => c.id === chosen) ?? list.find((c) => c.status === 'ativa') ?? list[0] ?? null
@@ -291,6 +296,9 @@ export async function loadModuleDetail(id: string, siblings?: ModuleVM[]): Promi
   const { data: row } = await supabase.from('modules').select(MODULE_COLS).eq('id', id).maybeSingle()
   if (!row) return null
   const mod = toModule(row as unknown as ModuleRow)
+  const sim = await getSimulation()
+  // Simulação: só módulo publicado da turma simulada (como a RLS do aluno).
+  if (sim && (mod.cohortId !== sim.cohortVM.id || mod.status !== 'publicado')) return null
   const states = siblings?.find((m) => m.id === id)
   if (states) mod.state = states.state
   else assignStates([mod], today())
@@ -313,7 +321,7 @@ export async function loadModuleDetail(id: string, siblings?: ModuleVM[]): Promi
   ])
   const progressOf = new Map((progress ?? []).map((p) => [p.content_id, p.status]))
   const checked = new Set((checks ?? []).map((c) => c.material_id))
-  return {
+  const detail = {
     module: mod,
     materials: (materials ?? []).map((m) => ({
       id: m.id,
@@ -359,6 +367,38 @@ export async function loadModuleDetail(id: string, siblings?: ModuleVM[]): Promi
         }
       }),
     internalNotes: notes?.notes ?? null,
+  }
+  return sim ? asSimulatedStudent(detail, sim) : detail
+}
+
+/**
+ * Módulo como o aluno da turma simulada vê: sem observações internas, só equipe visível, recursos publicados e
+ * liberados, biblioteca só com o que ele pode ler; checklist e progresso vêm do rascunho (nunca os do Admin).
+ */
+async function asSimulatedStudent(d: ModuleDetail, sim: NonNullable<Awaited<ReturnType<typeof getSimulation>>>): Promise<ModuleDetail> {
+  const supabase = await client()
+  const ids = d.library.map((l) => l.contentId)
+  const { data: rows } = ids.length
+    ? await supabase.from('contents').select('id, status, available_from, content_cohorts(cohort_id)').in('id', ids)
+    : { data: [] }
+  const readable = new Set(
+    (rows ?? [])
+      .filter((c) =>
+        contentVisible(
+          { status: c.status, availableFrom: c.available_from, cohortIds: (c.content_cohorts as unknown as Array<{ cohort_id: string }>).map((x) => x.cohort_id) },
+          sim.cohortVM.id,
+        ),
+      )
+      .map((c) => c.id),
+  )
+  const checks = new Set(sim.state.checks)
+  return {
+    ...d,
+    module: { ...d.module, staff: d.module.staff.filter((s) => s.visible) },
+    materials: d.materials.map((m) => ({ ...m, checked: checks.has(m.id) })),
+    resources: d.resources.filter((r) => resourceVisible(r)),
+    library: d.library.filter((l) => readable.has(l.contentId)).map((l) => ({ ...l, progress: sim.state.progress[l.contentId]?.status ?? null })),
+    internalNotes: null,
   }
 }
 

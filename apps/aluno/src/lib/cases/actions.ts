@@ -1,10 +1,22 @@
 'use server'
 
-import { createSupabaseServerClient } from '@portal/db/server'
+import type { createSupabaseServerClient } from '@portal/db/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { currentCohort, today } from '@/lib/academic/load'
-import { requireUser } from '@/lib/auth/session'
+import { applySim } from '@/lib/simulation/apply'
+import type { AuthState } from '@/lib/auth/session'
+import { studentGate } from '@/lib/simulation/gate'
+import type { Simulation } from '@/lib/simulation/session'
+import {
+  type RegisterInput,
+  simRegister,
+  simSaveDetails,
+  simSetCaseRemoved,
+  simSetRecordRemoved,
+  simSetStatus,
+  simUpdateRecord,
+} from '@/lib/simulation/state'
 import { hasPersonalIdentifier, parseTeeth, patientLabelError, validTooth } from './model'
 
 /**
@@ -17,11 +29,14 @@ type Db = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>
 const UUID = /^[0-9a-f-]{36}$/
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
-async function student() {
-  const auth = await requireUser()
-  const supabase = await createSupabaseServerClient()
-  if (!auth || !supabase) throw new Error('Banco não configurado neste ambiente.')
-  return { auth, db: supabase as Db }
+/**
+ * Aluno de verdade → banco. Admin no Modo de simulação → rascunho temporário (`sim`; a conexão fica só leitura).
+ * Admin fora da simulação e coordenação → bloqueado: nunca gravam casos.
+ */
+async function student(): Promise<{ auth: AuthState; db: Db; sim: Simulation | null }> {
+  const gate = await studentGate()
+  if (gate.kind === 'blocked') throw new Error(gate.reason)
+  return { auth: gate.auth, db: gate.db as Db, sim: gate.kind === 'sim' ? gate.sim : null }
 }
 
 function fail(error: { code?: string; message: string } | null) {
@@ -86,12 +101,18 @@ type Payload = {
 /** Registra o que o aluno fez hoje: em caso novo (cria o caso) ou em caso em andamento. */
 export async function registerProcedures(_: ActionState, fd: FormData): Promise<ActionState> {
   const out: { caseId?: string; count?: number } = {}
-  const result = await run(async ({ auth, db }) => {
+  const result = await run(async ({ auth, db, sim }) => {
     let p: Payload
     try {
       p = JSON.parse(str(fd, 'payload', 20000)) as Payload
     } catch {
       throw new Error('Não foi possível ler o registro.')
+    }
+    if (sim) {
+      const r = await applySim(sim, (state, ctx) => simRegister(state, p as RegisterInput, ctx))
+      out.caseId = r.caseId
+      out.count = r.count
+      return
     }
     const date = checkDate(p.date)
     const lines = (p.lines ?? []).filter((l) => l && UUID.test(l.stepId))
@@ -169,8 +190,28 @@ export async function registerProcedures(_: ActionState, fd: FormData): Promise<
 
 /** Completar/editar os dados opcionais do caso (inclusive os temas da dificuldade, até 3). */
 export async function saveCaseDetails(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ auth, db }) => {
+  return run(async ({ auth, db, sim }) => {
     const caseId = id(fd)
+    if (sim) {
+      await applySim(sim, (state, ctx) =>
+        simSaveDetails(
+          state,
+          caseId,
+          {
+            patient: str(fd, 'paciente', 40),
+            title: fd.get('titulo'),
+            supervisorId: str(fd, 'supervisor', 40),
+            smile: fd.get('smile'),
+            difficulty: fd.get('dificuldade'),
+            ease: fd.get('facilidade'),
+            differently: fd.get('diferente'),
+            topicIds: fd.getAll('temas'),
+          },
+          ctx,
+        ),
+      )
+      return 'Caso atualizado.'
+    }
     const label = str(fd, 'paciente', 40)
     const err = patientLabelError(label)
     if (err) throw new Error(err)
@@ -205,19 +246,27 @@ export async function saveCaseDetails(_: ActionState, fd: FormData): Promise<Act
 }
 
 export async function setCaseStatus(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ db }) => {
+  return run(async ({ db, sim }) => {
     const status = str(fd, 'para', 20) === 'concluido' ? 'concluido' : 'em_andamento'
-    const { error, count } = await db.from('clinical_cases').update({ status }, { count: 'exact' }).eq('id', id(fd))
-    fail(error)
-    if (!count) throw new Error('Este caso não pode ser alterado.')
+    if (sim) {
+      await applySim(sim, (state, ctx) => simSetStatus(state, id(fd), status, ctx))
+    } else {
+      const { error, count } = await db.from('clinical_cases').update({ status }, { count: 'exact' }).eq('id', id(fd))
+      fail(error)
+      if (!count) throw new Error('Este caso não pode ser alterado.')
+    }
     return status === 'concluido' ? 'Caso concluído. Você pode reabrir quando quiser.' : 'Caso reaberto.'
   })
 }
 
 /** Exclusão lógica do caso (some das listas e da Produção) e restauração. */
 export async function setCaseRemoved(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ db }) => {
+  return run(async ({ db, sim }) => {
     const remove = str(fd, 'excluir', 4) === 'sim'
+    if (sim) {
+      await applySim(sim, (state) => simSetCaseRemoved(state, id(fd), remove))
+      return remove ? 'Caso excluído. Ele fica em "Excluídos" e pode ser restaurado.' : 'Caso restaurado.'
+    }
     const { error, count } = await db
       .from('clinical_cases')
       .update({ removed_at: remove ? new Date().toISOString() : null }, { count: 'exact' })
@@ -231,10 +280,28 @@ export async function setCaseRemoved(_: ActionState, fd: FormData): Promise<Acti
 // ─── Registros ───────────────────────────────────────────────────────────────────────────────────
 
 export async function updateRecord(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ db }) => {
+  return run(async ({ db, sim }) => {
     const quantity = Number(str(fd, 'quantidade', 3))
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Quantidade inválida.')
     const mod = str(fd, 'modulo', 40)
+    if (sim) {
+      await applySim(sim, (state, ctx) =>
+        simUpdateRecord(
+          state,
+          id(fd),
+          {
+            date: str(fd, 'data', 10),
+            quantity,
+            teeth: parseTeeth(str(fd, 'dentes', 200)),
+            note: fd.get('nota'),
+            description: fd.has('descricao') ? fd.get('descricao') : undefined,
+            module: mod === 'auto' ? { auto: true, id: null } : { auto: false, id: UUID.test(mod) ? mod : null },
+          },
+          ctx,
+        ),
+      )
+      return 'Registro atualizado.'
+    }
     const row = {
       performed_on: checkDate(str(fd, 'data', 10)),
       quantity,
@@ -252,8 +319,12 @@ export async function updateRecord(_: ActionState, fd: FormData): Promise<Action
 
 /** Exclusão lógica de um registro lançado por engano (sai da Produção) e restauração. */
 export async function setRecordRemoved(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ db }) => {
+  return run(async ({ db, sim }) => {
     const remove = str(fd, 'excluir', 4) === 'sim'
+    if (sim) {
+      await applySim(sim, (state) => simSetRecordRemoved(state, id(fd), remove))
+      return remove ? 'Registro excluído (pode ser restaurado).' : 'Registro restaurado.'
+    }
     const { error, count } = await db
       .from('performed_procedures')
       .update({ removed_at: remove ? new Date().toISOString() : null }, { count: 'exact' })
@@ -271,7 +342,9 @@ export async function setRecordRemoved(_: ActionState, fd: FormData): Promise<Ac
  * miniatura na pasta do caso e apaga a anterior. Exige a confirmação de que a foto não mostra o rosto inteiro.
  */
 export async function uploadCover(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ auth, db }) => {
+  return run(async ({ auth, db, sim }) => {
+    // Simulação: a foto nunca é recebida nem enviada ao Storage (a prévia fica só no navegador).
+    if (sim) throw new Error('Simulação: a foto fica só neste navegador e não é enviada.')
     const caseId = id(fd)
     if (fd.get('semRosto') !== 'on') throw new Error('Confirme que a foto não mostra o rosto inteiro do paciente.')
     const file = fd.get('foto')
@@ -298,7 +371,8 @@ export async function uploadCover(_: ActionState, fd: FormData): Promise<ActionS
 }
 
 export async function removeCover(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ auth, db }) => {
+  return run(async ({ auth, db, sim }) => {
+    if (sim) return 'Prévia local removida.'
     const caseId = id(fd)
     const { data: own } = await db.from('clinical_cases').select('cover_path').eq('id', caseId).eq('owner_id', auth.userId).maybeSingle()
     if (!own?.cover_path) return 'Sem foto de capa.'

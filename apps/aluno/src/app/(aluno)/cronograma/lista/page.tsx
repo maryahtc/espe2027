@@ -9,6 +9,7 @@ import { cohortEyebrow } from '@/components/calendar/CalendarPage'
 import { datesChangedRecently, type ModuleVM } from '@/lib/academic/model'
 import { studentArea } from '@/lib/academic/student'
 import { formatRange, monthShort, relativeDays, weekdayShort, year } from '@/lib/dates'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Cronograma · lista' }
 
@@ -20,6 +21,7 @@ function leadText(modules: ModuleVM[], month: { current: number; total: number }
 }
 
 export default async function CronogramaListaPage() {
+  await guardStudentPage()
   const area = await studentArea()
   if (!area) return <NoCohort title="Cronograma" />
   const { modules, month, today } = area

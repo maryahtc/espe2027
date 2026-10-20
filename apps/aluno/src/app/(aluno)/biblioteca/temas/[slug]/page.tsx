@@ -6,6 +6,7 @@ import { ContentGrid } from '@/components/library/ContentCard'
 import { currentCohort } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { loadLibrary, loadTaxonomy } from '@/lib/library/load'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -14,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function TopicPage({ params }: { params: Promise<{ slug: string }> }) {
+  await guardStudentPage()
   const { slug } = await params
   const auth = await requireUser()
   const [{ categories, topics }, cohort] = await Promise.all([loadTaxonomy(true), currentCohort()])

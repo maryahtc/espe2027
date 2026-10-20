@@ -13,7 +13,9 @@ import type { ModuleVM } from '@/lib/academic/model'
 import { getAuth } from '@/lib/auth/session'
 import { daysBetween, formatDayMonth, formatLongDay, monthLong, monthShort, relativeDays, weekdayShort, year, day } from '@/lib/dates'
 import { loadHome, parsePreview } from '@/lib/home/load'
+import { getSimulation } from '@/lib/simulation/session'
 import { KIND_LABEL } from '@/lib/library/model'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
@@ -33,10 +35,12 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
  * O próximo módulo aparece sempre; pendências de preparação só nos 30 dias anteriores a ele (ou durante).
  */
 export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await guardStudentPage()
   const auth = await getAuth()
-  const preview = parsePreview(auth, await searchParams)
+  const preview = await parsePreview(auth, await searchParams)
   const home = await loadHome(auth, preview)
-  const name = firstName(auth)
+  // Simulação: sem o nome da conta Admin.
+  const name = (await getSimulation()) ? null : firstName(auth)
 
   if (!home) {
     return (

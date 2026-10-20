@@ -1475,6 +1475,43 @@ dado de teste criado). Banco, Auth, REST, Storage e portal saudáveis.
 | Turma encerrada | Só consulta | Só leitura | Só leitura |
 
 
+### Etapa 6 · ajuste final — Modo de simulação do aluno (20/10/2026)
+
+Aprovado pela Maryah em 20/10/2026. Sem migração e sem nenhuma gravação em produção.
+
+- **Para quê:** o Admin percorre o portal exatamente como um aluno novo de uma turma — inclusive Registrar caso,
+  marcar conteúdo, checklist, "Entendi" e o aceite do termo — sem ter conta de aluno e sem gerar dado real.
+- **Entrada:** Admin → "Ver portal como aluno" (`/admin/simulacao`) → escolher a turma. Começa como aluno novo
+  (tela do termo).
+- **Faixa** âmbar listrada fixa no topo de todas as telas: "MODO DE SIMULAÇÃO · Turma X · nada é salvo", com a hora
+  de término e **"Sair da simulação"** (também no Perfil e no termo). A aba do navegador mostra "[Simulação]".
+- **Duração:** até sair, no máximo 2 horas. Sair ou expirar descarta todo o rascunho.
+- **Rascunho temporário:** casos, registros, progresso, checklist, "Entendi" e aceite do termo ficam num cookie
+  httpOnly, comprimido e **cifrado** (AES-256-GCM, chave derivada da chave secreta do servidor), válido só para a
+  conta Admin que iniciou e só para a turma escolhida. Adulterado, copiado para outra conta ou vencido → ignorado.
+  Limites conservadores (5 casos, 30 registros).
+- **Leitura:** dados reais da turma, recortados como a RLS faria para um aluno matriculado (módulos e eventos
+  publicados, conteúdos publicados/liberados/da turma, recursos publicados e liberados, equipe visível, avisos
+  publicados no período e da turma; sem observações internas). Nome e dados da conta Admin não aparecem.
+- **Escrita:** toda ação de aluno passa por um único controle: aluno de verdade → banco; Admin em simulação →
+  rascunho, com a conexão travada em **só leitura** (insert/update/delete/funções que gravam/Storage dão erro);
+  Admin fora da simulação e coordenação → bloqueado. As regras dos casos repetem as do banco (código do paciente,
+  data futura, etapa ativa, descrição do "Outro", dentes, módulo automático, temas, Smile Cloud).
+- **Foto de capa na simulação:** prévia só no navegador; nunca é enviada ao servidor nem ao Storage.
+- **Admin → Turma → "Pré-visualizar"** a Início numa data (Etapa 5) agora abre dentro do Modo de simulação daquela
+  turma (com o termo já aceito no rascunho, porque o objetivo é ver a Início naquela data).
+- **Fora da simulação**, o Admin não abre as telas do aluno (vai para o seletor; conferido em cada página, a cada
+  navegação — exceção: o próprio Perfil, com nome e senha da conta Admin) e nenhuma ação de aluno grava
+  progresso, checklist, "Entendi" ou casos em nome dele. A coordenação continua podendo consultar o portal do aluno,
+  sem gravar ações de aluno. O aceite do termo da própria conta (no login) continua normal para todos.
+- **Aluno real:** comportamento inalterado.
+- **Fica para depois:** "data simulada" (ver o portal como num dia futuro) e auditoria de início/fim da simulação.
+- Testes (fora da produção): unitários do rascunho, das regras de visibilidade e do lacre; E2E local
+  `simulacao`: fingerprint do banco idêntico antes/depois de todos os fluxos, nenhum arquivo no Storage, paridade
+  tela a tela entre aluno real e Admin simulando a mesma turma, isolamento (aluna, coordenação, outra conta Admin,
+  cookie adulterado), saída e expiração descartando o rascunho, e reenvio das ações capturadas na simulação como
+  Admin fora dela sem gravar nada.
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)

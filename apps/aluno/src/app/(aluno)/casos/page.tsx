@@ -10,6 +10,7 @@ import { requireUser } from '@/lib/auth/session'
 import { canRegister, coverUrls, loadMyCases, loadStepOptions } from '@/lib/cases/load'
 import { type CaseFilter, caseHeadline, caseProcedures, filterCases } from '@/lib/cases/model'
 import { formatDayMonth, relativeDays } from '@/lib/dates'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Meus casos' }
 
@@ -21,6 +22,7 @@ const FILTERS: Array<{ key: CaseFilter | null; label: string }> = [
 ]
 
 export default async function CasesPage({ searchParams }: { searchParams: Promise<{ situacao?: string; q?: string }> }) {
+  await guardStudentPage()
   const auth = await requireUser()
   const area = await studentArea()
   if (!auth || !area) {

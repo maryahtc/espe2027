@@ -7,6 +7,10 @@ import { student } from '@/demo/data'
 import { studentArea } from '@/lib/academic/student'
 import { getAuth } from '@/lib/auth/session'
 import { monthLong, year } from '@/lib/dates'
+import { ExitSimulationButton } from '@/components/simulation/SimulationBanner'
+import { getSimulation } from '@/lib/simulation/session'
+import { SIM_STUDENT_NAME } from '@/lib/simulation/labels'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Meu perfil' }
 
@@ -20,9 +24,10 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 export default async function ProfilePage() {
-  const [auth, area] = await Promise.all([getAuth(), studentArea()])
+  await guardStudentPage({ ownProfile: true })
+  const [auth, area, sim] = await Promise.all([getAuth(), studentArea(), getSimulation()])
   const account = auth && auth !== 'previa' ? auth : null
-  const name = account ? account.displayName || account.fullName : student.name
+  const name = sim ? SIM_STUDENT_NAME : account ? account.displayName || account.fullName : student.name
   const initials = account
     ? name
         .split(/\s+/)
@@ -53,7 +58,11 @@ export default async function ProfilePage() {
       </div>
 
       <Group title="Dados">
-        {account ? (
+        {sim ? (
+          <p className="text-sm text-muted" data-simulacao>
+            Simulação: aqui o aluno vê e corrige o próprio nome e o e-mail da conta. Na simulação, nenhum dado da conta é mostrado ou alterado.
+          </p>
+        ) : account ? (
           <NameForm fullName={account.fullName} displayName={account.displayName} email={account.email} />
         ) : (
           <dl className="grid gap-5 sm:grid-cols-2">
@@ -123,12 +132,18 @@ export default async function ProfilePage() {
       </Group>
 
       <Group title="Conta">
-        <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/definir-senha" variant="secondary">
-            Alterar senha
-          </ButtonLink>
-          <SignOutButton />
-        </div>
+        {sim ? (
+          <div className="flex flex-wrap gap-3">
+            <ExitSimulationButton />
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href="/definir-senha" variant="secondary">
+              Alterar senha
+            </ButtonLink>
+            <SignOutButton />
+          </div>
+        )}
         <p className="mt-4 text-sm">
           <Link href="/termo?next=/perfil" className="underline underline-offset-2">
             Termo de uso

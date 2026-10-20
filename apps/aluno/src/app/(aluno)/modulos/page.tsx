@@ -4,11 +4,13 @@ import { ModuleView } from '@/components/modules/ModuleView'
 import { loadModuleDetail, today } from '@/lib/academic/load'
 import { focusModule } from '@/lib/academic/model'
 import { studentArea } from '@/lib/academic/student'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Módulos' }
 
 /** "Módulos" no menu: mostra o módulo em andamento ou o próximo (sem redirecionar). */
 export default async function ModulesIndex() {
+  await guardStudentPage()
   const area = await studentArea()
   const target = area ? (focusModule(area.modules) ?? area.modules.at(-1)) : null
   const detail = target ? await loadModuleDetail(target.id, area!.modules) : null

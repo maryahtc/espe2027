@@ -2,6 +2,8 @@ import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import { cache } from 'react'
 import type { ContentStatus, ModulePhase, RequirementLevel } from '@/lib/academic/model'
+import { getSimulation } from '@/lib/simulation/session'
+import { contentVisible } from '@/lib/simulation/visibility'
 import type { AttachmentVM, CategoryVM, ContentKind, ContentVM, ProgressStatus, TopicVM } from './model'
 
 export const CONTENT_COLS = `id, kind, title, slug, description, category_id, citation, url, file_path, file_name, video_id,
@@ -132,6 +134,28 @@ export const loadTaxonomy = cache(async (withArchived = false): Promise<{ catego
 export const loadLibrary = cache(async (userId: string | null, cohortId: string | null): Promise<ContentVM[]> => {
   const supabase = await createSupabaseServerClient()
   if (!supabase) return []
+  const sim = await getSimulation()
+  if (sim) {
+    // Simulação: só o que o aluno da turma pode ler; progresso do rascunho (nunca o do Admin).
+    const [{ data, error }, { data: published }] = await Promise.all([
+      supabase.from('contents').select(CONTENT_COLS).eq('status', 'publicado').order('published_at', { ascending: false }),
+      // Vínculos com módulos: o aluno só enxerga os de módulos publicados da turma.
+      supabase.from('modules').select('id').eq('cohort_id', sim.cohortVM.id).eq('status', 'publicado'),
+    ])
+    if (error) throw new Error(`Falha ao carregar a biblioteca: ${error.message}`)
+    const visibleModules = new Set((published ?? []).map((m) => m.id))
+    return (data as unknown as ContentRow[])
+      .map((r) => {
+        const p = sim.state.progress[r.id]
+        const row = p
+          ? { content_id: r.id, status: p.status, percent: p.percent, position_seconds: p.positionSeconds, completed_at: p.completedAt, updated_at: p.updatedAt }
+          : undefined
+        const c = toContent(r, row)
+        c.modules = c.modules.filter((m) => m.cohortId === sim.cohortVM.id && visibleModules.has(m.moduleId))
+        return c
+      })
+      .filter((c) => contentVisible(c, sim.cohortVM.id))
+  }
   const [{ data, error }, { data: progress }] = await Promise.all([
     supabase.from('contents').select(CONTENT_COLS).eq('status', 'publicado').order('published_at', { ascending: false }),
     userId

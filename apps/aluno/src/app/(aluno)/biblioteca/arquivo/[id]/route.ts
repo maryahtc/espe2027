@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from '@portal/db/server'
-import { markStarted } from '@/lib/library/progress'
+import { markStarted, simulationAllowsContent } from '@/lib/library/progress'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const download = url.searchParams.get('baixar') === '1'
   const supabase = await createSupabaseServerClient()
   if (!supabase || !UUID.test(id) || (attachmentId && !UUID.test(attachmentId))) return new Response('Não encontrado', { status: 404 })
+  if (!(await simulationAllowsContent(supabase, id))) return new Response('Não encontrado', { status: 404 })
 
   let path: string | null = null
   let name: string | null = null

@@ -3,10 +3,12 @@ import { notFound } from 'next/navigation'
 import { CalendarPage } from '@/components/calendar/CalendarPage'
 import { NoCohort } from '@/components/academic/NoCohort'
 import { studentCalendar } from '@/lib/academic/student'
+import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Cronograma' }
 
 export default async function CronogramaMesPage({ params }: { params: Promise<{ mes: string }> }) {
+  await guardStudentPage()
   const { mes } = await params
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) notFound()
   const data = await studentCalendar()

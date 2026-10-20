@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@portal/db/server'
+import { simulationAllowsResource } from '@/lib/library/progress'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const { id } = await params
   const supabase = await createSupabaseServerClient()
   if (!supabase || !/^[0-9a-f-]{36}$/.test(id)) return new Response('Não encontrado', { status: 404 })
+  if (!(await simulationAllowsResource(supabase, id))) return new Response('Não encontrado', { status: 404 })
   const { data: resource } = await supabase.from('module_resources').select('kind, file_path').eq('id', id).maybeSingle()
   if (!resource || resource.kind !== 'arquivo' || !resource.file_path) return new Response('Não encontrado', { status: 404 })
   const { data } = await supabase.storage.from('module-files').createSignedUrl(resource.file_path, 600)

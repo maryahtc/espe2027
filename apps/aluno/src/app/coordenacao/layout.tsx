@@ -3,15 +3,19 @@ import Link from 'next/link'
 import { SignOutButton } from '@/components/auth/SignOutButton'
 import { Logo } from '@/components/shell/Logo'
 import { PreviewBanner } from '@/components/shell/PreviewBanner'
+import { SimulationBanner } from '@/components/simulation/SimulationBanner'
 import { requireUser } from '@/lib/auth/session'
+import { getSimulation } from '@/lib/simulation/session'
 
 export const metadata: Metadata = { title: { default: 'Coordenação', template: '%s · Coordenação · Conexo' } }
 
 /** Área da coordenação (leitura): só coordenação e admin. */
 export default async function CoordinationLayout({ children }: { children: React.ReactNode }) {
   const auth = await requireUser(['coordenacao', 'admin'])
+  const sim = auth ? await getSimulation() : null
   return (
     <>
+      {sim ? <SimulationBanner backToStudent cohortName={sim.cohortVM.name} expiresAt={sim.expiresAt} /> : null}
       {!auth ? <PreviewBanner /> : null}
       <header className="flex h-16 items-center gap-6 border-b border-rule bg-surface px-4 sm:px-8">
         <Logo href="/coordenacao" />

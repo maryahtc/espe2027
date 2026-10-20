@@ -2,6 +2,9 @@
 
 import { createSupabaseServerClient } from '@portal/db/server'
 import { revalidatePath } from 'next/cache'
+import { studentGate } from '@/lib/simulation/gate'
+import { updateSimulation } from '@/lib/simulation/session'
+import { simDismiss } from '@/lib/simulation/state'
 import { redirect } from 'next/navigation'
 import type { ActionState } from '@/lib/admin/academic-actions'
 import { requireUser } from '@/lib/auth/session'
@@ -127,10 +130,23 @@ export async function deleteAnnouncement(_: ActionState, fd: FormData): Promise<
 
 /** "Entendi" do aluno: esconde um aviso comum. O banco recusa avisos importantes. */
 export async function dismissAnnouncement(fd: FormData): Promise<void> {
-  const auth = await requireUser()
-  const supabase = await createSupabaseServerClient()
+  const gate = await studentGate()
   const id = str(fd, 'id', 40)
-  if (!auth || !supabase || !isId(id)) return
+  if (gate.kind === 'blocked' || !isId(id)) return
+  if (gate.kind === 'sim') {
+    // Simulação: "Entendi" só no rascunho (e, como no banco, nunca em aviso importante).
+    const supabase = gate.db
+    const { data: a } = await supabase.from('announcements').select('important').eq('id', id).maybeSingle()
+    if (!a || a.important) return
+    try {
+      await updateSimulation(gate.sim, (st) => simDismiss(st, id))
+    } catch {
+      return
+    }
+    revalidatePath('/')
+    return
+  }
+  const { auth, db: supabase } = gate
   await supabase.from('announcement_dismissals').upsert({ user_id: auth.userId, announcement_id: id }, { ignoreDuplicates: true })
   revalidatePath('/')
 }
