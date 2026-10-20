@@ -2,7 +2,7 @@ import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import type { AuthState } from '@/lib/auth/session'
 import { trackingCohorts } from '@/lib/tracking/load'
-import { CASE_COLS, type CaseRow, RECORD_COLS, type RecordRow, toCase, toRecord } from './load'
+import { CASE_COLS, type CaseRow, type RecordRow, recordCols, toCase, toRecord } from './load'
 import type { CaseVM } from './model'
 
 /**
@@ -30,7 +30,7 @@ export async function loadCohortCases(cohortId: string): Promise<{ students: Sta
   const [{ data: enr }, { data: cases }, { data: records }] = await Promise.all([
     supabase.from('enrollments').select('user_id, status, profiles(full_name, display_name)').eq('cohort_id', cohortId).eq('role_in_cohort', 'aluno'),
     supabase.from('clinical_cases').select(`${CASE_COLS}, owner_id`).eq('cohort_id', cohortId),
-    supabase.from('performed_procedures').select(RECORD_COLS).eq('cohort_id', cohortId),
+    supabase.from('performed_procedures').select(await recordCols()).eq('cohort_id', cohortId).returns<RecordRow[]>(),
   ])
   const students = (enr ?? [])
     .map((e) => ({
@@ -58,7 +58,7 @@ export async function openStaffCase(caseId: string): Promise<(StaffCase & { owne
   if (allowed !== true) return null
   const [{ data: c }, { data: records }, { data: topics }] = await Promise.all([
     supabase.from('clinical_cases').select(`${CASE_COLS}, owner_id`).eq('id', caseId).maybeSingle(),
-    supabase.from('performed_procedures').select(RECORD_COLS).eq('case_id', caseId),
+    supabase.from('performed_procedures').select(await recordCols()).eq('case_id', caseId).returns<RecordRow[]>(),
     supabase.from('case_difficulty_topics').select('topic_id').eq('case_id', caseId),
   ])
   if (!c) return null

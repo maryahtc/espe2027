@@ -735,14 +735,14 @@ isOneToOne: false
                   ]
                 },"performed_procedures": {
                   Row: {
-                    "case_id": string,"cohort_id": string,"created_at": string,"id": string,"module_auto": boolean,"module_id": string | null,"note": string | null,"other_description": string | null,"other_description_norm": string | null,"owner_id": string,"performed_on": string,"procedure_id": string,"quantity": number,"removed_at": string | null,"step_id": string,"teeth": (number)[],"updated_at": string
+                    "arch": Database["public"]['Enums']["dental_arch"] | null,"case_id": string,"cohort_id": string,"created_at": string,"id": string,"module_auto": boolean,"module_id": string | null,"note": string | null,"other_description": string | null,"other_description_norm": string | null,"owner_id": string,"performed_on": string,"procedure_id": string,"quantity": number,"removed_at": string | null,"step_id": string,"teeth": (number)[],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "case_id": string,"cohort_id": string,"created_at"?: string,"id"?: string,"module_auto"?: boolean,"module_id"?: string | null,"note"?: string | null,"other_description"?: string | null,"other_description_norm"?: string | null,"owner_id": string,"performed_on": string,"procedure_id": string,"quantity": number,"removed_at"?: string | null,"step_id": string,"teeth"?: (number)[],"updated_at"?: string
+                    "arch"?: Database["public"]['Enums']["dental_arch"] | null,"case_id": string,"cohort_id": string,"created_at"?: string,"id"?: string,"module_auto"?: boolean,"module_id"?: string | null,"note"?: string | null,"other_description"?: string | null,"other_description_norm"?: string | null,"owner_id": string,"performed_on": string,"procedure_id": string,"quantity": number,"removed_at"?: string | null,"step_id": string,"teeth"?: (number)[],"updated_at"?: string
                   }
                   Update: {
-                    "case_id"?: string,"cohort_id"?: string,"created_at"?: string,"id"?: string,"module_auto"?: boolean,"module_id"?: string | null,"note"?: string | null,"other_description"?: string | null,"other_description_norm"?: string | null,"owner_id"?: string,"performed_on"?: string,"procedure_id"?: string,"quantity"?: number,"removed_at"?: string | null,"step_id"?: string,"teeth"?: (number)[],"updated_at"?: string
+                    "arch"?: Database["public"]['Enums']["dental_arch"] | null,"case_id"?: string,"cohort_id"?: string,"created_at"?: string,"id"?: string,"module_auto"?: boolean,"module_id"?: string | null,"note"?: string | null,"other_description"?: string | null,"other_description_norm"?: string | null,"owner_id"?: string,"performed_on"?: string,"procedure_id"?: string,"quantity"?: number,"removed_at"?: string | null,"step_id"?: string,"teeth"?: (number)[],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -793,14 +793,14 @@ isOneToOne: false
                   ]
                 },"procedure_steps": {
                   Row: {
-                    "active": boolean,"completes": boolean,"created_at": string,"id": string,"name": string,"position": number,"procedure_id": string,"requires_description": boolean,"slug": string,"synonyms": (string)[],"unit": Database["public"]['Enums']["count_unit"],"updated_at": string
+                    "active": boolean,"completes": boolean,"created_at": string,"id": string,"location": Database["public"]['Enums']["step_location"],"name": string,"position": number,"procedure_id": string,"requires_description": boolean,"slug": string,"synonyms": (string)[],"unit": Database["public"]['Enums']["count_unit"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "active"?: boolean,"completes"?: boolean,"created_at"?: string,"id"?: string,"name": string,"position"?: number,"procedure_id": string,"requires_description"?: boolean,"slug": string,"synonyms"?: (string)[],"unit": Database["public"]['Enums']["count_unit"],"updated_at"?: string
+                    "active"?: boolean,"completes"?: boolean,"created_at"?: string,"id"?: string,"location"?: Database["public"]['Enums']["step_location"],"name": string,"position"?: number,"procedure_id": string,"requires_description"?: boolean,"slug": string,"synonyms"?: (string)[],"unit": Database["public"]['Enums']["count_unit"],"updated_at"?: string
                   }
                   Update: {
-                    "active"?: boolean,"completes"?: boolean,"created_at"?: string,"id"?: string,"name"?: string,"position"?: number,"procedure_id"?: string,"requires_description"?: boolean,"slug"?: string,"synonyms"?: (string)[],"unit"?: Database["public"]['Enums']["count_unit"],"updated_at"?: string
+                    "active"?: boolean,"completes"?: boolean,"created_at"?: string,"id"?: string,"location"?: Database["public"]['Enums']["step_location"],"name"?: string,"position"?: number,"procedure_id"?: string,"requires_description"?: boolean,"slug"?: string,"synonyms"?: (string)[],"unit"?: Database["public"]['Enums']["count_unit"],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1014,7 +1014,7 @@ isOneToOne: false
           Views: {
             "active_performed_procedures": {
                   Row: {
-                    "case_id": string | null,"category_id": string | null,"cohort_id": string | null,"completes": boolean | null,"id": string | null,"kind": Database["public"]['Enums']["procedure_kind"] | null,"module_id": string | null,"owner_id": string | null,"performed_on": string | null,"procedure_id": string | null,"quantity": number | null,"step_id": string | null,"teeth": (number)[] | null,"unit": Database["public"]['Enums']["count_unit"] | null
+                    "arch": Database["public"]['Enums']["dental_arch"] | null,"case_id": string | null,"category_id": string | null,"cohort_id": string | null,"completes": boolean | null,"id": string | null,"kind": Database["public"]['Enums']["procedure_kind"] | null,"location": Database["public"]['Enums']["step_location"] | null,"module_id": string | null,"owner_id": string | null,"performed_on": string | null,"procedure_id": string | null,"quantity": number | null,"step_id": string | null,"teeth": (number)[] | null,"unit": Database["public"]['Enums']["count_unit"] | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1208,7 +1208,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio"
+            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","dental_arch": "superior"|"inferior"|"ambas","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio","step_location": "dentes"|"arcada"|"nenhuma"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1324,7 +1324,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"]
+            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"dental_arch": ["superior", "inferior", "ambas"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"],"step_location": ["dentes", "arcada", "nenhuma"]
           }
         }
 } as const

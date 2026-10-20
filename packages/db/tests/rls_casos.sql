@@ -182,8 +182,8 @@ begin
   values (caso_a, pg_temp.etapa('laminado-ceramico', 'preparo'), hoje - 9, 4, '{12,11,21,22}') returning id into reg;
   insert into public.performed_procedures (case_id, step_id, performed_on, quantity, teeth)
   values (caso_a, pg_temp.etapa('laminado-ceramico', 'cimentacao'), hoje - 2, 4, '{12,11,21,22}');
-  insert into public.performed_procedures (case_id, step_id, performed_on, quantity)
-  values (caso_a, pg_temp.etapa('escaneamento-intraoral', 'escaneamento-intraoral'), hoje - 30, 2);
+  insert into public.performed_procedures (case_id, step_id, performed_on, quantity, arch)
+  values (caso_a, pg_temp.etapa('escaneamento-intraoral', 'escaneamento-intraoral'), hoje - 30, 2, 'ambas');
   reset role;
   insert into ids values ('reg', reg);
   insert into resultados (teste, passou) values ('Registro copia dono, turma e procedimento da etapa',

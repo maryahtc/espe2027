@@ -5,7 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth/session'
 import { parseSynonyms, slugify } from '@/lib/library/model'
-import { UNITS, type CountUnit } from '@/lib/procedures/model'
+import { odontogramReady } from '@/lib/cases/schema'
+import { LOCATIONS, type StepLocation, UNITS, type CountUnit } from '@/lib/procedures/model'
 
 /**
  * Ações de Admin → Procedimentos. Só admin; a RLS confere de novo e o histórico registra quem mudou o quê.
@@ -70,6 +71,12 @@ function unit(fd: FormData): CountUnit {
   if (!UNITS.includes(v)) throw new Error('Escolha a unidade de contagem.')
   return v
 }
+/** Localização: só escolhida nas etapas por peça (nas demais o banco a define pela unidade). */
+async function locationFields(fd: FormData, u: CountUnit): Promise<{ location?: StepLocation }> {
+  if (u !== 'peca' || !(await odontogramReady())) return {}
+  const v = text(fd, 'localizacao', 10) as StepLocation
+  return { location: LOCATIONS.includes(v) ? v : 'dentes' }
+}
 const kind = (fd: FormData) => (text(fd, 'tipo', 20) === 'geral' ? 'geral' : 'tratamento')
 
 async function uniqueSlug(db: Db, table: 'procedure_categories' | 'procedures', base: string): Promise<string> {
@@ -127,7 +134,7 @@ export async function createProcedure(_: ActionState, fd: FormData): Promise<Act
     const stepName = text(fd, 'etapa', 80) || name
     const { error: stepError } = await db
       .from('procedure_steps')
-      .insert({ procedure_id: data!.id, name: stepName, slug: slugify(stepName), unit: unit(fd), completes, position: 1 })
+      .insert({ procedure_id: data!.id, name: stepName, slug: slugify(stepName), unit: unit(fd), ...(await locationFields(fd, unit(fd))), completes, position: 1 })
     if (stepError) {
       await db.from('procedures').delete().eq('id', data!.id)
       fail(stepError)
@@ -175,9 +182,11 @@ export async function saveProcedureTopics(_: ActionState, fd: FormData): Promise
 export async function saveStep(_: ActionState, fd: FormData): Promise<ActionState> {
   return run(async (db) => {
     const name = req(fd, 'nome', 'nome da etapa', 80)
+    const u = unit(fd)
     const row = {
       name,
-      unit: unit(fd),
+      unit: u,
+      ...(await locationFields(fd, u)),
       completes: checked(fd, 'conclui'),
       requires_description: checked(fd, 'descricao'),
       synonyms: parseSynonyms(text(fd, 'sinonimos', 2000), name),

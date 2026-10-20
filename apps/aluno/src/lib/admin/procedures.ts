@@ -1,7 +1,8 @@
 import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import type { HistoryEntry } from '@/lib/admin/academic'
-import { frequentDescriptions, type ProcedureVM, type StepVM } from '@/lib/procedures/model'
+import { odontogramReady } from '@/lib/cases/schema'
+import { frequentDescriptions, legacyLocation, type ProcedureVM, type StepLocation, type StepVM } from '@/lib/procedures/model'
 
 async function client() {
   const supabase = await createSupabaseServerClient()
@@ -17,7 +18,11 @@ export async function adminCatalog(): Promise<{ categories: ProcedureCategoryVM[
   const [{ data: cats }, { data: procs }, { data: steps }, { data: links }, { data: uses }] = await Promise.all([
     supabase.from('procedure_categories').select('id, name, slug, position, archived_at').order('position'),
     supabase.from('procedures').select('id, category_id, name, slug, kind, synonyms, active, position').order('position'),
-    supabase.from('procedure_steps').select('id, procedure_id, name, slug, unit, completes, requires_description, synonyms, active, position').order('position'),
+    supabase
+      .from('procedure_steps')
+      .select(`id, procedure_id, name, slug, unit, completes, requires_description, synonyms, active, position${(await odontogramReady()) ? ', location' : ''}`)
+      .order('position')
+      .returns<Array<{ id: string; procedure_id: string; name: string; slug: string; unit: StepVM['unit']; completes: boolean; requires_description: boolean; synonyms: string[] | null; active: boolean; position: number; location?: StepLocation }>>(),
     supabase.from('procedure_topics').select('procedure_id, topic_id'),
     supabase.from('performed_procedures').select('step_id'),
   ])
@@ -32,6 +37,7 @@ export async function adminCatalog(): Promise<{ categories: ProcedureCategoryVM[
       name: s.name,
       slug: s.slug,
       unit: s.unit,
+      location: s.location ?? legacyLocation(s.unit),
       completes: s.completes,
       requiresDescription: s.requires_description,
       synonyms: s.synonyms ?? [],

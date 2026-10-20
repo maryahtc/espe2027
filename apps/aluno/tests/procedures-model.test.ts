@@ -7,6 +7,7 @@ const step = (over: Partial<StepVM>): StepVM => ({
   name: 'Preparo',
   slug: 'preparo',
   unit: 'dente',
+  location: 'dentes',
   completes: false,
   requiresDescription: false,
   synonyms: [],

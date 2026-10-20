@@ -6,6 +6,7 @@ import { QuickRegister } from '@/components/cases/QuickRegister'
 import { studentArea } from '@/lib/academic/student'
 import { requireUser } from '@/lib/auth/session'
 import { loadRegistration } from '@/lib/cases/load'
+import { odontogramReady } from '@/lib/cases/schema'
 import { caseHeadline, topOptions } from '@/lib/cases/model'
 import { guardStudentPage } from '@/lib/simulation/guard'
 
@@ -40,6 +41,7 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
           supervisors={r.supervisors}
           topics={r.topics}
           initialCaseId={initial}
+          archSupported={await odontogramReady()}
         />
       ) : (
         <EmptyState title="Esta conta não pode registrar casos agora">

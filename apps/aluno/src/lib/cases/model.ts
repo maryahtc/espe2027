@@ -2,7 +2,7 @@
  * Meus casos (Etapa 6) — regras puras, testáveis sem banco.
  * As validações espelham as do banco (o banco confere de novo): o Conexo não é prontuário.
  */
-import type { CountUnit } from '@/lib/procedures/model'
+import { archQuantity, type CountUnit, type DentalArch, type StepLocation } from '@/lib/procedures/model'
 
 export type CaseStatus = 'em_andamento' | 'concluido'
 
@@ -16,6 +16,8 @@ export type StepOption = {
   unit: CountUnit
   completes: boolean
   requiresDescription: boolean
+  /** O que se identifica no registro: posições FDI, arcada ou nada. */
+  location: StepLocation
   categoryName: string
   /** Nome do procedimento, da etapa e sinônimos, normalizados (sem acento, minúsculas). */
   search: string
@@ -31,6 +33,7 @@ export type RecordVM = {
   performedOn: string
   quantity: number
   teeth: number[]
+  arch: DentalArch | null
   moduleId: string | null
   moduleAuto: boolean
   note: string | null
@@ -232,4 +235,83 @@ export function filterCases<T extends Pick<CaseVM, 'status' | 'removed' | 'patie
     .filter((c) => (filter === 'excluidos' ? c.removed : !c.removed))
     .filter((c) => (filter === 'andamento' ? c.status === 'em_andamento' : filter === 'concluidos' ? c.status === 'concluido' : true))
     .filter((c) => !q || normalize(`${c.patientLabel} ${c.title ?? ''}`).includes(q) || (bare(q) !== '' && bare(c.patientLabel).includes(bare(q))))
+}
+
+// ─── Odontograma e arcada (posições FDI só como seletor; nada de prontuário) ─────────────────────
+
+/**
+ * Quantidade de uma linha do registro (mesma regra do banco): com posições FDI marcadas = número de posições
+ * (não editável); por arcada = 1 ou 2 (ambas); caso = 1; senão a quantidade escolhida.
+ */
+export function lineQuantity(o: Pick<StepOption, 'location' | 'unit'>, l: { quantity: number; teeth: number[]; arch: DentalArch | null }, archSupported = true): number {
+  if (o.location === 'dentes' && l.teeth.length) return l.teeth.length
+  if (o.location === 'arcada' && archSupported && l.arch) return archQuantity(l.arch)
+  if (o.unit === 'caso') return 1
+  return l.quantity
+}
+
+/** O que falta numa linha antes de salvar (mensagem curta) ou null. */
+export function lineError(o: Pick<StepOption, 'location' | 'requiresDescription'>, l: { teeth: number[]; arch: DentalArch | null; description: string }, archSupported = true): string | null {
+  if (o.requiresDescription && l.description.trim().length < 3) return 'Descreva o "Outro procedimento".'
+  if (o.location === 'arcada' && archSupported && !l.arch) return 'Escolha a arcada: superior, inferior ou ambas.'
+  if (o.location !== 'dentes' && l.teeth.length) return 'Esta etapa não identifica dentes.'
+  return null
+}
+
+/** Posições FDI envolvidas no caso (registros ativos) e as que já tiveram a etapa que conclui — tudo derivado. */
+export function caseTeeth(records: RecordVM[], options: StepOption[]): Map<number, { done: boolean }> {
+  const byStep = new Map(options.map((o) => [o.stepId, o]))
+  const out = new Map<number, { done: boolean }>()
+  for (const r of records.filter((x) => !x.removed)) {
+    const done = !!byStep.get(r.stepId)?.completes
+    for (const t of r.teeth) out.set(t, { done: (out.get(t)?.done ?? false) || done })
+  }
+  return out
+}
+
+/** Atalhos do odontograma. */
+export const TOOTH_SHORTCUTS: Array<{ label: string; teeth: number[] }> = [
+  { label: 'Anteriores sup.', teeth: [13, 12, 11, 21, 22, 23] },
+  { label: 'Anteriores inf.', teeth: [43, 42, 41, 31, 32, 33] },
+  { label: 'Arcada superior', teeth: FDI_UPPER },
+  { label: 'Arcada inferior', teeth: FDI_LOWER },
+]
+/** Liga/desliga um grupo: se todos já estão marcados, desmarca; senão marca os que faltam. */
+export function toggleGroup(current: number[], group: number[]): number[] {
+  return group.every((t) => current.includes(t)) ? current.filter((t) => !group.includes(t)) : [...current, ...group.filter((t) => !current.includes(t))]
+}
+/** Ordem de exibição: arcada superior da direita do paciente para a esquerda, depois a inferior. */
+export function sortTeeth(teeth: number[]): number[] {
+  const order = [...FDI_UPPER, ...FDI_LOWER]
+  return [...teeth].sort((a, b) => order.indexOf(a) - order.indexOf(b))
+}
+
+/**
+ * Posições, arcada e quantidade de um registro (mesmas regras do gatilho do banco), validadas antes de gravar —
+ * no registro real e no rascunho da simulação. Lança Error com mensagem clara; nunca descarta dado em silêncio.
+ * `archSupported` = o banco já tem a coluna da arcada (antes da migração: comportamento anterior).
+ */
+export function resolvePlacement(
+  step: { location: StepLocation; unit: CountUnit },
+  input: { quantity: number; teeth: number[]; arch: DentalArch | null },
+  archSupported = true,
+): { quantity: number; teeth: number[]; arch: DentalArch | null } {
+  const teeth = [...new Set(input.teeth.map(Number))]
+  if (teeth.some((t) => !validTooth(t))) throw new Error('Posição FDI inválida (use 11 a 48).')
+  const arch = archSupported ? input.arch : null
+  let quantity = Number(input.quantity)
+  if (step.location === 'dentes') {
+    if (arch) throw new Error('Esta etapa identifica posições FDI, não arcada.')
+    if (teeth.length) quantity = teeth.length
+  } else if (step.location === 'arcada') {
+    if (teeth.length) throw new Error('Esta etapa não identifica dentes: informe a arcada.')
+    if (archSupported && !arch) throw new Error('Escolha a arcada: superior, inferior ou ambas.')
+    if (arch) quantity = archQuantity(arch)
+  } else {
+    if (teeth.length) throw new Error('Esta etapa não identifica dentes.')
+    if (arch) throw new Error('Esta etapa não identifica arcada.')
+  }
+  if (step.unit === 'caso') quantity = 1
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Quantidade inválida.')
+  return { quantity, teeth, arch }
 }

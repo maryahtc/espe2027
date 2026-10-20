@@ -24,12 +24,14 @@ const COHORT = '00000000-0000-4000-b000-000000000001'
 const STEP = '00000000-0000-4000-c000-000000000001'
 const STEP_OTHER = '00000000-0000-4000-c000-000000000002'
 const STEP_OFF = '00000000-0000-4000-c000-000000000003'
+const STEP_ARCH = '00000000-0000-4000-c000-000000000004'
 const TOPIC = '00000000-0000-4000-d000-000000000001'
 const MOD_A = '00000000-0000-4000-e000-00000000000a'
 const MOD_B = '00000000-0000-4000-e000-00000000000b'
 
 function ctx(): Ctx {
   return {
+    archSupported: true,
     today: '2027-03-10',
     now: '2027-03-10T12:00:00.000Z',
     modules: [
@@ -37,9 +39,10 @@ function ctx(): Ctx {
       { id: MOD_B, label: '02', title: 'B', start: '2027-03-08', end: '2027-03-12' },
     ],
     steps: new Map([
-      [STEP, { procedureId: 'p1', active: true, requiresDescription: false }],
-      [STEP_OTHER, { procedureId: 'p2', active: true, requiresDescription: true }],
-      [STEP_OFF, { procedureId: 'p3', active: false, requiresDescription: false }],
+      [STEP, { procedureId: 'p1', active: true, requiresDescription: false, location: 'dentes', unit: 'dente' }],
+      [STEP_OTHER, { procedureId: 'p2', active: true, requiresDescription: true, location: 'nenhuma', unit: 'caso' }],
+      [STEP_OFF, { procedureId: 'p3', active: false, requiresDescription: false, location: 'dentes', unit: 'dente' }],
+      [STEP_ARCH, { procedureId: 'p4', active: true, requiresDescription: false, location: 'arcada', unit: 'arcada' }],
     ]),
     activeTopics: new Set([TOPIC]),
     newId: randomUUID,
@@ -47,7 +50,7 @@ function ctx(): Ctx {
 }
 
 const register = (s = emptyState(), over: Partial<Parameters<typeof simRegister>[1]> = {}) =>
-  simRegister(s, { mode: 'novo', patient: 'm.a.s.', date: '2027-03-09', lines: [{ stepId: STEP, quantity: 2, teeth: [11, 21, 99] }], module: { auto: true }, ...over }, ctx())
+  simRegister(s, { mode: 'novo', patient: 'm.a.s.', date: '2027-03-09', lines: [{ stepId: STEP, quantity: 2, teeth: [11, 21] }], module: { auto: true }, ...over }, ctx())
 
 describe('rascunho da simulação: casos com as mesmas regras do banco', () => {
   it('registra caso novo: código em maiúsculas, dentes válidos, módulo automático pela data', () => {
@@ -94,15 +97,34 @@ describe('rascunho da simulação: casos com as mesmas regras do banco', () => {
     expect(simCases(s, COHORT)[0]!.concludedOn).toBeNull()
 
     const rid = c.records[0]!.id
-    simUpdateRecord(s, rid, { date: '2027-02-02', quantity: 4, teeth: [12], note: 'ok', module: { auto: true, id: null } }, ctx())
+    simUpdateRecord(s, rid, { date: '2027-02-02', quantity: 4, teeth: [], note: 'ok', module: { auto: true, id: null } }, ctx())
     expect(simCases(s, COHORT)[0]!.records[0]).toMatchObject({ quantity: 4, performedOn: '2027-02-02', moduleId: MOD_A })
+    simUpdateRecord(s, rid, { date: '2027-02-02', quantity: 4, teeth: [12, 22], note: 'ok', module: { auto: true, id: null } }, ctx())
+    expect(simCases(s, COHORT)[0]!.records[0]).toMatchObject({ quantity: 2, teeth: [12, 22] }) // com posições: quantidade = nº de posições
     simSetRecordRemoved(s, rid, true)
     expect(simCases(s, COHORT)[0]!.startedOn).toBe('2027-02-03') // registro excluído não conta
     simSetCaseRemoved(s, caseId, true)
     expect(simCases(s, COHORT)[0]!.removed).toBe(true)
   })
 
-  it('limites conservadores', () => {
+  it('odontograma e arcada: mesmas regras do banco (quantidade automática, nada descartado em silêncio)', () => {
+    const s = emptyState()
+    const { caseId } = register(s, { lines: [{ stepId: STEP, quantity: 9, teeth: [12, 11, 21, 22], note: 'refeito' }] })
+    let r = simCases(s, COHORT)[0]!.records[0]!
+    expect(r.quantity).toBe(4)
+    expect(r.note).toBe('refeito')
+    register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP_ARCH, quantity: 1, teeth: [], arch: 'ambas' }] })
+    r = simCases(s, COHORT)[0]!.records.find((x) => x.stepId === STEP_ARCH)!
+    expect([r.arch, r.quantity]).toEqual(['ambas', 2])
+    expect(() => register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP_ARCH, quantity: 1, teeth: [] }] })).toThrow(/arcada/)
+    expect(() => register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP_ARCH, quantity: 1, teeth: [16], arch: 'superior' }] })).toThrow(/não identifica dentes/)
+    expect(() => register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP, quantity: 1, teeth: [11], arch: 'superior' }] })).toThrow(/não arcada/)
+    expect(() => register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP_OTHER, quantity: 1, teeth: [11], description: 'algo feito' }] })).toThrow(/não identifica dentes/)
+    expect(() => register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP, quantity: 1, teeth: [51] }] })).toThrow(/FDI/)
+    expect(() => register(s, { mode: 'existente', caseId, lines: [{ stepId: STEP, quantity: 1, teeth: [], note: 'ligar 11 98765-4321' }] })).toThrow(/CPF, telefone/)
+  })
+
+    it('limites conservadores', () => {
     const s = emptyState()
     for (let i = 0; i < SIM_LIMITS.cases; i++) register(s, { patient: `C-${i}` })
     expect(() => register(s, { patient: 'X-1' })).toThrow(/Limite da simulação/)

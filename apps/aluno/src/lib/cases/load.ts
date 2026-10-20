@@ -7,7 +7,9 @@ import { loadLibrary, loadTaxonomy } from '@/lib/library/load'
 import { type ContentVM, isReleased } from '@/lib/library/model'
 import { getSimulation } from '@/lib/simulation/session'
 import { simCases } from '@/lib/simulation/state'
+import { type DentalArch, legacyLocation, type StepLocation } from '@/lib/procedures/model'
 import type { CaseVM, ModuleSpan, RecordVM, StepOption } from './model'
+import { odontogramReady } from './schema'
 import { normalize } from './model'
 
 async function client() {
@@ -19,10 +21,14 @@ async function client() {
 /** Etapas ativas de procedimentos ativos, prontas para o registro (rótulo, unidade, busca por sinônimos). */
 export const loadStepOptions = cache(async (): Promise<StepOption[]> => {
   const supabase = await client()
+  const ready = await odontogramReady()
   const [{ data: cats }, { data: procs }, { data: steps }] = await Promise.all([
     supabase.from('procedure_categories').select('id, name, position'),
     supabase.from('procedures').select('id, category_id, name, synonyms, active, position'),
-    supabase.from('procedure_steps').select('id, procedure_id, name, unit, completes, requires_description, synonyms, active, position'),
+    supabase
+      .from('procedure_steps')
+      .select(`id, procedure_id, name, unit, completes, requires_description, synonyms, active, position${ready ? ', location' : ''}`)
+      .returns<Array<{ id: string; procedure_id: string; name: string; unit: StepOption['unit']; completes: boolean; requires_description: boolean; synonyms: string[] | null; active: boolean; position: number; location?: StepLocation }>>(),
   ])
   const catOf = new Map((cats ?? []).map((c) => [c.id, c]))
   const procOf = new Map((procs ?? []).map((p) => [p.id, p]))
@@ -40,6 +46,7 @@ export const loadStepOptions = cache(async (): Promise<StepOption[]> => {
         unit: s.unit,
         completes: s.completes,
         requiresDescription: s.requires_description,
+        location: s.location ?? legacyLocation(s.unit),
         categoryName: c?.name ?? '',
         search: normalize([p.name, s.name, ...(p.synonyms ?? []), ...(s.synonyms ?? [])].join(' ')),
         position: (c?.position ?? 0) * 10000 + p.position * 100 + s.position,
@@ -75,7 +82,11 @@ export type CaseRow = {
 }
 export const CASE_COLS = `id, cohort_id, patient_label, title, status, started_on, last_activity_on, concluded_on, supervisor_faculty_id,
   smile_cloud_url, difficulty_text, ease_text, do_differently_text, cover_path, removed_at, created_at`
-export const RECORD_COLS = 'id, case_id, step_id, procedure_id, performed_on, quantity, teeth, module_id, module_auto, note, other_description, removed_at, created_at'
+const RECORD_BASE = 'id, case_id, step_id, procedure_id, performed_on, quantity, teeth, module_id, module_auto, note, other_description, removed_at, created_at'
+/** Colunas dos registros (a arcada só existe depois da migração do odontograma). */
+export async function recordCols(): Promise<string> {
+  return (await odontogramReady()) ? `${RECORD_BASE}, arch` : RECORD_BASE
+}
 
 export type RecordRow = {
   id: string
@@ -85,6 +96,7 @@ export type RecordRow = {
   performed_on: string
   quantity: number
   teeth: number[] | null
+  arch?: DentalArch | null
   module_id: string | null
   module_auto: boolean
   note: string | null
@@ -100,6 +112,7 @@ export const toRecord = (r: RecordRow): RecordVM => ({
   performedOn: r.performed_on,
   quantity: r.quantity,
   teeth: r.teeth ?? [],
+  arch: r.arch ?? null,
   moduleId: r.module_id,
   moduleAuto: r.module_auto,
   note: r.note,
@@ -137,9 +150,10 @@ export const loadMyCases = cache(async (userId: string): Promise<CaseVM[]> => {
   const sim = await getSimulation()
   if (sim) return simCases(sim.state, sim.cohortVM.id)
   const supabase = await client()
+  const cols = await recordCols()
   const [{ data: cases }, { data: records }] = await Promise.all([
     supabase.from('clinical_cases').select(CASE_COLS).eq('owner_id', userId).order('last_activity_on', { ascending: false, nullsFirst: false }),
-    supabase.from('performed_procedures').select(RECORD_COLS).eq('owner_id', userId),
+    supabase.from('performed_procedures').select(cols).eq('owner_id', userId).returns<RecordRow[]>(),
   ])
   const byCase = new Map<string, RecordVM[]>()
   for (const r of (records ?? []) as RecordRow[]) byCase.set(r.case_id, [...(byCase.get(r.case_id) ?? []), toRecord(r)])
@@ -160,7 +174,7 @@ export async function loadMyCase(id: string, userId: string): Promise<CaseVM | n
   const { data: c } = await supabase.from('clinical_cases').select(`${CASE_COLS}, owner_id`).eq('id', id).maybeSingle()
   if (!c || (c as { owner_id: string }).owner_id !== userId) return null
   const [{ data: records }, { data: topics }] = await Promise.all([
-    supabase.from('performed_procedures').select(RECORD_COLS).eq('case_id', id),
+    supabase.from('performed_procedures').select(await recordCols()).eq('case_id', id).returns<RecordRow[]>(),
     supabase.from('case_difficulty_topics').select('topic_id').eq('case_id', id),
   ])
   return toCase(c as CaseRow, ((records ?? []) as RecordRow[]).map(toRecord), (topics ?? []).map((t) => t.topic_id))

@@ -17,7 +17,10 @@ import {
   simSetStatus,
   simUpdateRecord,
 } from '@/lib/simulation/state'
-import { hasPersonalIdentifier, parseTeeth, patientLabelError, validTooth } from './model'
+import { type DentalArch, ARCHES } from '@/lib/procedures/model'
+import { loadStepOptions } from './load'
+import { hasPersonalIdentifier, parseTeeth, patientLabelError, resolvePlacement } from './model'
+import { odontogramReady } from './schema'
 
 /**
  * Ações de Meus casos. Só o dono escreve, em turma ativa — o banco garante (RLS + gatilhos); aqui as mensagens são
@@ -42,7 +45,7 @@ async function student(): Promise<{ auth: AuthState; db: Db; sim: Simulation | n
 function fail(error: { code?: string; message: string } | null) {
   if (!error) return
   if (error.code === '42501') throw new Error('Não é possível registrar aqui: os casos são registrados pelo aluno, em turma ativa.')
-  if (error.code === '23514' && /futuro|Descreva|desativada|módulo|temas/.test(error.message)) throw new Error(error.message)
+  if (error.code === '23514' && /futuro|Descreva|desativada|módulo|temas|arcada|dentes|FDI/.test(error.message)) throw new Error(error.message)
   if (error.code === '23514') throw new Error('Algum dado não é permitido (ex.: nome, CPF ou telefone do paciente, ou dente inválido).')
   if (error.code === '23503') throw new Error('Registro inválido.')
   throw new Error('Não foi possível salvar.')
@@ -93,7 +96,7 @@ type Payload = {
   caseId?: string
   patient?: string
   date: string
-  lines: Array<{ stepId: string; quantity: number; teeth: number[]; description?: string }>
+  lines: Array<{ stepId: string; quantity: number; teeth: number[]; description?: string; arch?: DentalArch | null; note?: string }>
   module: { auto: true } | { auto: false; id: string | null }
   extras?: { title?: string; supervisorId?: string; smile?: string; difficulty?: string; ease?: string; differently?: string; topicIds?: string[] }
 }
@@ -118,19 +121,26 @@ export async function registerProcedures(_: ActionState, fd: FormData): Promise<
     const lines = (p.lines ?? []).filter((l) => l && UUID.test(l.stepId))
     if (!lines.length) throw new Error('Escolha o que você fez.')
     if (lines.length > 12) throw new Error('No máximo 12 procedimentos por registro.')
+    // Confere as etapas antes de criar qualquer coisa: ativas, descrição quando exigida, posições FDI/arcada conforme
+    // a localização da etapa (mesmas regras do banco) e observação curta.
+    const ready = await odontogramReady()
+    const steps = new Map((await loadStepOptions()).map((o) => [o.stepId, o]))
     const rows = lines.map((l) => {
-      const quantity = Number(l.quantity)
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Quantidade inválida.')
-      const teeth = [...new Set((l.teeth ?? []).map(Number).filter(validTooth))]
-      return { step_id: l.stepId, quantity, teeth, other_description: cleanText(l.description, 120, 'Descrição') }
+      const o = steps.get(l.stepId)
+      if (!o || !o.active) throw new Error('Um dos procedimentos escolhidos não está mais disponível.')
+      const other = cleanText(l.description, 120, 'Descrição')
+      if (o.requiresDescription && (other ?? '').length < 3) throw new Error('Descreva o "Outro procedimento".')
+      const arch = ARCHES.includes(l.arch as DentalArch) ? (l.arch as DentalArch) : null
+      const placed = resolvePlacement(o, { quantity: Number(l.quantity), teeth: l.teeth ?? [], arch }, ready)
+      return {
+        step_id: l.stepId,
+        quantity: placed.quantity,
+        teeth: placed.teeth,
+        ...(ready ? { arch: placed.arch } : {}),
+        other_description: other,
+        note: cleanText(l.note, 200, 'Observação'),
+      }
     })
-    // Confere as etapas antes de criar qualquer coisa (ativas; descrição quando exigida).
-    const { data: steps } = await db.from('procedure_steps').select('id, procedure_id, active, requires_description').in('id', rows.map((r) => r.step_id))
-    for (const r of rows) {
-      const s = (steps ?? []).find((x) => x.id === r.step_id)
-      if (!s || !s.active) throw new Error('Um dos procedimentos escolhidos não está mais disponível.')
-      if (s.requires_description && (r.other_description ?? '').length < 3) throw new Error('Descreva o "Outro procedimento".')
-    }
     const mod = p.module?.auto === false ? { module_auto: false, module_id: p.module.id && UUID.test(p.module.id) ? p.module.id : null } : { module_auto: true }
 
     let caseId: string
@@ -170,7 +180,7 @@ export async function registerProcedures(_: ActionState, fd: FormData): Promise<
     }
 
     // Dono, turma e procedimento também são preenchidos (e conferidos) pelo banco a partir do caso e da etapa.
-    const procedureOf = new Map((steps ?? []).map((x) => [x.id, x.procedure_id]))
+    const procedureOf = new Map([...steps.values()].map((x) => [x.stepId, x.procedureId]))
     const { error } = await db.from('performed_procedures').insert(
       rows.map((r) => ({ ...r, ...mod, case_id: caseId, owner_id: auth.userId, cohort_id: cohortId, procedure_id: procedureOf.get(r.step_id)!, performed_on: date })),
     )
@@ -281,9 +291,10 @@ export async function setCaseRemoved(_: ActionState, fd: FormData): Promise<Acti
 
 export async function updateRecord(_: ActionState, fd: FormData): Promise<ActionState> {
   return run(async ({ db, sim }) => {
-    const quantity = Number(str(fd, 'quantidade', 3))
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Quantidade inválida.')
+    const quantity = Number(str(fd, 'quantidade', 3)) || 1
     const mod = str(fd, 'modulo', 40)
+    const archIn = str(fd, 'arcada', 10)
+    const arch = ARCHES.includes(archIn as DentalArch) ? (archIn as DentalArch) : null
     if (sim) {
       await applySim(sim, (state, ctx) =>
         simUpdateRecord(
@@ -293,6 +304,7 @@ export async function updateRecord(_: ActionState, fd: FormData): Promise<Action
             date: str(fd, 'data', 10),
             quantity,
             teeth: parseTeeth(str(fd, 'dentes', 200)),
+            arch,
             note: fd.get('nota'),
             description: fd.has('descricao') ? fd.get('descricao') : undefined,
             module: mod === 'auto' ? { auto: true, id: null } : { auto: false, id: UUID.test(mod) ? mod : null },
@@ -302,10 +314,17 @@ export async function updateRecord(_: ActionState, fd: FormData): Promise<Action
       )
       return 'Registro atualizado.'
     }
+    // Posições FDI / arcada conforme a localização da etapa do registro (mesmas regras do banco).
+    const ready = await odontogramReady()
+    const { data: current } = await db.from('performed_procedures').select('step_id').eq('id', id(fd)).maybeSingle()
+    const o = current ? (await loadStepOptions()).find((x) => x.stepId === current.step_id) : undefined
+    if (!o) throw new Error('Este registro não pode ser alterado.')
+    const placed = resolvePlacement(o, { quantity, teeth: parseTeeth(str(fd, 'dentes', 200)), arch }, ready)
     const row = {
       performed_on: checkDate(str(fd, 'data', 10)),
-      quantity,
-      teeth: parseTeeth(str(fd, 'dentes', 200)),
+      quantity: placed.quantity,
+      teeth: placed.teeth,
+      ...(ready ? { arch: placed.arch } : {}),
       note: cleanText(fd.get('nota'), 200, 'Observação'),
       other_description: fd.has('descricao') ? cleanText(fd.get('descricao'), 120, 'Descrição') : undefined,
       ...(mod === 'auto' ? { module_auto: true } : { module_auto: false, module_id: UUID.test(mod) ? mod : null }),

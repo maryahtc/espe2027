@@ -1512,6 +1512,37 @@ Aprovado pela Maryah em 20/10/2026. Sem migração e sem nenhuma gravação em p
   cookie adulterado), saída e expiração descartando o rascunho, e reenvio das ações capturadas na simulação como
   Admin fora dela sem gravar nada.
 
+### Etapa 6 · ajuste final — odontograma e arcada no Registrar caso (21/10/2026)
+
+Aprovado pela Maryah em 21/10/2026. O odontograma é **só um seletor de posições FDI** (11–48), não prontuário:
+sem faces, condições, diagnóstico, anamnese, evolução, prescrição ou exames. Documentação clínica: Smile Cloud.
+
+- **Dois caminhos para o mesmo registro** (lembra a última escolha; na primeira vez, "Por dente"):
+  - *Por dente:* marcar posições (toque, deslizar o dedo ou atalhos) → escolher a etapa (só as que identificam
+    posições) → observação opcional → "+ Outra etapa nos mesmos dentes" / "+ Outros dentes".
+  - *Por procedimento:* escolher a etapa → o mesmo odontograma (etapas de posições) ou Superior · Inferior · Ambas
+    (etapas por arcada) → observação opcional.
+- **Localização na etapa, não na unidade** (`procedure_steps.location`: dentes · arcada · nenhuma). Dente → dentes,
+  arcada → arcada, caso → nenhuma (fixas). Peça → escolhida etapa a etapa no Admin → Procedimentos: laminado,
+  coroa total, inlay/onlay/overlay, semidireta, prótese parcial fixa e coroa sobre implante → posições FDI; placa
+  oclusal → arcada. O FDI marca a posição (inclusive de elemento protético/pôntico), nunca uma condição.
+- **Arcada no registro** (`performed_procedures.arch`: superior · inferior · ambas): obrigatória nas etapas por
+  arcada; quantidade automática 1 ou 2.
+- **Quantidade:** com posições marcadas = número de posições (não editável); sem posições, livre como antes.
+- **Recusa** posições FDI ou arcada onde a etapa não identifica isso (com mensagem; nada é descartado em silêncio).
+- **Observação deste registro** (até 200 caracteres), com o aviso de que não é prontuário.
+- **Página do caso:** odontograma pequeno com as posições envolvidas e ✓ onde já houve a etapa que conclui (derivado
+  dos registros); tocar numa posição filtra a linha do tempo. Edição de registro com o mesmo odontograma/arcada.
+- **Modo de simulação:** odontograma e arcada funcionam no rascunho, sem gravar nada.
+- **Migração `20261021120000_odontograma_arcada`** (só aditiva): tipos `step_location` e `dental_arch`, coluna
+  `location` (preenchida pela unidade e pela tabela acima), coluna `arch`, gatilhos de coerência novos (sem alterar
+  os existentes) e `arch`/`location` no fim da visão `active_performed_procedures`. **Ainda não aplicada em
+  produção** — aguarda autorização. Até lá o portal publicado segue o comportamento anterior (detecta a versão do
+  banco), sem arcada.
+- **Para a Minha Produção (Etapa 9), sem duplicar dados:** experiência (todas as etapas), concluídos (etapa que
+  conclui), por categoria, mês, módulo, dente (cada posição listada) e arcada (campo novo; e, para posições FDI, pela
+  numeração 1x/2x = superior, 3x/4x = inferior).
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)

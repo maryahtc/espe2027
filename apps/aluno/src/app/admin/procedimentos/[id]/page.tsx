@@ -10,11 +10,12 @@ import { requireUser } from '@/lib/auth/session'
 import { adminTaxonomy } from '@/lib/admin/library'
 import { adminCatalog, procedureHistory, stepDescriptions } from '@/lib/admin/procedures'
 import { deleteStep, saveProcedure, saveProcedureTopics, saveStep } from '@/lib/admin/procedure-actions'
-import { catalogIssues, experienceOnly, isSingleStep, type StepVM, stepLabel, UNIT_LABEL, UNITS } from '@/lib/procedures/model'
+import { catalogIssues, experienceOnly, isSingleStep, LOCATION_LABEL, LOCATIONS, type StepVM, stepLabel, UNIT_LABEL, UNITS } from '@/lib/procedures/model'
 
 export const metadata: Metadata = { title: 'Procedimento' }
 
 const UNIT_OPTIONS = UNITS.map((u) => [u, UNIT_LABEL[u].one] as [string, string])
+const LOCATION_OPTIONS = LOCATIONS.map((l) => [l, LOCATION_LABEL[l]] as [string, string])
 
 function StepFields({ s, geral }: { s?: StepVM; geral: boolean }) {
   return (
@@ -23,6 +24,19 @@ function StepFields({ s, geral }: { s?: StepVM; geral: boolean }) {
         <Input label="Nome da etapa" name="nome" required maxLength={80} defaultValue={s?.name} />
         <Select label="Unidade" name="unidade" defaultValue={s?.unit ?? 'dente'} options={UNIT_OPTIONS} />
         <Input label="Ordem" name="posicao" type="number" min={0} defaultValue={s?.position ?? 1} />
+      </div>
+      <div data-localizacao>
+        <Select
+          label="No registro, o aluno identifica (só etapas por peça)"
+          name="localizacao"
+          defaultValue={s?.location ?? 'dentes'}
+          options={LOCATION_OPTIONS}
+          className="max-w-md"
+        />
+        <p className="mt-1 text-xs text-muted">
+          Por dente → posições FDI; por arcada → arcada; por caso → nada (definido pela unidade). Por peça, escolha aqui — ex.: laminado e coroa → posições FDI;
+          placa oclusal → arcada.
+        </p>
       </div>
       <TextArea label="Sinônimos da etapa (opcional)" name="sinonimos" rows={1} defaultValue={s?.synonyms.join(', ') ?? ''} hint="Só para a busca." />
       <div className="flex flex-wrap gap-x-6">
@@ -120,7 +134,9 @@ export default async function AdminProcedurePage({ params, searchParams }: { par
                   <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
                     <span className="num w-5 text-muted">{s.position}</span>
                     <span className={s.active ? 'font-semibold' : 'text-muted line-through'}>{isSingleStep(p) ? `${s.name} (etapa única)` : s.name}</span>
-                    <span className="text-xs text-muted">{UNIT_LABEL[s.unit].one}</span>
+                    <span className="text-xs text-muted">
+                      {UNIT_LABEL[s.unit].one} · {s.location === 'dentes' ? 'posições FDI' : s.location === 'arcada' ? 'arcada' : 'sem localização'}
+                    </span>
                     {s.completes ? <span className="text-xs font-semibold">✓ conclui</span> : null}
                     {s.requiresDescription ? <span className="text-xs text-muted">descrição obrigatória</span> : null}
                     <span className="ml-auto text-xs text-muted">{s.uses ? `${s.uses} ${s.uses === 1 ? 'registro' : 'registros'}` : 'sem registros'}</span>

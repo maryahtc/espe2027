@@ -24,6 +24,7 @@ const opt = (stepId: string, procedureId: string, procedureName: string, stepNam
   unit,
   completes,
   requiresDescription: false,
+  location: unit === 'arcada' ? 'arcada' : unit === 'caso' ? 'nenhuma' : 'dentes',
   categoryName: 'Cat',
   search: `${procedureName} ${stepName} ${synonyms}`
     .normalize('NFD')
@@ -46,6 +47,7 @@ const rec = (over: Partial<RecordVM>): RecordVM => ({
   performedOn: '2027-04-06',
   quantity: 1,
   teeth: [],
+  arch: null,
   moduleId: null,
   moduleAuto: true,
   note: null,

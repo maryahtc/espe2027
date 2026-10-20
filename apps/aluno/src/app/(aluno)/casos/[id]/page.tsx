@@ -8,17 +8,20 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { CaseCover } from '@/components/cases/CaseCover'
+import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { CoverUpload } from '@/components/cases/CoverUpload'
+import { RecordPlacement } from '@/components/cases/RecordPlacement'
 import { cohortModules, loadFaculty } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { saveCaseDetails, setCaseRemoved, setCaseStatus, setRecordRemoved, updateRecord } from '@/lib/cases/actions'
 import { canRegister, coverUrls, loadMyCase, loadStepOptions, relatedContents } from '@/lib/cases/load'
 import { getSimulation } from '@/lib/simulation/session'
-import { caseHeadline, type RecordVM, type StepOption, suggestTopics, timeline, treatmentSummary } from '@/lib/cases/model'
+import { caseHeadline, caseTeeth, type RecordVM, sortTeeth, type StepOption, suggestTopics, timeline, treatmentSummary } from '@/lib/cases/model'
+import { odontogramReady } from '@/lib/cases/schema'
 import { formatDayMonth, formatLongDay, year } from '@/lib/dates'
 import { loadTaxonomy } from '@/lib/library/load'
 import { KIND_LABEL } from '@/lib/library/model'
-import { unitText } from '@/lib/procedures/model'
+import { ARCH_LABEL, unitText } from '@/lib/procedures/model'
 import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Caso' }
@@ -43,20 +46,21 @@ function Block({ id, title, children, aside }: { id: string; title: string; chil
 const inputCls = 'field mt-1.5 block min-h-11 w-full px-3 text-base'
 const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
-export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ registrado?: string }> }) {
+export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ registrado?: string; dente?: string }> }) {
   await guardStudentPage()
   const auth = await requireUser()
   if (!auth) notFound()
-  const [{ id }, { registrado }] = await Promise.all([params, searchParams])
+  const [{ id }, { registrado, dente }] = await Promise.all([params, searchParams])
   const c = await loadMyCase(id, auth.userId)
   if (!c) notFound()
-  const [options, modules, faculty, taxonomy, writable, covers] = await Promise.all([
+  const [options, modules, faculty, taxonomy, writable, covers, archSupported] = await Promise.all([
     loadStepOptions(),
     cohortModules(c.cohortId),
     loadFaculty(),
     loadTaxonomy(),
     canRegister(c.cohortId),
     coverUrls([c.coverPath]),
+    odontogramReady(),
   ])
   const help = await relatedContents(c, auth.userId)
   const byStep = new Map(options.map((o) => [o.stepId, o]))
@@ -66,7 +70,10 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   }
   const supervisor = faculty.find((f) => f.id === c.supervisorId)
   const topicName = new Map(taxonomy.topics.map((t) => [t.id, t.name]))
-  const groups = timeline(c.records)
+  // Odontograma do caso (derivado dos registros) e filtro da linha do tempo por posição FDI.
+  const teethMap = caseTeeth(c.records, options)
+  const tooth = dente && teethMap.has(Number(dente)) ? Number(dente) : null
+  const groups = timeline(tooth ? c.records.filter((r) => r.teeth.includes(tooth)) : c.records)
   const removedRecords = c.records.filter((r) => r.removed)
   const summary = treatmentSummary(c.records, options)
   const editable = writable && !c.removed
@@ -197,6 +204,19 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         ) : null}
 
         <Block id="linha-do-tempo" title="Linha do tempo" aside={<span className="text-sm text-muted">{groups.length} {groups.length === 1 ? 'consulta' : 'consultas'}</span>}>
+          {teethMap.size ? (
+            <div className="glass mb-6 rounded-2xl p-4">
+              <CaseTeethMap teeth={teethMap} selected={tooth} hrefFor={(t) => (t === tooth ? `/casos/${c.id}#linha-do-tempo` : `/casos/${c.id}?dente=${t}#linha-do-tempo`)} />
+              {tooth ? (
+                <p className="mt-3 text-sm" data-filtro-dente>
+                  Mostrando os registros da posição <span className="num font-semibold">{tooth}</span> ·{' '}
+                  <Link href={`/casos/${c.id}#linha-do-tempo`} scroll={false} className="font-semibold underline underline-offset-4">
+                    ver todos
+                  </Link>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           {groups.length ? (
             <ol className="space-y-6">
               {groups.map((g, gi) => (
@@ -208,7 +228,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                   </p>
                   <ul className="space-y-2">
                     {g.records.map((r) => (
-                      <RecordRow key={r.id} r={r} o={byStep.get(r.stepId)} moduleName={moduleName(r.moduleId)} modules={modules} editable={editable} />
+                      <RecordRow key={r.id} r={r} o={byStep.get(r.stepId)} moduleName={moduleName(r.moduleId)} modules={modules} editable={editable} archSupported={archSupported} />
                     ))}
                   </ul>
                 </li>
@@ -385,19 +405,22 @@ function RecordRow({
   moduleName,
   modules,
   editable,
+  archSupported,
 }: {
   r: RecordVM
   o: StepOption | undefined
   moduleName: string | null
   modules: Array<{ id: string; label: string; title: string }>
   editable: boolean
+  archSupported: boolean
 }) {
   const label = o?.label ?? 'Procedimento'
   const summary = (
     <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
       <span className="text-[15px] font-semibold">{label}</span>
       <span className="num text-sm">{o ? unitText(o.unit, r.quantity) : r.quantity}</span>
-      {r.teeth.length ? <span className="num text-xs text-muted">{r.teeth.join(' ')}</span> : null}
+      {r.teeth.length ? <span className="num text-xs text-muted">{sortTeeth(r.teeth).join(' ')}</span> : null}
+      {r.arch ? <span className="text-xs text-muted">Arcada {ARCH_LABEL[r.arch].toLowerCase()}</span> : null}
       {o?.completes ? <span className="text-xs text-muted">✓ conclui</span> : null}
       {moduleName ? <span className="text-xs text-muted">{moduleName}</span> : null}
       {r.description ? <span className="w-full text-xs text-ink-2">{r.description}</span> : null}
@@ -420,14 +443,11 @@ function RecordRow({
                 Data
                 <input type="date" name="data" defaultValue={r.performedOn} required className={inputCls} />
               </label>
-              <label className="block text-sm font-semibold">
-                Quantidade{o ? ` (${o.unit === 'peca' ? 'peças' : `${o.unit}s`})` : ''}
-                <input type="number" name="quantidade" min={1} max={99} defaultValue={r.quantity} required className={inputCls} />
-              </label>
-              <label className="block text-sm font-semibold">
-                Dentes (opcional)
-                <input name="dentes" defaultValue={r.teeth.join(' ')} placeholder="Ex.: 12 11 21" className={cn(inputCls, 'num')} />
-              </label>
+              {o ? (
+                <RecordPlacement location={o.location} unit={o.unit} teeth={r.teeth} arch={r.arch} quantity={r.quantity} archSupported={archSupported} inputCls={inputCls} />
+              ) : (
+                <input type="hidden" name="quantidade" value={r.quantity} />
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-semibold">
@@ -449,8 +469,9 @@ function RecordRow({
                 </label>
               ) : (
                 <label className="block text-sm font-semibold">
-                  Observação curta (opcional)
+                  Observação deste registro (opcional)
                   <input name="nota" defaultValue={r.note ?? ''} maxLength={200} className={inputCls} />
+                  <span className="mt-1 block text-xs font-normal text-muted">Não é prontuário: a documentação clínica fica no Smile Cloud.</span>
                 </label>
               )}
             </div>

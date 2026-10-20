@@ -13,6 +13,30 @@ export const UNIT_LABEL: Record<CountUnit, { one: string; many: string }> = {
   arcada: { one: 'arcada', many: 'arcadas' },
   caso: { one: 'caso', many: 'casos' },
 }
+/**
+ * Localização da etapa: o que o aluno identifica no registro — posições FDI ('dentes'), a arcada ('arcada') ou nada.
+ * É diferente da unidade (como se conta). Dente → dentes, arcada → arcada, caso → nenhuma; peça → por etapa.
+ * O FDI é só posição (inclui a de um elemento protético/pôntico): nenhuma condição ou diagnóstico.
+ */
+export type StepLocation = 'dentes' | 'arcada' | 'nenhuma'
+export const LOCATIONS: StepLocation[] = ['dentes', 'arcada', 'nenhuma']
+export const LOCATION_LABEL: Record<StepLocation, string> = {
+  dentes: 'Posições FDI (odontograma)',
+  arcada: 'Arcada (superior, inferior ou ambas)',
+  nenhuma: 'Nada a identificar',
+}
+/** A localização fixa pela unidade (null = escolhida na etapa: só peça). Mesma regra do banco. */
+export function locationForUnit(unit: CountUnit): StepLocation | null {
+  return unit === 'dente' ? 'dentes' : unit === 'arcada' ? 'arcada' : unit === 'caso' ? 'nenhuma' : null
+}
+/** Antes da migração do odontograma: peça seguia o comportamento antigo (dentes opcionais). */
+export const legacyLocation = (unit: CountUnit): StepLocation => locationForUnit(unit) ?? 'dentes'
+
+export type DentalArch = 'superior' | 'inferior' | 'ambas'
+export const ARCHES: DentalArch[] = ['superior', 'inferior', 'ambas']
+export const ARCH_LABEL: Record<DentalArch, string> = { superior: 'Superior', inferior: 'Inferior', ambas: 'Ambas' }
+export const archQuantity = (a: DentalArch) => (a === 'ambas' ? 2 : 1)
+
 export const KIND_LABEL: Record<ProcedureKind, string> = {
   tratamento: 'Tratamento',
   geral: 'Geral (diagnóstico e planejamento)',
@@ -24,6 +48,7 @@ export type StepVM = {
   name: string
   slug: string
   unit: CountUnit
+  location: StepLocation
   completes: boolean
   requiresDescription: boolean
   synonyms: string[]

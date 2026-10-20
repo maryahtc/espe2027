@@ -6,7 +6,8 @@
  * As regras dos casos repetem as do banco (gatilhos e restrições), para a experiência ser a mesma do aluno real.
  * Funções puras: testáveis sem banco.
  */
-import { hasPersonalIdentifier, type CaseVM, type ModuleSpan, moduleForDate, patientLabelError, type RecordVM, validTooth } from '@/lib/cases/model'
+import type { CountUnit, DentalArch, StepLocation } from '@/lib/procedures/model'
+import { hasPersonalIdentifier, resolvePlacement, type CaseVM, type ModuleSpan, moduleForDate, patientLabelError, type RecordVM, validTooth } from '@/lib/cases/model'
 
 export const SIM_DURATION_MS = 2 * 60 * 60 * 1000
 
@@ -21,6 +22,8 @@ export type SimRecord = {
   performedOn: string
   quantity: number
   teeth: number[]
+  /** Arcada (etapas por arcada) — ausente em rascunhos anteriores ao odontograma. */
+  arch?: DentalArch | null
   moduleId: string | null
   moduleAuto: boolean
   note: string | null
@@ -83,6 +86,7 @@ export function toRecordVM(r: SimRecord): RecordVM {
     performedOn: r.performedOn,
     quantity: r.quantity,
     teeth: r.teeth,
+    arch: r.arch ?? null,
     moduleId: r.moduleId,
     moduleAuto: r.moduleAuto,
     note: r.note,
@@ -126,8 +130,10 @@ export function simCases(state: SimState, cohortId: string): CaseVM[] {
 
 // ─── Escrita no rascunho (mesmas regras do banco) ────────────────────────────────────────────────
 
-export type StepInfo = { procedureId: string; active: boolean; requiresDescription: boolean }
+export type StepInfo = { procedureId: string; active: boolean; requiresDescription: boolean; location: StepLocation; unit: CountUnit }
 export type Ctx = {
+  /** O banco de produção já tem a arcada (migração do odontograma)? Mesmo comportamento do registro real. */
+  archSupported: boolean
   today: string
   now: string
   modules: ModuleSpan[]
@@ -170,6 +176,14 @@ function moduleOf(ctx: Ctx, performedOn: string, mod: { auto: boolean; id: strin
   if (mod.id && !ctx.modules.some((m) => m.id === mod.id)) throw new SimError('O módulo precisa ser da turma do caso.')
   return { moduleAuto: false, moduleId: mod.id }
 }
+/** Mesma regra do registro real (resolvePlacement); erros viram mensagem da simulação. */
+function placement(step: StepInfo, input: { quantity: number; teeth: number[]; arch: DentalArch | null }, ctx: Ctx) {
+  try {
+    return resolvePlacement(step, input, ctx.archSupported)
+  } catch (e) {
+    throw new SimError(e instanceof Error ? e.message : 'Registro inválido.')
+  }
+}
 const totalRecords = (s: SimState) => s.cases.reduce((n, c) => n + c.records.length, 0)
 function findCase(s: SimState, id: string): SimCase {
   const c = s.cases.find((x) => x.id === id)
@@ -182,7 +196,7 @@ export type RegisterInput = {
   caseId?: string
   patient?: string
   date: string
-  lines: Array<{ stepId: string; quantity: number; teeth: number[]; description?: string }>
+  lines: Array<{ stepId: string; quantity: number; teeth: number[]; description?: string; arch?: DentalArch | null; note?: string }>
   module: { auto: true } | { auto: false; id: string | null }
   extras?: { title?: string; supervisorId?: string; smile?: string; difficulty?: string; ease?: string; differently?: string; topicIds?: string[] }
 }
@@ -195,8 +209,6 @@ export function simRegister(s: SimState, p: RegisterInput, ctx: Ctx): { caseId: 
   if (lines.length > 12) throw new SimError('No máximo 12 procedimentos por registro.')
   const mod = p.module?.auto === false ? { auto: false, id: p.module.id && UUID.test(p.module.id) ? p.module.id : null } : { auto: true, id: null }
   const rows = lines.map((l) => {
-    const quantity = Number(l.quantity)
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new SimError('Quantidade inválida.')
     const step = ctx.steps.get(l.stepId)
     if (!step || !step.active) throw new SimError('Um dos procedimentos escolhidos não está mais disponível.')
     const description = text(l.description, 120, 'Descrição')
@@ -204,9 +216,9 @@ export function simRegister(s: SimState, p: RegisterInput, ctx: Ctx): { caseId: 
     return {
       stepId: l.stepId,
       procedureId: step.procedureId,
-      quantity,
-      teeth: [...new Set((l.teeth ?? []).map(Number).filter(validTooth))],
+      ...placement(step, { quantity: Number(l.quantity), teeth: l.teeth ?? [], arch: l.arch ?? null }, ctx),
       description: step.requiresDescription ? description : null,
+      note: text(l.note, 200, 'Observação'),
     }
   })
   if (totalRecords(s) + rows.length > SIM_LIMITS.records) throw new SimError(SIM_LIMIT_MSG)
@@ -237,7 +249,7 @@ export function simRegister(s: SimState, p: RegisterInput, ctx: Ctx): { caseId: 
     s.cases.push(target)
   }
   const m = moduleOf(ctx, on, mod)
-  for (const r of rows) target.records.push({ id: ctx.newId(), ...r, performedOn: on, ...m, note: null, removed: false, createdAt: ctx.now })
+  for (const r of rows) target.records.push({ id: ctx.newId(), ...r, performedOn: on, ...m, removed: false, createdAt: ctx.now })
   return { caseId: target.id, count: rows.length }
 }
 
@@ -287,13 +299,16 @@ function findRecord(s: SimState, id: string): { c: SimCase; r: SimRecord } {
 export function simUpdateRecord(
   s: SimState,
   id: string,
-  f: { date: unknown; quantity: number; teeth: number[]; note: unknown; description?: unknown; module: { auto: boolean; id: string | null } },
+  f: { date: unknown; quantity: number; teeth: number[]; arch?: DentalArch | null; note: unknown; description?: unknown; module: { auto: boolean; id: string | null } },
   ctx: Ctx,
 ): void {
   const { r } = findRecord(s, id)
-  if (!Number.isInteger(f.quantity) || f.quantity < 1 || f.quantity > 99) throw new SimError('Quantidade inválida.')
   const on = date(f.date, ctx.today)
   const step = ctx.steps.get(r.stepId)
+  const placed = step
+    ? placement(step, { quantity: f.quantity, teeth: f.teeth, arch: f.arch ?? null }, ctx)
+    : { quantity: f.quantity, teeth: [...new Set(f.teeth.filter(validTooth))], arch: r.arch ?? null }
+  if (!Number.isInteger(placed.quantity) || placed.quantity < 1 || placed.quantity > 99) throw new SimError('Quantidade inválida.')
   const note = text(f.note, 200, 'Observação')
   let description = r.description
   if (step?.requiresDescription && f.description !== undefined) {
@@ -306,7 +321,7 @@ export function simUpdateRecord(
       ? { moduleAuto: true, moduleId: r.moduleId }
       : moduleOf(ctx, on, { auto: true, id: null })
     : moduleOf(ctx, on, f.module)
-  Object.assign(r, { performedOn: on, quantity: f.quantity, teeth: [...new Set(f.teeth.filter(validTooth))], note, description, ...m })
+  Object.assign(r, { performedOn: on, ...placed, note, description, ...m })
 }
 
 export function simSetRecordRemoved(s: SimState, id: string, removed: boolean): void {
