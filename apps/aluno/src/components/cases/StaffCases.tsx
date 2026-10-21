@@ -8,17 +8,18 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { CaseCover, CoverBadge } from '@/components/cases/CaseCover'
+import { CaseJourney } from '@/components/cases/CaseJourney'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { cohortModules, loadFaculty, today } from '@/lib/academic/load'
 import type { AuthState } from '@/lib/auth/session'
 import { coverUrls, loadStepOptions, relatedContents } from '@/lib/cases/load'
-import { caseHeadline, caseProcedures, caseTeeth, sortTeeth, timeline, treatmentSummary } from '@/lib/cases/model'
+import { caseHeadline, caseProcedures, caseJourney, caseTeeth, treatmentSummary } from '@/lib/cases/model'
 import { AUDIT_ACTION, type AuditEntry, loadCaseAudit, loadCohortCases, openStaffCase, staffCohorts } from '@/lib/cases/staff'
 import { purgeCase } from '@/lib/cases/staff-actions'
 import { formatDayMonth, relativeDays, year } from '@/lib/dates'
 import { loadTaxonomy } from '@/lib/library/load'
 import { KIND_LABEL } from '@/lib/library/model'
-import { ARCH_LABEL, unitText } from '@/lib/procedures/model'
+import { unitText } from '@/lib/procedures/model'
 
 /**
  * Casos — leitura da coordenação (só a própria turma, sem os removidos) e do admin (todas as turmas, com os removidos).
@@ -301,7 +302,7 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
   }
   const supervisor = faculty.find((f) => f.id === c.supervisorId)
   const topicName = new Map(taxonomy.topics.map((t) => [t.id, t.name]))
-  const groups = timeline(c.records)
+  const visits = caseJourney(c.records, options)
   const summary = treatmentSummary(c.records, options)
   const teethMap = caseTeeth(c.records, options)
   const back = `${base}?${new URLSearchParams({ turma: c.cohortId, aluno: c.ownerId })}`
@@ -375,48 +376,14 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
           </Block>
         ) : null}
 
-        <Block id="linha-do-tempo" title="Linha do tempo" aside={<span className="text-sm text-muted">{groups.length} {groups.length === 1 ? 'consulta' : 'consultas'}</span>}>
+        <Block id="linha-do-tempo" title="Jornada do caso" aside={<span className="text-sm text-muted">{visits.length} {visits.length === 1 ? 'consulta' : 'consultas'}</span>}>
           {teethMap.size ? (
             <div className="glass mb-6 rounded-2xl p-4">
               <CaseTeethMap teeth={teethMap} />
             </div>
           ) : null}
-          {groups.length ? (
-            <ol className="space-y-6">
-              {groups.map((g, gi) => (
-                <li key={g.date} className="grid gap-3 sm:grid-cols-[11rem_1fr]">
-                  <p className="text-sm">
-                    <span className="eyebrow block text-[10px]">Consulta {gi + 1}</span>
-                    <span className="num font-semibold">
-                      {formatDayMonth(g.date)}/{year(g.date)}
-                    </span>
-                  </p>
-                  <ul className="space-y-2">
-                    {g.records.map((r) => {
-                      const o = byStep.get(r.stepId)
-                      const mod = moduleName(r.moduleId)
-                      return (
-                        <li key={r.id} className="rounded-xl border border-rule px-4 py-3">
-                          <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                            <span className="text-[15px]">
-                              <span className="font-semibold">{o?.procedureName ?? 'Procedimento'}</span>
-                              {o && o.stepName !== o.procedureName ? <span className="text-ink-2"> · {o.stepName}</span> : null}
-                            </span>
-                            <span className="num text-sm">{o ? unitText(o.unit, r.quantity) : r.quantity}</span>
-                            {r.teeth.length ? <span className="num text-xs text-muted">{sortTeeth(r.teeth).join(' ')}</span> : null}
-                            {r.arch ? <span className="text-xs text-muted">Arcada {ARCH_LABEL[r.arch].toLowerCase()}</span> : null}
-                            {o?.completes ? <span className="text-xs text-muted">✓ conclui</span> : null}
-                            {mod ? <span className="text-xs text-muted">{mod}</span> : null}
-                            {r.description ? <span className="w-full text-xs text-ink-2">{r.description}</span> : null}
-                            {r.note ? <span className="w-full text-xs text-muted">{r.note}</span> : null}
-                          </span>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </li>
-              ))}
-            </ol>
+          {visits.length ? (
+            <CaseJourney visits={visits} byStep={byStep} moduleName={moduleName} status={c.status} concludedOn={c.concludedOn} />
           ) : (
             <p className="text-sm text-muted">Nenhum registro ativo neste caso.</p>
           )}

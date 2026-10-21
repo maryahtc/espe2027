@@ -191,6 +191,38 @@ export function timeline(records: RecordVM[]): Array<{ date: string; records: Re
   return [...groups.entries()].map(([date, list]) => ({ date, records: list }))
 }
 
+// ─── Jornada do caso (só apresentação dos registros existentes) ─────────────────────────────────
+
+export type JourneyVisit = {
+  date: string
+  /** Consulta N: ordem cronológica entre TODAS as datas do caso (não muda com o filtro por dente). */
+  number: number
+  procedures: Array<{ procedureId: string; procedureName: string; records: RecordVM[] }>
+}
+
+/**
+ * Consultas = registros ativos agrupados pela data (nada novo no banco). Em cada consulta, os procedimentos na ordem
+ * em que foram registrados e, dentro deles, as etapas na ordem do catálogo. `tooth` filtra só os registros daquele
+ * dente/posição, mantendo o agrupamento e a numeração das consultas.
+ */
+export function caseJourney(records: RecordVM[], options: StepOption[], tooth: number | null = null): JourneyVisit[] {
+  const byStep = new Map(options.map((o) => [o.stepId, o]))
+  const active = records.filter((r) => !r.removed)
+  const numbers = new Map([...new Set(active.map((r) => r.performedOn))].sort().map((d, i) => [d, i + 1]))
+  const out: JourneyVisit[] = []
+  for (const g of timeline(tooth === null ? active : active.filter((r) => r.teeth.includes(tooth)))) {
+    const procs = new Map<string, { procedureId: string; procedureName: string; records: RecordVM[] }>()
+    for (const r of g.records) {
+      const p = procs.get(r.procedureId) ?? { procedureId: r.procedureId, procedureName: byStep.get(r.stepId)?.procedureName ?? 'Procedimento', records: [] }
+      p.records.push(r)
+      procs.set(r.procedureId, p)
+    }
+    for (const p of procs.values()) p.records.sort((a, b) => (byStep.get(a.stepId)?.position ?? 0) - (byStep.get(b.stepId)?.position ?? 0) || a.createdAt.localeCompare(b.createdAt))
+    out.push({ date: g.date, number: numbers.get(g.date) ?? 0, procedures: [...procs.values()] })
+  }
+  return out
+}
+
 export type TreatmentSummary = {
   procedureId: string
   procedureName: string

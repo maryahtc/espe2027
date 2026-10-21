@@ -1570,6 +1570,22 @@ RLS, regras clínicas ou estrutura dos registros.
   mesma tela e saiu). "Completar caso" (dados opcionais e reflexão) e "Concluir caso" (status) têm funções diferentes
   e foram mantidos.
 
+### Etapa 6 · jornada do caso (21/10/2026)
+
+A antiga "Linha do tempo" da página do caso (aluno e leitura da coordenação/Admin) virou a **Jornada do caso**: linha
+vertical contínua com um marco por consulta. Só apresentação: nada novo no banco (consulta = registros agrupados pela
+data; `caseJourney` em `lib/cases/model.ts`, componente `CaseJourney`).
+
+- Marco = data em destaque ("09 ABR 2027") e "Consulta N" pela ordem cronológica entre todas as datas do caso (a
+  numeração não muda com o filtro). Dentro: procedimento uma vez e, subordinadas, as etapas (ordem do catálogo) com
+  dentes/posições discretos, quantidade só quando acrescenta algo, ✓ da etapa que conclui, módulo e observação em
+  segundo plano.
+- Tocar num dente do mapa filtra a jornada: só as consultas (e registros) daquele dente, ainda agrupadas, com
+  "N de M consultas". Na leitura da coordenação/Admin o mapa segue sem filtro, como antes: cada abertura do caso grava
+  auditoria.
+- Fim da linha: só o status real — "Em andamento" ou "Caso concluído · data". Nada de próxima consulta ou previsão.
+- Edição, exclusão e restauração de cada registro continuam na própria etapa ("Editar").
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)

@@ -31,7 +31,7 @@ export function CaseTeethMap({ teeth, selected, hrefFor }: { teeth: Map<number, 
         href={hrefFor(t)}
         scroll={false}
         className={cls}
-        aria-label={`Dente ${t}${info.done ? ', etapa final registrada' : ''}: filtrar a linha do tempo`}
+        aria-label={`Dente ${t}${info.done ? ', etapa final registrada' : ''}: filtrar a jornada`}
         aria-current={selected === t ? 'true' : undefined}
         data-dente-caso={t}
       >
@@ -49,7 +49,7 @@ export function CaseTeethMap({ teeth, selected, hrefFor }: { teeth: Map<number, 
       <QuadrantGrid cell={cell} compact />
       <OrientationLegend />
       <p className="pt-2 text-[11px] text-muted">
-        Dentes dos registros deste caso · ✓ etapa final já registrada{hrefFor ? ' · toque num dente para filtrar a linha do tempo' : ''}
+        Dentes dos registros deste caso · ✓ etapa final já registrada{hrefFor ? ' · toque num dente para ver as consultas em que ele participou' : ''}
       </p>
     </div>
   )

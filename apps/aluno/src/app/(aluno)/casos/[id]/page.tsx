@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { CaseCover, CoverBadge } from '@/components/cases/CaseCover'
+import { CaseJourney } from '@/components/cases/CaseJourney'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { CoverUpload } from '@/components/cases/CoverUpload'
 import { RecordPlacement } from '@/components/cases/RecordPlacement'
@@ -16,12 +17,12 @@ import { requireUser } from '@/lib/auth/session'
 import { saveCaseDetails, setCaseRemoved, setCaseStatus, setRecordRemoved, updateRecord } from '@/lib/cases/actions'
 import { canRegister, coverUrls, loadMyCase, loadStepOptions, relatedContents } from '@/lib/cases/load'
 import { getSimulation } from '@/lib/simulation/session'
-import { caseHeadline, caseTeeth, hasOwnStepName, type RecordVM, sortTeeth, type StepOption, suggestTopics, timeline, treatmentSummary, usesPositions } from '@/lib/cases/model'
+import { caseHeadline, caseJourney, caseTeeth, type RecordVM, type StepOption, suggestTopics, treatmentSummary, usesPositions } from '@/lib/cases/model'
 import { odontogramReady } from '@/lib/cases/schema'
-import { formatDayMonth, formatLongDay, year } from '@/lib/dates'
+import { formatDayMonth, year } from '@/lib/dates'
 import { loadTaxonomy } from '@/lib/library/load'
 import { KIND_LABEL } from '@/lib/library/model'
-import { ARCH_LABEL, unitText } from '@/lib/procedures/model'
+import { unitText } from '@/lib/procedures/model'
 import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Caso' }
@@ -44,7 +45,6 @@ function Block({ id, title, children, aside }: { id: string; title: string; chil
 }
 
 const inputCls = 'field mt-1.5 block min-h-11 w-full px-3 text-base'
-const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ registrado?: string; dente?: string }> }) {
   await guardStudentPage()
@@ -73,7 +73,9 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   // Odontograma do caso (derivado dos registros) e filtro da linha do tempo por posição FDI.
   const teethMap = caseTeeth(c.records, options)
   const tooth = dente && teethMap.has(Number(dente)) ? Number(dente) : null
-  const groups = timeline(tooth ? c.records.filter((r) => r.teeth.includes(tooth)) : c.records)
+  // Jornada: consultas = registros agrupados pela data (numeração sobre todas as datas, também com o filtro).
+  const visits = caseJourney(c.records, options, tooth)
+  const totalVisits = caseJourney(c.records, options).length
   const removedRecords = c.records.filter((r) => r.removed)
   const summary = treatmentSummary(c.records, options)
   const editable = writable && !c.removed
@@ -198,37 +200,37 @@ export default async function CasePage({ params, searchParams }: { params: Promi
           </Block>
         ) : null}
 
-        <Block id="linha-do-tempo" title="Linha do tempo" aside={<span className="text-sm text-muted">{groups.length} {groups.length === 1 ? 'consulta' : 'consultas'}</span>}>
+        <Block
+          id="linha-do-tempo"
+          title="Jornada do caso"
+          aside={
+            <span className="text-sm text-muted">
+              {tooth ? `${visits.length} de ${totalVisits}` : totalVisits} {totalVisits === 1 ? 'consulta' : 'consultas'}
+            </span>
+          }
+        >
           {teethMap.size ? (
             <div className="glass mb-6 rounded-2xl p-4">
               <CaseTeethMap teeth={teethMap} selected={tooth} hrefFor={(t) => (t === tooth ? `/casos/${c.id}#linha-do-tempo` : `/casos/${c.id}?dente=${t}#linha-do-tempo`)} />
               {tooth ? (
                 <p className="mt-3 text-sm" data-filtro-dente>
-                  Mostrando os registros do dente <span className="num font-semibold">{tooth}</span> ·{' '}
+                  Consultas em que o dente <span className="num font-semibold">{tooth}</span> participou ·{' '}
                   <Link href={`/casos/${c.id}#linha-do-tempo`} scroll={false} className="font-semibold underline underline-offset-4">
-                    ver todos
+                    ver todas
                   </Link>
                 </p>
               ) : null}
             </div>
           ) : null}
-          {groups.length ? (
-            <ol className="space-y-6">
-              {groups.map((g, gi) => (
-                <li key={g.date} className="grid gap-3 sm:grid-cols-[11rem_1fr]">
-                  <p className="text-sm">
-                    <span className="eyebrow block text-[10px]">Consulta {gi + 1}</span>
-                    <span className="num font-semibold">{formatDayMonth(g.date)}/{year(g.date)}</span>
-                    <span className="block text-xs text-muted">{capitalize(formatLongDay(g.date).split(',')[0] ?? '')}</span>
-                  </p>
-                  <ul className="space-y-2">
-                    {g.records.map((r) => (
-                      <RecordRow key={r.id} r={r} o={byStep.get(r.stepId)} moduleName={moduleName(r.moduleId)} modules={modules} editable={editable} archSupported={archSupported} />
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ol>
+          {visits.length ? (
+            <CaseJourney
+              visits={visits}
+              byStep={byStep}
+              moduleName={moduleName}
+              status={c.status}
+              concludedOn={c.concludedOn}
+              renderStep={(r, step) => <RecordEditor r={r} o={byStep.get(r.stepId)} step={step} modules={modules} editable={editable} archSupported={archSupported} />}
+            />
           ) : (
             <p className="text-sm text-muted">Nenhum registro ativo neste caso.</p>
           )}
@@ -394,45 +396,32 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   )
 }
 
-function RecordRow({
+/** Etapa da jornada com edição (data, dentes/arcada, quantidade, módulo, observação) e exclusão — como antes. */
+function RecordEditor({
   r,
   o,
-  moduleName,
+  step,
   modules,
   editable,
   archSupported,
 }: {
   r: RecordVM
   o: StepOption | undefined
-  moduleName: string | null
+  step: ReactNode
   modules: Array<{ id: string; label: string; title: string }>
   editable: boolean
   archSupported: boolean
 }) {
-  const summary = (
-    <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <span className="text-[15px]">
-        <span className="font-semibold">{o?.procedureName ?? 'Procedimento'}</span>
-        {o && hasOwnStepName(o) ? <span className="text-ink-2"> · {o.stepName}</span> : null}
-      </span>
-      <span className="num text-sm">{o ? unitText(o.unit, r.quantity) : r.quantity}</span>
-      {r.teeth.length ? <span className="num text-xs text-muted">{sortTeeth(r.teeth).join(' ')}</span> : null}
-      {r.arch ? <span className="text-xs text-muted">Arcada {ARCH_LABEL[r.arch].toLowerCase()}</span> : null}
-      {o?.completes ? <span className="text-xs text-muted">✓ conclui</span> : null}
-      {moduleName ? <span className="text-xs text-muted">{moduleName}</span> : null}
-      {r.description ? <span className="w-full text-xs text-ink-2">{r.description}</span> : null}
-      {r.note ? <span className="w-full text-xs text-muted">{r.note}</span> : null}
-    </span>
-  )
-  if (!editable) return <li className="rounded-xl border border-rule px-4 py-3">{summary}</li>
+  const summary = step
+  if (!editable) return <div className="py-0.5">{summary}</div>
   return (
-    <li data-registro={r.id}>
-      <details className="group rounded-xl border border-rule">
-        <summary className="flex cursor-pointer list-none items-start gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+    <>
+      <details className="group -mx-2 rounded-xl open:bg-white/[0.03]">
+        <summary className="flex cursor-pointer list-none items-start gap-3 rounded-xl px-2 py-1.5 hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden">
           <span className="min-w-0 flex-1">{summary}</span>
           <span className="shrink-0 pt-0.5 text-xs font-semibold text-muted group-open:hidden">Editar</span>
         </summary>
-        <div className="border-t border-rule px-4 py-4">
+        <div className="mt-1 border-t border-rule px-2 py-4">
           <ActionForm action={updateRecord}>
             <input type="hidden" name="id" value={r.id} />
             <div className="grid gap-4 sm:grid-cols-3">
@@ -479,6 +468,6 @@ function RecordRow({
           </ActionForm>
         </div>
       </details>
-    </li>
+    </>
   )
 }

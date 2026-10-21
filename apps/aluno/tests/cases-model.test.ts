@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   caseHeadline,
+  caseJourney,
   filterCases,
   hasPersonalIdentifier,
   moduleForDate,
@@ -226,5 +227,38 @@ describe('polimento do registro: acesso rápido, procedimento → etapa e lingua
   })
   it('atalhos do odontograma falam em dentes (arcada é localização de etapa)', () => {
     expect(TOOTH_SHORTCUTS.map((s) => s.label)).toEqual(['Anteriores sup.', 'Anteriores inf.', 'Todos superiores', 'Todos inferiores'])
+  })
+})
+
+describe('jornada do caso (só apresentação)', () => {
+  const records = [
+    rec({ stepId: 'lc', performedOn: '2027-04-09', teeth: [11, 12, 21, 22], quantity: 4, createdAt: '2027-04-09T10:00:00Z' }),
+    rec({ stepId: 'lv', performedOn: '2027-03-12', teeth: [22, 11, 12, 21], quantity: 4, createdAt: '2027-03-12T10:05:00Z' }),
+    rec({ stepId: 'lp', performedOn: '2027-03-12', teeth: [11, 12, 21, 22], quantity: 4, createdAt: '2027-03-12T10:10:00Z' }),
+    rec({ stepId: 'sc', procedureId: 'esc', performedOn: '2027-03-12', quantity: 2, createdAt: '2027-03-12T09:00:00Z' }),
+    rec({ stepId: 'ex', procedureId: 'exo', performedOn: '2027-05-01', teeth: [36], createdAt: '2027-05-01T09:00:00Z' }),
+    rec({ stepId: 'lc', performedOn: '2027-05-02', teeth: [11], removed: true }),
+  ]
+  it('consultas por data, numeradas em ordem cronológica; procedimentos e etapas na ordem do catálogo', () => {
+    const j = caseJourney(records, options)
+    expect(j.map((v) => [v.date, v.number])).toEqual([
+      ['2027-03-12', 1],
+      ['2027-04-09', 2],
+      ['2027-05-01', 3],
+    ])
+    expect(j[0]!.procedures.map((p) => [p.procedureName, p.records.map((r) => r.stepId)])).toEqual([
+      ['Escaneamento intraoral', ['sc']],
+      ['Laminado cerâmico', ['lp', 'lv']],
+    ])
+  })
+  it('filtro por dente: só as consultas e registros daquele dente, mantendo a numeração real', () => {
+    const j = caseJourney(records, options, 36)
+    expect(j.map((v) => [v.date, v.number, v.procedures.map((p) => p.procedureName)])).toEqual([['2027-05-01', 3, ['Exodontia']]])
+    const j11 = caseJourney(records, options, 11)
+    expect(j11.map((v) => v.number)).toEqual([1, 2])
+    expect(j11[0]!.procedures.map((p) => p.procedureName)).toEqual(['Laminado cerâmico'])
+  })
+  it('registros excluídos não entram na jornada', () => {
+    expect(caseJourney(records, options).some((v) => v.date === '2027-05-02')).toBe(false)
   })
 })
