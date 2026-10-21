@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Novo workflow' }
 export default function NewWorkflowPage() {
   return (
     <>
-      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
+      <PrototypeNotice etapa="Etapa 9 (Workflows Clínicos)" />
       <WorkflowEditor
         graph={draftWorkflow.graph}
         meta={{

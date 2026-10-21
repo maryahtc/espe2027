@@ -48,9 +48,12 @@ export const studentNav: NavArea[] = [
     label: 'Clínica',
     href: '/casos',
     icon: 'tooth',
-    match: ['/casos'],
-    // "Minha produção" volta na Etapa 9 (decisão de 13/10/2026: nenhum número fictício para alunos reais).
-    children: [{ label: 'Meus casos', href: '/casos', match: ['/casos'] }],
+    match: ['/casos', '/producao'],
+    children: [
+      { label: 'Meus casos', href: '/casos', match: ['/casos'] },
+      // Etapa 7: produção real, derivada dos registros (sem números fictícios).
+      { label: 'Minha produção', href: '/producao', match: ['/producao'] },
+    ],
   },
 ]
 
@@ -193,7 +196,7 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
         summary: 'Árvores de raciocínio: perguntas, caminhos e conteúdos',
         icon: 'branch',
         action: 'Novo workflow',
-        stage: 'Etapa 10',
+        stage: 'Etapa 9',
         details: [
           'Editor por blocos: pergunta, orientação, decisão, alerta, conteúdo, resultado, referência',
           'Mapa automático da árvore e "ver como aluno"',
@@ -218,7 +221,7 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
         label: 'Produção da turma',
         summary: 'Procedimentos, lacunas e dificuldades',
         icon: 'chart',
-        stage: 'Etapa 11',
+        stage: 'Etapa 10',
         details: ['Totais e distribuição por procedimento', 'Alunos com pouca exposição', 'Dificuldades mais relatadas por tema'],
       },
     ],

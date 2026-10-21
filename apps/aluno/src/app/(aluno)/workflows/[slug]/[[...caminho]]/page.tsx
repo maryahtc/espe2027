@@ -26,7 +26,7 @@ export default async function WorkflowPage({ params }: { params: Params }) {
   if (!workflow || !resolved) notFound()
   return (
     <>
-      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
+      <PrototypeNotice etapa="Etapa 9 (Workflows Clínicos)" />
       <Link href="/workflows" className="text-sm text-muted hover:text-ink">
         ← Workflow clínico
       </Link>

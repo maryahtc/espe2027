@@ -12,7 +12,7 @@ export default async function WorkflowsPage() {
   await guardStudentPage()
   return (
     <>
-      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
+      <PrototypeNotice etapa="Etapa 9 (Workflows Clínicos)" />
       <PageTitle
         eyebrow="Pensar"
         title="Workflow clínico"

@@ -18,7 +18,7 @@ export default async function DraftPreviewPage({ params }: { params: Promise<{ c
   if (!resolved) notFound()
   return (
     <>
-      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
+      <PrototypeNotice etapa="Etapa 9 (Workflows Clínicos)" />
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-md border border-ink bg-sunken px-4 py-3 text-sm">
         <span>
           <strong>Pré-visualização como aluno</strong> · rascunho, não publicado

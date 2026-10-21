@@ -11,7 +11,7 @@ import { PrototypeNotice } from '@/components/shell/PrototypeNotice'
 export default function AdminHome() {
   return (
     <>
-      <PrototypeNotice etapa="Etapa 11 (revisão do painel inicial do Admin)" />
+      <PrototypeNotice etapa="Etapa 10 (revisão do painel inicial do Admin)" />
       <PageTitle eyebrow={`Administração · ${adminOverview.cohort}`} title="O que você quer cadastrar?" />
 
       {/* As seis ações principais: o caminho mais curto para cada cadastro. */}

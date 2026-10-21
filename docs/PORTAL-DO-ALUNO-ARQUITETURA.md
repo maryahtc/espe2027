@@ -836,6 +836,34 @@ Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima
 | 4 | **Temas + Biblioteca**: `topics`, categorias, conteúdos, Bunny Stream (upload direto + player assinado), busca, filtros, progresso, vínculo com módulos | Subir uma aula, vinculá‑la a um módulo e a temas, assisti‑la como aluno no celular | Conta Bunny; **lista inicial de temas** |
 | 5 | **Início do aluno** | "Teste dos 5 segundos" | — |
 | 6 | **Meus casos** (estruturado): procedimentos (admin), registro rápido, lista, detalhe, reflexões, temas de dificuldade | **Cronometrar o registro no celular (< 1 min)** | **Taxonomia de procedimentos** (reunião com a coordenação clínica) |
+| 7 | **Minha Produção**: a própria formação clínica do aluno a partir dos registros reais (casos, consultas, experiências, tratamentos concluídos, evolução, categorias → procedimento → etapas, mapa clínico, módulos, áreas para explorar com a biblioteca). Sem migração. | Conferir os números contra os próprios registros; filtros; Modo de simulação sem gravar nada | Etapa 6 |
+| 8 | **Mapa de Tratamento / Planejamento do Caso** | Montar um plano de consultas, reordenar, marcar realizada | — |
+| 9 | **Workflows Clínicos**: motor, player, editor estruturado + mapa, validação, versões, "explorar no workflow" | Montar sozinha o workflow "Alteração estética anterior" e usá‑lo como aluno | — |
+| 10 | **Painel da Coordenação/Admin** + **revisão do painel inicial do Admin** (hoje com dados fictícios: substituir por números reais — alunos, módulos, biblioteca, avisos, pendências de cadastro) | Ver a turma de teste; conferir agregados × casos individuais; ver a auditoria; conferir que todos os números do painel inicial do Admin são reais | — |
+| 11 | **IA do Conexo** — **será redesenhada antes da implementação**; não assume automaticamente o escopo da antiga "IA opcional no registro" (ver histórico abaixo) | A definir no redesenho | Redesenho aprovado; conta Anthropic (institucional) |
+| 12 | **Infraestrutura, proteção de produção e preparação para lançamento** (inclui toda a antiga 11b, detalhada em M.3) | Restaurar um backup na homologação; ver o CI recusar um seed apontado para produção | Conta Backblaze B2; projeto de homologação; Supabase Pro |
+| 13 | **Piloto real**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas; restringir o link do Smile Cloud ao domínio oficial (pendência de 19/10/2026) | Uso real | Domínio; termo revisado (LGPD) |
+| 14 | **Lançamento** MVP 1 → MVP 2 em etapas do mesmo tamanho | — | — |
+
+**Roadmap reorganizado em 21/10/2026 (aprovado pela Maryah).** A tabela acima é a ordem vigente a partir da Etapa 7.
+A numeração antiga fica abaixo **só como referência histórica** — as seções anteriores a esta data citam as etapas pelo
+número antigo:
+
+| Antiga | Nova | Observação |
+|---|---|---|
+| 7 · IA opcional no registro | 11 · IA do Conexo | Será redesenhada; o escopo antigo não é herdado automaticamente |
+| 8 · Mapa de tratamento | 8 · Mapa de Tratamento / Planejamento do Caso | — |
+| 9 · Produção + recomendações | 7 · Minha Produção | "Para você" na Início e recomendação logo após registrar ficam como pendência sem etapa |
+| 10 · Workflows | 9 · Workflows Clínicos | — |
+| 11 · Painel da coordenação | 10 · Painel da Coordenação/Admin | — |
+| 11b · Proteção de produção e backups | 12 · Infraestrutura, proteção de produção e preparação para lançamento | Continua obrigatória antes dos alunos reais |
+| 12 · Piloto | 13 · Piloto real | — |
+| 13 · Lançamento | 14 · Lançamento | — |
+
+<details><summary>Linhas antigas da tabela (histórico, até 21/10/2026)</summary>
+
+| # | Etapa | Você testa | Depende de |
+|---|---|---|---|
 | 7 | **IA opcional no registro**: "Descrever o que fiz" + sugestão de temas, disjuntor, `ai_suggestions`, conjunto de avaliação | Descrever casos reais em texto e conferir sugestões; desligar a IA e ver que tudo continua funcionando | Conta Anthropic (institucional); ~50 descrições de exemplo |
 | 8 | **Mapa de tratamento** | Montar um plano de 5 consultas, reordenar, marcar realizada | — |
 | 9 | **Produção + recomendações** | Ver a produção mudar após registrar; ver recomendações coerentes | — |
@@ -845,12 +873,14 @@ Cada etapa termina com algo que você **vê e testa** e aprova antes da próxima
 | 12 | **Piloto**: revisão de segurança, desempenho, acessibilidade, domínio, termo, 2–3 alunos reais por 2 semanas; restringir o link do Smile Cloud ao domínio oficial (pendência de 19/10/2026) | Uso real | Domínio; termo revisado (LGPD) |
 | 13 | **Lançamento MVP 1** → MVP 2 em etapas do mesmo tamanho | — | — |
 
+</details>
+
 **Prazo:** hoje é outubro de 2026 e a turma começa em fevereiro de 2027 (~4 meses). A estimativa de 3–4 meses
 para o MVP 1 cabe, mas **sem folga**. Se apertar, a ordem acima já prioriza o que o aluno usa na primeira semana
 (login, cronograma, biblioteca, Início, casos); workflows e painel da coordenação podem entrar nas primeiras
 semanas de aula sem prejuízo, porque a produção ainda será pequena. Ver decisão aberta 9.
 
-### M.3 Etapa obrigatória antes do go-live — **Proteção de produção e backups**
+### M.3 Etapa obrigatória antes do go-live — **Proteção de produção e backups** (antiga 11b; hoje parte da Etapa 12)
 
 Registrada em 07/10/2026. **Obrigatória antes de alimentar definitivamente o sistema e antes da entrada de
 alunos reais** (entra entre a última etapa funcional e o Piloto, etapa 12). A estratégia já foi aprovada; só a
@@ -1659,6 +1689,53 @@ simulação 70, capa/coordenação/Admin 70, botão registrar 9, procedimentos 2
 | Renomear "Completar caso" (reflexão/dados) para evitar confusão com "Concluir caso" (sugerido, não decidido) | A decidir |
 | Minha Produção (painel) e recomendações | Etapa 9 |
 | Proteção de produção e backups | Etapa 11b, obrigatória antes do go-live |
+
+### Etapa 7 · Minha Produção (implementada em 21/10/2026 — aguardando teste e aprovação da Maryah)
+
+Plano final aprovado em 21/10/2026. **Sem migração, sem tabela/view nova, sem alteração no Supabase**: tudo é derivado
+dos registros da Etapa 6 no momento da leitura (`lib/production/model.ts`, regras puras com testes; carga em
+`lib/production/load.ts`, reaproveitando as cargas de casos, catálogo e cronograma). Rota `/producao` (substitui o
+protótipo fictício, removido junto com `demo/production.ts`), no menu Clínica → "Minha produção".
+
+**Definições**
+- **Registro válido:** registro e caso não removidos, caso da turma atual do aluno (restaurar volta a contar; exclusão
+  definitiva some). O status do caso não interfere.
+- **Posições** (dados gravados no registro): cada dente; arcada (ambas = superior + inferior); unidade caso = posição
+  única; sem dente/arcada informados = unidades anônimas pela quantidade (contam, fora do mapa).
+- **Casos clínicos:** casos com algum registro válido no recorte (detalhe: em andamento × concluídos, status atual).
+- **Consultas clínicas:** pares distintos caso + data (o conceito da jornada da Etapa 6).
+- **Experiências clínicas:** chaves distintas caso + data + etapa + posição. Duplicata no mesmo dia não conta duas vezes;
+  repetição real em outra data é nova experiência. Não depende de como o aluno dividiu as linhas.
+- **Tratamentos concluídos:** só etapas que concluem; unidades distintas caso + procedimento + posição (no máximo 1 por
+  caso e procedimento na unidade caso); data e módulo da **primeira** conclusão. Procedimento "geral" e "Outro
+  procedimento" nunca concluem.
+- **Procedimentos diferentes:** informação secundária (procedimentos distintos registrados).
+- **Módulo efetivo:** `module_auto` → recalculado na leitura pela data e pelo cronograma atual (mesma regra de
+  `module_for_date`); corrigido pelo aluno → o `module_id` gravado. Nada persistido muda.
+- **Anos do curso:** 1º ano = do início da turma à véspera do mesmo dia no ano seguinte; o último termina no fim da turma
+  (Turma 2027: 01/02/2027–31/01/2028, 01/02/2028–31/01/2029, 01/02/2029–31/07/2029). 29/02 → 28/02 nos anos seguintes.
+- Catálogo atual (categoria, "conclui", nomes) vale para o histórico; etapas/procedimentos desativados continuam contando.
+
+**Tela:** filtros (Todo o curso · Este ano do curso · Este módulo · Período; no endereço da página) → resumo 2×2 (Casos,
+Consultas, Experiências, Tratamentos concluídos) + "procedimentos diferentes" → Minha evolução (barras por mês do
+início da turma até hoje, Experiências | Tratamentos concluídos, período filtrado em destaque, "Ver em tabela") →
+Onde estou construindo experiência (categoria → procedimento "N experiências · N tratamentos concluídos" → etapas, ✓
+na etapa final) → Meu mapa clínico (quadrantes FDI, intensidade em 4 faixas relativas ao próprio aluno, legenda: "A
+intensidade indica só a quantidade de experiências registradas naquela posição. Não representa condição do dente,
+qualidade, complexidade ou diagnóstico."; toque no dente: total, casos, consultas, procedimentos e etapas; arcadas,
+"sem dente informado" e "por caso" à parte, sem distribuir) → Por módulo (módulos já iniciados + "Sem módulo" se
+houver) → Áreas para explorar (recolhida; curso inteiro; categorias e procedimentos ativos ainda sem registro, sem
+"Outro procedimento"; biblioteca só com vínculo real procedimento → tema → conteúdo liberado para a turma, até 3).
+Sem ranking, comparação, percentil, meta, alerta, IA, diagnóstico ou dado fictício.
+
+**Estados e acesso:** sem registros → bloco único com "+ Registrar caso" (sem as demais seções); período sem registros →
+aviso, evolução do curso continua; sem dente → mapa some. Só o aluno: coordenação vê aviso "Minha produção é do aluno"
+(visão agregada na Etapa 10); Admin fora da simulação vai ao seletor. **Modo de simulação:** números do rascunho, com o
+catálogo e o cronograma reais (só leitura), nada gravado no banco ou Storage.
+
+Testes (fora da produção): unitários 131 (26 novos de produção) · E2E local `producao` 39 (conjunto conhecido com valores
+calculados à mão: todos os indicadores, filtros, categorias, mapa, módulos, cronograma alterado, remover/restaurar,
+isolamento, coordenação, estado vazio, simulação com fingerprint idêntico) + regressões da Etapa 6.
 
 ## N. Decisões
 

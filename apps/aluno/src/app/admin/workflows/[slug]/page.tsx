@@ -17,7 +17,7 @@ export default async function EditWorkflowPage({ params }: { params: Promise<{ s
   if (!w) notFound()
   return (
     <>
-      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
+      <PrototypeNotice etapa="Etapa 9 (Workflows Clínicos)" />
       <WorkflowEditor
         graph={w.graph}
         meta={{ name: w.title, category: w.category, description: w.summary, status: w.status, previewHref: `/workflows/${w.slug}` }}

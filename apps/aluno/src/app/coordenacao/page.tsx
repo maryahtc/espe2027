@@ -34,7 +34,7 @@ export default function CoordinationPage() {
         </span>
         <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
       </Link>
-      <EmptyState stage="Etapa 11" title="O que vai existir aqui">
+      <EmptyState stage="Etapa 10" title="O que vai existir aqui">
         <ul className="list-disc space-y-1 pl-5">
           <li>Casos registrados, procedimentos e evolução mensal</li>
           <li>Procedimentos pouco realizados pela turma</li>

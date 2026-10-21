@@ -12,7 +12,7 @@ export default function AdminWorkflowsPage() {
   const all = [...workflows, draftWorkflow]
   return (
     <>
-      <PrototypeNotice etapa="Etapa 10 (Workflows)" />
+      <PrototypeNotice etapa="Etapa 9 (Workflows Clínicos)" />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageTitle
           eyebrow="Clínica"
