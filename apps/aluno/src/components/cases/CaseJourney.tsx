@@ -22,7 +22,7 @@ export function JourneyStep({ r, o, moduleName }: { r: RecordVM; o: StepOption |
       <span className="sr-only">{o?.label ?? 'Procedimento'}: </span>
       <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <span className={cn('text-[15px]', own ? 'font-medium text-ink' : 'text-ink-2')} aria-hidden="true">
-          {own ? o.stepName : 'Realizado'}
+          {own ? o.stepName : (r.description ?? 'Realizado')}
         </span>
         {r.teeth.length ? <span className="num text-sm text-muted">· {sortTeeth(r.teeth).join(', ')}</span> : null}
         {r.arch ? <span className="text-sm text-muted">· Arcada {ARCH_LABEL[r.arch].toLowerCase()}</span> : null}
@@ -33,7 +33,7 @@ export function JourneyStep({ r, o, moduleName }: { r: RecordVM; o: StepOption |
           </span>
         ) : null}
       </span>
-      {r.description ? <span className="mt-0.5 block text-xs text-ink-2">{r.description}</span> : null}
+      {r.description && own ? <span className="mt-0.5 block text-xs text-ink-2">{r.description}</span> : null}
       {r.note || moduleName ? (
         <span className="mt-0.5 block text-xs text-muted">
           {[moduleName, r.note].filter(Boolean).join(' · ')}
