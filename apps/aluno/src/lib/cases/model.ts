@@ -10,6 +10,8 @@ export type CaseStatus = 'em_andamento' | 'concluido'
 export type StepOption = {
   stepId: string
   procedureId: string
+  /** Identificador estável do procedimento no catálogo (só leitura; usado nos atalhos padrão). */
+  procedureSlug: string
   procedureName: string
   stepName: string
   label: string
@@ -220,7 +222,7 @@ export function treatmentSummary(records: RecordVM[], options: StepOption[]): Tr
     const active = records.filter((r) => !r.removed && byStep.get(r.stepId)?.procedureId === s.procedureId)
     const done = new Set(active.filter((r) => byStep.get(r.stepId)?.completes).flatMap((r) => r.teeth))
     const before = new Set(active.filter((r) => !byStep.get(r.stepId)?.completes).flatMap((r) => r.teeth))
-    s.pendingTeeth = done.size || before.size ? [...before].filter((t) => !done.has(t)) : []
+    s.pendingTeeth = done.size || before.size ? sortTeeth([...before].filter((t) => !done.has(t))) : []
   }
   return [...out.values()]
 }
@@ -273,8 +275,9 @@ export function caseTeeth(records: RecordVM[], options: StepOption[]): Map<numbe
 export const TOOTH_SHORTCUTS: Array<{ label: string; teeth: number[] }> = [
   { label: 'Anteriores sup.', teeth: [13, 12, 11, 21, 22, 23] },
   { label: 'Anteriores inf.', teeth: [43, 42, 41, 31, 32, 33] },
-  { label: 'Arcada superior', teeth: FDI_UPPER },
-  { label: 'Arcada inferior', teeth: FDI_LOWER },
+  // "Arcada" é também a localização de algumas etapas: aqui são só atalhos de seleção de dentes.
+  { label: 'Todos superiores', teeth: FDI_UPPER },
+  { label: 'Todos inferiores', teeth: FDI_LOWER },
 ]
 /** Liga/desliga um grupo: se todos já estão marcados, desmarca; senão marca os que faltam. */
 export function toggleGroup(current: number[], group: number[]): number[] {
@@ -314,4 +317,107 @@ export function resolvePlacement(
   if (step.unit === 'caso') quantity = 1
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Quantidade inválida.')
   return { quantity, teeth, arch }
+}
+
+/**
+ * Quadrantes na orientação clínica (direita do paciente à esquerda da tela). Cada quadrante em ordem FDI a partir
+ * da linha média; `inner` = os 4 mais próximos da linha média (11–14 …), `outer` = 15–18 ….
+ */
+export const QUADRANTS = {
+  upperRight: [18, 17, 16, 15, 14, 13, 12, 11],
+  upperLeft: [21, 22, 23, 24, 25, 26, 27, 28],
+  lowerRight: [48, 47, 46, 45, 44, 43, 42, 41],
+  lowerLeft: [31, 32, 33, 34, 35, 36, 37, 38],
+} as const
+
+// ─── Linguagem: dente × posição FDI ──────────────────────────────────────────────────────────────
+
+/**
+ * Procedimentos em que o número FDI marca uma posição que pode não ter dente presente (pôntico, implante, enxerto
+ * em rebordo). Nos demais, a interface fala em "dentes".
+ */
+const POSITION_PROCEDURES = new Set(['protese-parcial-fixa-dentossuportada', 'implante', 'coroa-sobre-implante', 'enxerto-osseo'])
+export function usesPositions(o: Pick<StepOption, 'procedureSlug'> | null | undefined): boolean {
+  return !!o && POSITION_PROCEDURES.has(o.procedureSlug)
+}
+/** "3 dentes" / "1 posição" (com `selected`: "3 dentes selecionados"). */
+export function teethCount(n: number, positions = false, selected = false): string {
+  const noun = positions ? (n === 1 ? 'posição' : 'posições') : n === 1 ? 'dente' : 'dentes'
+  const adj = selected ? (positions ? (n === 1 ? ' selecionada' : ' selecionadas') : n === 1 ? ' selecionado' : ' selecionados') : ''
+  return `${n} ${noun}${adj}`
+}
+
+// ─── Procedimento → etapas (só apresentação) ─────────────────────────────────────────────────────
+
+export type ProcedureGroup = { procedureId: string; procedureSlug: string; procedureName: string; categoryName: string; steps: StepOption[] }
+
+/** Agrupa etapas pelo procedimento, mantendo a ordem em que aparecem (catálogo ou relevância da busca). */
+export function groupByProcedure(options: StepOption[]): ProcedureGroup[] {
+  const out = new Map<string, ProcedureGroup>()
+  for (const o of options) {
+    const g = out.get(o.procedureId) ?? { procedureId: o.procedureId, procedureSlug: o.procedureSlug, procedureName: o.procedureName, categoryName: o.categoryName, steps: [] }
+    g.steps.push(o)
+    out.set(o.procedureId, g)
+  }
+  return [...out.values()]
+}
+
+/** A etapa tem nome próprio (≠ do procedimento)? Ex.: Laminado cerâmico → "Cimentação". */
+export const hasOwnStepName = (o: Pick<StepOption, 'stepName' | 'procedureName'>) => o.stepName !== o.procedureName
+
+// ─── Acesso rápido (sem dado novo no banco) ──────────────────────────────────────────────────────
+
+/**
+ * Atalhos padrão quando o aluno ainda não tem histórico (ou na simulação): procedimentos do catálogo aprovado,
+ * em ordem de prioridade. Só entram os que existem, estão ativos e combinam com o caminho escolhido.
+ */
+export const DEFAULT_QUICK_PROCEDURES = [
+  'laminado-ceramico',
+  'restauracao-em-resina-anterior',
+  'restauracao-em-resina-posterior',
+  'faceta-direta-em-resina',
+  'coroa-total',
+  'escaneamento-intraoral',
+  'tratamento-endodontico',
+  'clareamento-de-consultorio',
+]
+
+export type QuickItem =
+  | { kind: 'etapa'; option: StepOption; source: 'recente' | 'frequente' }
+  | { kind: 'procedimento'; group: ProcedureGroup; source: 'padrao' }
+
+/**
+ * Acesso rápido (até `max`): 1) etapas recentes do próprio aluno; 2) as mais frequentes (2+ registros);
+ * 3) sem histórico, os atalhos padrão. Com pouco histórico, completa com os padrão até `min`.
+ * `pool` = etapas compatíveis com o caminho (ex.: só as de dentes no "Por dente").
+ */
+export function quickAccess(pool: StepOption[], history: Array<{ stepId: string; createdAt: string }>, max = 6, min = 4): QuickItem[] {
+  const byId = new Map(pool.map((o) => [o.stepId, o]))
+  const usable = history.filter((h) => byId.has(h.stepId))
+  const items: QuickItem[] = []
+  const has = (stepId: string) => items.some((i) => i.kind === 'etapa' && i.option.stepId === stepId)
+  // Recentes: as 3 últimas etapas distintas.
+  for (const h of [...usable].sort((a, b) => b.createdAt.localeCompare(a.createdAt))) {
+    if (items.length >= 3) break
+    if (!has(h.stepId)) items.push({ kind: 'etapa', option: byId.get(h.stepId)!, source: 'recente' })
+  }
+  // Frequentes: registradas 2+ vezes, as mais usadas primeiro.
+  const count = new Map<string, number>()
+  for (const h of usable) count.set(h.stepId, (count.get(h.stepId) ?? 0) + 1)
+  for (const [id] of [...count.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1])) {
+    if (items.length >= max) break
+    if (!has(id)) items.push({ kind: 'etapa', option: byId.get(id)!, source: 'frequente' })
+  }
+  // Padrão: sem histórico, ou para completar o mínimo (sem repetir procedimento já sugerido).
+  if (items.length < min) {
+    const groups = groupByProcedure(pool)
+    const target = items.length ? min : max
+    for (const slug of DEFAULT_QUICK_PROCEDURES) {
+      if (items.length >= target) break
+      const g = groups.find((x) => x.procedureSlug === slug)
+      if (!g || items.some((i) => (i.kind === 'etapa' ? i.option.procedureId : i.group.procedureId) === g.procedureId)) continue
+      items.push({ kind: 'procedimento', group: g, source: 'padrao' })
+    }
+  }
+  return items.slice(0, max)
 }

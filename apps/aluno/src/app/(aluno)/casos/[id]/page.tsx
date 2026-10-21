@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
-import { CaseCover } from '@/components/cases/CaseCover'
+import { CaseCover, CoverBadge } from '@/components/cases/CaseCover'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { CoverUpload } from '@/components/cases/CoverUpload'
 import { RecordPlacement } from '@/components/cases/RecordPlacement'
@@ -16,7 +16,7 @@ import { requireUser } from '@/lib/auth/session'
 import { saveCaseDetails, setCaseRemoved, setCaseStatus, setRecordRemoved, updateRecord } from '@/lib/cases/actions'
 import { canRegister, coverUrls, loadMyCase, loadStepOptions, relatedContents } from '@/lib/cases/load'
 import { getSimulation } from '@/lib/simulation/session'
-import { caseHeadline, caseTeeth, type RecordVM, sortTeeth, type StepOption, suggestTopics, timeline, treatmentSummary } from '@/lib/cases/model'
+import { caseHeadline, caseTeeth, hasOwnStepName, type RecordVM, sortTeeth, type StepOption, suggestTopics, timeline, treatmentSummary, usesPositions } from '@/lib/cases/model'
 import { odontogramReady } from '@/lib/cases/schema'
 import { formatDayMonth, formatLongDay, year } from '@/lib/dates'
 import { loadTaxonomy } from '@/lib/library/load'
@@ -79,6 +79,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const editable = writable && !c.removed
   const suggested = suggestTopics(c.difficulty ?? '', taxonomy.topics, 5).filter((t) => !c.topicIds.includes(t.id))
   const justSaved = Number(registrado) > 0
+  const coverSrc = c.coverPath ? (covers.get(c.coverPath) ?? null) : null
 
   return (
     <article>
@@ -101,14 +102,9 @@ export default async function CasePage({ params, searchParams }: { params: Promi
             ) : null}
           </p>
           {editable ? (
-            <span className="flex flex-wrap gap-3 text-sm">
-              <Link href={`/casos/novo?caso=${c.id}`} className="font-semibold underline-offset-4 hover:underline">
-                Registrar outro neste caso
-              </Link>
-              <a href="#reflexao" className="text-muted hover:text-ink">
-                Completar caso
-              </a>
-            </span>
+            <a href="#reflexao" className="text-sm text-muted hover:text-ink">
+              Completar caso
+            </a>
           ) : null}
         </div>
       ) : null}
@@ -127,17 +123,16 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         </div>
       ) : null}
 
-      <header className="glass glass-sheen mt-6 grid overflow-hidden rounded-[26px] md:grid-cols-12">
-        <CaseCover
-          item={{ patient: c.patientLabel }}
-          src={c.coverPath ? covers.get(c.coverPath) : null}
-          overlay={false}
-          className="aspect-[16/7] md:col-span-4 md:aspect-auto md:min-h-64"
-        />
-        <div className="flex flex-col justify-between gap-8 p-6 sm:p-8 md:col-span-8 lg:p-10">
+      {/* Com foto: capa valorizada. Sem foto: só um selo pequeno — as informações do caso vêm primeiro. */}
+      <header className={cn('glass glass-sheen mt-6 overflow-hidden rounded-[26px]', coverSrc && 'grid md:grid-cols-12')} data-capa-caso={coverSrc ? 'foto' : 'sem-foto'}>
+        {coverSrc ? <CaseCover item={{ patient: c.patientLabel }} src={coverSrc} overlay={false} className="aspect-[16/7] md:col-span-4 md:aspect-auto md:min-h-64" /> : null}
+        <div className={cn('flex flex-col justify-between p-6 sm:p-8 lg:p-10', coverSrc ? 'gap-8 md:col-span-8' : 'gap-6')}>
           <div>
             <p className="eyebrow">Paciente</p>
-            <h1 className="num mt-2 text-6xl leading-none font-extralight tracking-tight sm:text-7xl">{c.patientLabel}</h1>
+            <div className="mt-2 flex items-center gap-4">
+              {coverSrc ? null : <CoverBadge />}
+              <h1 className="num text-6xl leading-none font-extralight tracking-tight sm:text-7xl">{c.patientLabel}</h1>
+            </div>
             <p className="mt-4 text-2xl font-light">{caseHeadline(c, options)}</p>
             <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               {c.status === 'em_andamento' ? (
@@ -209,7 +204,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               <CaseTeethMap teeth={teethMap} selected={tooth} hrefFor={(t) => (t === tooth ? `/casos/${c.id}#linha-do-tempo` : `/casos/${c.id}?dente=${t}#linha-do-tempo`)} />
               {tooth ? (
                 <p className="mt-3 text-sm" data-filtro-dente>
-                  Mostrando os registros da posição <span className="num font-semibold">{tooth}</span> ·{' '}
+                  Mostrando os registros do dente <span className="num font-semibold">{tooth}</span> ·{' '}
                   <Link href={`/casos/${c.id}#linha-do-tempo`} scroll={false} className="font-semibold underline underline-offset-4">
                     ver todos
                   </Link>
@@ -414,10 +409,12 @@ function RecordRow({
   editable: boolean
   archSupported: boolean
 }) {
-  const label = o?.label ?? 'Procedimento'
   const summary = (
     <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <span className="text-[15px] font-semibold">{label}</span>
+      <span className="text-[15px]">
+        <span className="font-semibold">{o?.procedureName ?? 'Procedimento'}</span>
+        {o && hasOwnStepName(o) ? <span className="text-ink-2"> · {o.stepName}</span> : null}
+      </span>
       <span className="num text-sm">{o ? unitText(o.unit, r.quantity) : r.quantity}</span>
       {r.teeth.length ? <span className="num text-xs text-muted">{sortTeeth(r.teeth).join(' ')}</span> : null}
       {r.arch ? <span className="text-xs text-muted">Arcada {ARCH_LABEL[r.arch].toLowerCase()}</span> : null}
@@ -444,7 +441,7 @@ function RecordRow({
                 <input type="date" name="data" defaultValue={r.performedOn} required className={inputCls} />
               </label>
               {o ? (
-                <RecordPlacement location={o.location} unit={o.unit} teeth={r.teeth} arch={r.arch} quantity={r.quantity} archSupported={archSupported} inputCls={inputCls} />
+                <RecordPlacement location={o.location} unit={o.unit} positions={usesPositions(o)} teeth={r.teeth} arch={r.arch} quantity={r.quantity} archSupported={archSupported} inputCls={inputCls} />
               ) : (
                 <input type="hidden" name="quantidade" value={r.quantity} />
               )}

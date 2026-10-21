@@ -24,7 +24,7 @@ export const loadStepOptions = cache(async (): Promise<StepOption[]> => {
   const ready = await odontogramReady()
   const [{ data: cats }, { data: procs }, { data: steps }] = await Promise.all([
     supabase.from('procedure_categories').select('id, name, position'),
-    supabase.from('procedures').select('id, category_id, name, synonyms, active, position'),
+    supabase.from('procedures').select('id, category_id, slug, name, synonyms, active, position'),
     supabase
       .from('procedure_steps')
       .select(`id, procedure_id, name, unit, completes, requires_description, synonyms, active, position${ready ? ', location' : ''}`)
@@ -40,6 +40,7 @@ export const loadStepOptions = cache(async (): Promise<StepOption[]> => {
       return {
         stepId: s.id,
         procedureId: p.id,
+        procedureSlug: p.slug,
         procedureName: p.name,
         stepName: s.name,
         label: s.name === p.name ? p.name : `${p.name} · ${s.name}`,
@@ -196,15 +197,19 @@ export function moduleSpans(modules: Awaited<ReturnType<typeof cohortModules>>):
 
 /** Tudo o que a tela de registro precisa, de uma vez. */
 export async function loadRegistration(auth: AuthState, cohortId: string) {
-  const [options, cases, modules, faculty, taxonomy, allowed] = await Promise.all([
+  const [options, cases, modules, faculty, taxonomy, allowed, sim] = await Promise.all([
     activeStepOptions(),
     loadMyCases(auth.userId),
     cohortModules(cohortId),
     loadFaculty(),
     loadTaxonomy(),
     canRegister(cohortId),
+    getSimulation(),
   ])
-  const history = cases.flatMap((c) => c.records.filter((r) => !r.removed).map((r) => ({ stepId: r.stepId, createdAt: r.createdAt })))
+  // Acesso rápido: só o histórico real do aluno. Na simulação (rascunho, nada real) → atalhos padrão.
+  const history = sim
+    ? []
+    : cases.flatMap((c) => c.records.filter((r) => !r.removed).map((r) => ({ stepId: r.stepId, createdAt: r.createdAt })))
   return {
     allowed,
     options,

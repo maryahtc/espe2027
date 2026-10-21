@@ -7,7 +7,7 @@ import { studentArea } from '@/lib/academic/student'
 import { requireUser } from '@/lib/auth/session'
 import { loadRegistration } from '@/lib/cases/load'
 import { odontogramReady } from '@/lib/cases/schema'
-import { caseHeadline, topOptions } from '@/lib/cases/model'
+import { caseHeadline } from '@/lib/cases/model'
 import { guardStudentPage } from '@/lib/simulation/guard'
 
 export const metadata: Metadata = { title: 'Registrar' }
@@ -34,7 +34,7 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
       {r.allowed ? (
         <QuickRegister
           options={r.options}
-          top={topOptions(r.options, r.history)}
+          history={r.history}
           openCases={r.openCases.map((c) => ({ id: c.id, patientLabel: c.patientLabel, headline: caseHeadline(c, r.options), lastActivityOn: c.lastActivityOn }))}
           modules={r.modules}
           today={area.today}

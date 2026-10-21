@@ -12,6 +12,7 @@ import { archQuantity, type CountUnit, type DentalArch, type StepLocation, UNIT_
 export function RecordPlacement({
   location,
   unit,
+  positions = false,
   teeth: initialTeeth,
   arch: initialArch,
   quantity: initialQuantity,
@@ -20,6 +21,8 @@ export function RecordPlacement({
 }: {
   location: StepLocation
   unit: CountUnit
+  /** PPF/pôntico/implante: fala em "posições FDI"; nos demais, em "dentes". */
+  positions?: boolean
   teeth: number[]
   arch: DentalArch | null
   quantity: number
@@ -36,17 +39,19 @@ export function RecordPlacement({
   const unitLabel = (n: number) => (n === 1 ? UNIT_LABEL[unit].one : UNIT_LABEL[unit].many)
   return (
     <div className="space-y-3 sm:col-span-2" data-edicao-posicoes>
-      <input type="hidden" name="dentes" value={location === 'dentes' ? teeth.join(' ') : ''} />
+      <input type="hidden" name="dentes" value={location === 'dentes' ? sortTeeth(teeth).join(' ') : ''} />
       <input type="hidden" name="arcada" value={byArch ? (arch ?? '') : ''} />
       {location === 'dentes' ? (
         <div className="space-y-2">
           <p className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="num">{teeth.length ? `Posições: ${sortTeeth(teeth).join(' ')}` : 'Sem posições marcadas (opcional)'}</span>
+            <span className="num">
+              {teeth.length ? `${positions ? 'Posições FDI' : 'Dentes'}: ${sortTeeth(teeth).join(' ')}` : positions ? 'Nenhuma posição marcada (opcional)' : 'Nenhum dente selecionado (opcional)'}
+            </span>
             <button type="button" className="text-sm font-semibold underline-offset-4 hover:underline" onClick={() => setOpen(!open)} aria-expanded={open}>
-              {open ? 'Fechar odontograma' : teeth.length ? 'Alterar posições' : 'Marcar no odontograma'}
+              {open ? 'Fechar odontograma' : teeth.length ? (positions ? 'Alterar posições' : 'Alterar dentes') : positions ? 'Marcar posições' : 'Selecionar dentes'}
             </button>
           </p>
-          {open ? <Odontogram value={teeth} onChange={setTeeth} /> : null}
+          {open ? <Odontogram value={teeth} onChange={setTeeth} label={positions ? 'Posições FDI' : 'Dentes'} /> : null}
         </div>
       ) : null}
       {byArch ? (

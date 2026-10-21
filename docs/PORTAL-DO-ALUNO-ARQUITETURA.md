@@ -1546,6 +1546,30 @@ sem faces, condições, diagnóstico, anamnese, evolução, prescrição ou exam
   conclui), por categoria, mês, módulo, dente (cada posição listada) e arcada (campo novo; e, para posições FDI, pela
   numeração 1x/2x = superior, 3x/4x = inferior).
 
+### Etapa 6 · polimento de UX de Meus casos (21/10/2026)
+
+Só interface, a partir do teste manual da Maryah no Modo de simulação. Sem migração, sem mudança de banco, catálogo,
+RLS, regras clínicas ou estrutura dos registros.
+
+- **Odontograma em quatro quadrantes** (registro e página do caso, mesmo componente `ToothQuadrants`): linha média
+  entre 11 | 21 e 41 | 31 e plano oclusal; orientação clínica (direita do paciente à esquerda da tela). No celular
+  cada quadrante tem 2 linhas de 4 (os 4 mais próximos da linha média junto ao plano oclusal); a partir de 640 px,
+  uma linha de 8. Atalhos "Todos superiores" / "Todos inferiores" ("arcada" fica só para a localização da etapa).
+- **Linguagem:** "Selecionar dentes", "X dentes selecionados", "Alterar dentes"; "posição FDI" só onde pode não
+  haver dente (prótese parcial fixa, implante, coroa sobre implante, enxerto ósseo). Dentes sempre exibidos e
+  gravados na ordem FDI do odontograma, independentemente da ordem dos toques.
+- **Acesso rápido** (no máximo 6) depois de escolher os dentes e no "Por procedimento": recentes do próprio aluno →
+  frequentes (2+ registros) → sem histórico, atalhos padrão do catálogo aprovado (laminado, resina anterior e
+  posterior, faceta direta, coroa total, escaneamento, endodontia, clareamento — só os compatíveis com o caminho).
+  Nada novo no banco. Na simulação, só os atalhos padrão. Busca e lista completa continuam logo abaixo.
+- **Procedimento → etapa:** o procedimento aparece primeiro e as etapas abaixo (Laminado cerâmico → Preparo ·
+  Provisório · Cimentação) no acesso rápido, na busca, na lista completa, na linha escolhida e na linha do tempo.
+  Procedimento com uma única etapa: um toque.
+- **Página do caso:** sem foto, a capa vira um selo pequeno ao lado do código do paciente (com foto, igual a antes).
+  Um único CTA de novo registro: "+ Registrar procedimento" (o "Registrar outro neste caso" da confirmação abria a
+  mesma tela e saiu). "Completar caso" (dados opcionais e reflexão) e "Concluir caso" (status) têm funções diferentes
+  e foram mantidos.
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)

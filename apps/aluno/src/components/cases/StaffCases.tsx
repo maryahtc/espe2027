@@ -1,3 +1,4 @@
+import { cn } from '@portal/ui/cn'
 import { EmptyState } from '@portal/ui/empty-state'
 import { IconArrowRight, IconCheck, IconExternal } from '@portal/ui/icons'
 import { PageTitle } from '@portal/ui/section'
@@ -6,7 +7,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
-import { CaseCover } from '@/components/cases/CaseCover'
+import { CaseCover, CoverBadge } from '@/components/cases/CaseCover'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { cohortModules, loadFaculty, today } from '@/lib/academic/load'
 import type { AuthState } from '@/lib/auth/session'
@@ -304,6 +305,7 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
   const summary = treatmentSummary(c.records, options)
   const teethMap = caseTeeth(c.records, options)
   const back = `${base}?${new URLSearchParams({ turma: c.cohortId, aluno: c.ownerId })}`
+  const coverSrc = c.coverPath ? (covers.get(c.coverPath) ?? null) : null
 
   return (
     <article data-leitura>
@@ -319,17 +321,15 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
         </p>
       ) : null}
 
-      <header className="glass glass-sheen grid overflow-hidden rounded-[26px] md:grid-cols-12">
-        <CaseCover
-          item={{ patient: c.patientLabel }}
-          src={c.coverPath ? covers.get(c.coverPath) : null}
-          overlay={false}
-          className="aspect-[16/7] md:col-span-4 md:aspect-auto md:min-h-64"
-        />
-        <div className="flex flex-col justify-between gap-8 p-6 sm:p-8 md:col-span-8 lg:p-10">
+      <header className={cn('glass glass-sheen overflow-hidden rounded-[26px]', coverSrc && 'grid md:grid-cols-12')} data-capa-caso={coverSrc ? 'foto' : 'sem-foto'}>
+        {coverSrc ? <CaseCover item={{ patient: c.patientLabel }} src={coverSrc} overlay={false} className="aspect-[16/7] md:col-span-4 md:aspect-auto md:min-h-64" /> : null}
+        <div className={cn('flex flex-col justify-between p-6 sm:p-8 lg:p-10', coverSrc ? 'gap-8 md:col-span-8' : 'gap-6')}>
           <div>
             <p className="eyebrow">Paciente · caso de {c.ownerName}</p>
-            <h1 className="num mt-2 text-6xl leading-none font-extralight tracking-tight sm:text-7xl">{c.patientLabel}</h1>
+            <div className="mt-2 flex items-center gap-4">
+              {coverSrc ? null : <CoverBadge />}
+              <h1 className="num text-6xl leading-none font-extralight tracking-tight sm:text-7xl">{c.patientLabel}</h1>
+            </div>
             <p className="mt-4 text-2xl font-light">{caseHeadline(c, options)}</p>
             <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               {c.status === 'em_andamento' ? (
@@ -398,7 +398,10 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
                       return (
                         <li key={r.id} className="rounded-xl border border-rule px-4 py-3">
                           <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                            <span className="text-[15px] font-semibold">{o?.label ?? 'Procedimento'}</span>
+                            <span className="text-[15px]">
+                              <span className="font-semibold">{o?.procedureName ?? 'Procedimento'}</span>
+                              {o && o.stepName !== o.procedureName ? <span className="text-ink-2"> · {o.stepName}</span> : null}
+                            </span>
                             <span className="num text-sm">{o ? unitText(o.unit, r.quantity) : r.quantity}</span>
                             {r.teeth.length ? <span className="num text-xs text-muted">{sortTeeth(r.teeth).join(' ')}</span> : null}
                             {r.arch ? <span className="text-xs text-muted">Arcada {ARCH_LABEL[r.arch].toLowerCase()}</span> : null}

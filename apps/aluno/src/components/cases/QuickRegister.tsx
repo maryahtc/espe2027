@@ -5,15 +5,22 @@ import { useActionState, useEffect, useMemo, useState } from 'react'
 import { ArchPicker, Odontogram } from '@/components/cases/Odontogram'
 import { type ActionState, registerProcedures } from '@/lib/cases/actions'
 import {
+  groupByProcedure,
+  hasOwnStepName,
   lineError,
   lineQuantity,
   type ModuleSpan,
   moduleForDate,
   patientLabelError,
+  type ProcedureGroup,
+  quickAccess,
+  type QuickItem,
   searchOptions,
   sortTeeth,
   type StepOption,
   suggestTopics,
+  teethCount,
+  usesPositions,
 } from '@/lib/cases/model'
 import { type DentalArch, UNIT_LABEL } from '@/lib/procedures/model'
 
@@ -32,11 +39,11 @@ type Line = {
 type Entry = 'dente' | 'procedimento'
 const ENTRY_KEY = 'conexo.registro.entrada'
 
-/** Ajuda curta: o número FDI é só a posição (inclui elemento protético/pôntico), nunca uma condição. */
+/** Ajuda curta. Em PPF/pôntico/implante o número FDI é a posição (pode não haver dente); nunca uma condição. */
 function teethHint(o: StepOption): string {
-  return o.unit === 'peca'
+  return usesPositions(o)
     ? 'Marque a posição FDI de cada elemento (inclusive pôntico ou implante). O número indica só a posição.'
-    : 'Marque os dentes (posição FDI). Opcional.'
+    : 'Selecione os dentes (opcional).'
 }
 
 const chip =
@@ -62,7 +69,7 @@ const newLine = (option: StepOption, teeth: number[] = [], showTeeth = false): L
  */
 export function QuickRegister({
   options,
-  top,
+  history,
   openCases,
   modules,
   today,
@@ -72,7 +79,8 @@ export function QuickRegister({
   archSupported = true,
 }: {
   options: StepOption[]
-  top: StepOption[]
+  /** Histórico real do próprio aluno (vazio na simulação) — base do acesso rápido. */
+  history: Array<{ stepId: string; createdAt: string }>
   openCases: OpenCase[]
   modules: ModuleSpan[]
   today: string
@@ -133,8 +141,7 @@ export function QuickRegister({
   // "Por dente": só etapas que identificam posições FDI (definido na etapa, não pela unidade).
   const toothOptions = active.filter((o) => o.location === 'dentes')
   const pool = entry === 'dente' ? toothOptions : active
-  const poolTop = top.filter((o) => pool.some((p) => p.stepId === o.stepId))
-  const results = searchOptions(pool, query)
+  const quick = useMemo(() => quickAccess(pool, history), [pool, history])
 
   const errors: string[] = []
   if (mode === 'novo' && labelError) errors.push(labelError)
@@ -162,7 +169,7 @@ export function QuickRegister({
     lines: lines.map((l) => ({
       stepId: l.option.stepId,
       quantity: lineQuantity(l.option, l, archSupported),
-      teeth: l.option.location === 'dentes' ? l.teeth : [],
+      teeth: l.option.location === 'dentes' ? sortTeeth(l.teeth) : [],
       arch: archSupported && l.option.location === 'arcada' ? l.arch : null,
       description: l.description,
       note: l.note,
@@ -290,92 +297,54 @@ export function QuickRegister({
         </div>
 
         {lines.map((l, i) => (
-          <LineCard key={l.key} l={l} index={i} archSupported={archSupported} update={update} remove={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} />
+          <LineCard key={l.key} l={l} index={i} archSupported={archSupported} update={update} remove={() => {
+              const rest = lines.filter((x) => x.key !== l.key)
+              setLines(rest)
+              // Sem nenhuma linha: volta direto à escolha (não deixa o aluno sem caminho).
+              if (!rest.length) setAdding(true)
+            }} />
         ))}
 
         {adding ? (
-          <div className="space-y-4 rounded-2xl border border-rule p-3 sm:p-4" data-composer>
+          <div className="space-y-4 rounded-2xl border border-rule p-2.5 sm:p-4" data-composer>
             {entry === 'dente' && pickStage === 'dentes' ? (
               <>
-                <Odontogram value={pick} onChange={setPick} label="Selecione os dentes" hint="Toque nas posições ou deslize o dedo pela linha. O número indica só a posição FDI." />
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-rule-strong bg-white/[0.04] px-4 py-3">
-                  <span className="num text-sm" data-selecao>
-                    {pick.length ? `${pick.length} ${pick.length === 1 ? 'posição' : 'posições'} · ${sortTeeth(pick).join(' ')}` : 'Nenhuma posição marcada'}
+                <Odontogram value={pick} onChange={setPick} label="Selecionar dentes" hint="Toque nos dentes ou deslize o dedo para marcar vários." />
+                <div className="flex flex-col gap-3 rounded-2xl border border-rule-strong bg-white/[0.04] p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                  <span className="num min-w-0 text-sm" data-selecao>
+                    {pick.length ? (
+                      <>
+                        <span className="font-semibold">{teethCount(pick.length, false, true)}</span>
+                        <span className="text-muted"> · {sortTeeth(pick).join(' ')}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted">Nenhum dente selecionado</span>
+                    )}
                   </span>
                   <button
                     type="button"
                     disabled={!pick.length}
                     onClick={() => setPickStage('etapa')}
-                    className="min-h-11 shrink-0 rounded-full bg-ink px-4 text-sm font-semibold text-on-ink disabled:opacity-40"
+                    className="min-h-12 shrink-0 rounded-full bg-ink px-5 text-[15px] font-semibold text-on-ink disabled:opacity-40"
                   >
                     Escolher procedimento →
                   </button>
                 </div>
               </>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {entry === 'dente' ? (
-                  <p className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <p className="flex flex-wrap items-center justify-between gap-2 text-sm" data-dentes-escolhidos>
                     <span className="num">
-                      Posições: <span className="font-semibold">{sortTeeth(pick).join(' ')}</span>
+                      <span className="text-muted">{teethCount(pick.length, false, true)}: </span>
+                      <span className="font-semibold">{sortTeeth(pick).join(' ')}</span>
                     </span>
-                    <button type="button" className="text-xs font-semibold text-muted underline-offset-4 hover:text-ink hover:underline" onClick={() => setPickStage('dentes')}>
-                      Alterar posições
+                    <button type="button" className="min-h-9 text-xs font-semibold text-muted underline-offset-4 hover:text-ink hover:underline" onClick={() => setPickStage('dentes')}>
+                      Alterar dentes
                     </button>
                   </p>
                 ) : null}
-                {poolTop.length ? (
-                  <div className="flex flex-wrap gap-2" aria-label="Seus mais registrados">
-                    {poolTop.map((o) => (
-                      <button key={o.stepId} type="button" className={chip} onClick={() => choose(o)}>
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={entry === 'dente' ? 'Buscar procedimento para estes dentes…' : 'Buscar: laminado, resina, extração…'}
-                  className={field}
-                  aria-label="Buscar procedimento"
-                  autoComplete="off"
-                />
-                {results.length ? (
-                  <ul className="divide-y divide-rule rounded-xl border border-rule" aria-label="Resultados">
-                    {results.map((o) => (
-                      <li key={o.stepId}>
-                        <button type="button" onClick={() => choose(o)} className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-left text-[15px] hover:bg-white/[0.04]">
-                          <span>{o.label}</span>
-                          <span className="shrink-0 text-xs text-muted">{UNIT_LABEL[o.unit].one}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : query.trim() ? (
-                  <p className="text-sm text-muted">
-                    {entry === 'dente' ? 'Nada encontrado entre as etapas por dente. Procedimento por arcada ou caso? Use “Por procedimento”.' : 'Nada encontrado. Use “Outro procedimento” e descreva.'}
-                  </p>
-                ) : null}
-                <details className="text-sm">
-                  <summary className="cursor-pointer text-muted hover:text-ink">Ver lista completa</summary>
-                  <div className="mt-2 max-h-80 space-y-3 overflow-y-auto pr-1">
-                    {[...new Set(pool.map((o) => o.categoryName))].map((cat) => (
-                      <div key={cat}>
-                        <p className="eyebrow text-[10px]">{cat}</p>
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          {pool
-                            .filter((o) => o.categoryName === cat)
-                            .map((o) => (
-                              <button key={o.stepId} type="button" className="rounded-full border border-rule px-3 py-1.5 text-left text-sm hover:border-ink" onClick={() => choose(o)}>
-                                {o.label}
-                              </button>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
+                <ProcedureChooser pool={pool} quick={quick} query={query} setQuery={setQuery} choose={choose} byTooth={entry === 'dente'} />
               </div>
             )}
             {lines.length ? (
@@ -534,11 +503,13 @@ function LineCard({
   const unit = qty === 1 ? UNIT_LABEL[o.unit].one : UNIT_LABEL[o.unit].many
   const lockedByTeeth = o.location === 'dentes' && l.teeth.length > 0
   const lockedByArch = o.location === 'arcada' && archSupported
+  const positions = usesPositions(o)
   return (
     <div data-linha={index} className="space-y-3 rounded-2xl border border-rule p-3 sm:p-4">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[17px] leading-snug font-semibold" data-escolhido>
-          {o.label}
+        <p className="leading-snug" data-escolhido aria-label={o.label}>
+          <span className="block text-[17px] font-semibold">{o.procedureName}</span>
+          {hasOwnStepName(o) ? <span className="block text-[15px] text-ink-2">{o.stepName}</span> : null}
         </p>
         <button type="button" className="shrink-0 text-xs font-semibold text-muted underline-offset-4 hover:text-ink hover:underline" onClick={remove}>
           Remover
@@ -551,10 +522,11 @@ function LineCard({
             <span className="num" data-posicoes>
               {l.teeth.length ? (
                 <>
-                  Posições: <span className="font-semibold">{sortTeeth(l.teeth).join(' ')}</span>
+                  <span className="text-muted">{positions ? 'Posições FDI' : 'Dentes'}: </span>
+                  <span className="font-semibold">{sortTeeth(l.teeth).join(' ')}</span>
                 </>
               ) : (
-                <span className="text-muted">Sem posições marcadas (opcional)</span>
+                <span className="text-muted">{positions ? 'Nenhuma posição marcada (opcional)' : 'Nenhum dente selecionado (opcional)'}</span>
               )}
             </span>
             <button
@@ -563,10 +535,12 @@ function LineCard({
               className="text-sm font-semibold underline-offset-4 hover:underline"
               onClick={() => update(l.key, { showTeeth: !l.showTeeth })}
             >
-              {l.showTeeth ? 'Fechar odontograma' : l.teeth.length ? 'Alterar posições' : 'Marcar no odontograma'}
+              {l.showTeeth ? 'Fechar odontograma' : l.teeth.length ? (positions ? 'Alterar posições' : 'Alterar dentes') : positions ? 'Marcar posições' : 'Selecionar dentes'}
             </button>
           </p>
-          {l.showTeeth ? <Odontogram value={l.teeth} onChange={(teeth) => update(l.key, { teeth })} hint={teethHint(o)} /> : null}
+          {l.showTeeth ? (
+            <Odontogram value={l.teeth} onChange={(teeth) => update(l.key, { teeth })} label={positions ? 'Posições FDI' : 'Dentes'} hint={teethHint(o)} />
+          ) : null}
         </div>
       ) : null}
 
@@ -585,7 +559,7 @@ function LineCard({
               {lockedByArch && !l.arch ? '—' : qty}
             </span>{' '}
             {lockedByArch && !l.arch ? <span className="text-muted">(escolha a arcada)</span> : <span>{unit}</span>}
-            <span className="text-xs text-muted">{lockedByTeeth ? ' · pelas posições marcadas' : ''}</span>
+            <span className="text-xs text-muted">{lockedByTeeth ? (positions ? ' · pelas posições marcadas' : ' · pelos dentes selecionados') : ''}</span>
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
@@ -637,6 +611,184 @@ function LineCard({
           + Observação (opcional)
         </button>
       )}
+    </div>
+  )
+}
+
+/** Nome do procedimento em destaque e, abaixo, a etapa (quando a etapa tem nome próprio). */
+function StepText({ o, compact = false }: { o: StepOption; compact?: boolean }) {
+  return (
+    <span className="min-w-0">
+      <span className={cn('block font-semibold', compact ? 'text-sm' : 'text-[15px]')}>{o.procedureName}</span>
+      {hasOwnStepName(o) ? <span className={cn('block text-ink-2', compact ? 'text-xs' : 'text-sm')}>{o.stepName}</span> : null}
+    </span>
+  )
+}
+
+/**
+ * Um procedimento e suas etapas (só apresentação): primeiro o tratamento, abaixo a etapa realizada.
+ * Com uma única etapa no caminho atual, um toque basta.
+ */
+function ProcedureRow({ g, choose, compact = false }: { g: ProcedureGroup; choose: (o: StepOption) => void; compact?: boolean }) {
+  if (g.steps.length === 1) {
+    const o = g.steps[0]!
+    return (
+      <button
+        type="button"
+        onClick={() => choose(o)}
+        aria-label={o.label}
+        data-etapa={o.label}
+        className={cn('flex w-full items-center justify-between gap-3 px-3 text-left hover:bg-white/[0.04]', compact ? 'min-h-11 py-1.5' : 'min-h-12 py-2')}
+      >
+        <StepText o={o} compact={compact} />
+        <span className="shrink-0 text-xs text-muted">{UNIT_LABEL[o.unit].one}</span>
+      </button>
+    )
+  }
+  return (
+    <div className={cn('px-3', compact ? 'py-2' : 'py-2.5')} data-procedimento={g.procedureName}>
+      <p className={cn('font-semibold', compact ? 'text-sm' : 'text-[15px]')}>{g.procedureName}</p>
+      <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label={`Etapas de ${g.procedureName}`}>
+        {g.steps.map((o) => (
+          <button
+            key={o.stepId}
+            type="button"
+            onClick={() => choose(o)}
+            aria-label={o.label}
+            data-etapa={o.label}
+            className="inline-flex min-h-11 items-center rounded-full border border-rule-strong px-4 text-sm transition-colors hover:border-ink active:scale-[0.98]"
+          >
+            {o.stepName}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Escolha do procedimento/etapa: acesso rápido (recentes, frequentes ou padrão — no máximo 6), busca e lista
+ * completa por categoria. `pool` já vem filtrado pelo caminho (no "Por dente", só etapas que identificam dentes).
+ */
+function ProcedureChooser({
+  pool,
+  quick,
+  query,
+  setQuery,
+  choose,
+  byTooth,
+}: {
+  pool: StepOption[]
+  quick: QuickItem[]
+  query: string
+  setQuery: (q: string) => void
+  choose: (o: StepOption) => void
+  byTooth: boolean
+}) {
+  const [open, setOpen] = useState<string | null>(null)
+  const results = groupByProcedure(searchOptions(pool, query))
+  const openGroup = quick.find((i): i is Extract<QuickItem, { kind: 'procedimento' }> => i.kind === 'procedimento' && i.group.procedureId === open)?.group
+  const personal = quick.some((i) => i.source !== 'padrao')
+  return (
+    <div className="space-y-3">
+      {quick.length && !query.trim() ? (
+        <div data-acesso-rapido>
+          <p className="text-xs text-muted">{personal ? 'Acesso rápido · seus recentes e mais usados' : 'Acesso rápido'}</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {quick.map((i) => {
+              if (i.kind === 'etapa') {
+                return (
+                  <button
+                    key={i.option.stepId}
+                    type="button"
+                    onClick={() => choose(i.option)}
+                    aria-label={i.option.label}
+                    data-etapa={i.option.label}
+                    data-fonte={i.source}
+                    className="flex min-h-14 items-center rounded-2xl border border-rule-strong px-3 py-2 text-left transition-colors hover:border-ink active:scale-[0.98]"
+                  >
+                    <StepText o={i.option} compact />
+                  </button>
+                )
+              }
+              const g = i.group
+              const single = g.steps.length === 1 ? g.steps[0]! : null
+              const isOpen = open === g.procedureId
+              return (
+                <button
+                  key={g.procedureId}
+                  type="button"
+                  onClick={() => (single ? choose(single) : setOpen(isOpen ? null : g.procedureId))}
+                  aria-label={single ? single.label : g.procedureName}
+                  aria-expanded={single ? undefined : isOpen}
+                  data-etapa={single ? single.label : undefined}
+                  data-procedimento-rapido={single ? undefined : g.procedureName}
+                  data-fonte={i.source}
+                  className={cn(
+                    'flex min-h-14 items-center justify-between gap-2 rounded-2xl border px-3 py-2 text-left transition-colors hover:border-ink active:scale-[0.98]',
+                    isOpen ? 'border-ink bg-white/[0.06]' : 'border-rule-strong',
+                  )}
+                >
+                  {single ? (
+                    <StepText o={single} compact />
+                  ) : (
+                    <>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold">{g.procedureName}</span>
+                        <span className="block text-xs text-muted">{g.steps.length} etapas</span>
+                      </span>
+                      <span aria-hidden="true" className={cn('shrink-0 text-muted transition-transform', isOpen && 'rotate-90')}>
+                        ›
+                      </span>
+                    </>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          {openGroup ? (
+            <div className="mt-2 rounded-2xl border border-rule bg-white/[0.03]" data-etapas-abertas>
+              <ProcedureRow g={openGroup} choose={choose} />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={byTooth ? 'Buscar procedimento para estes dentes…' : 'Buscar: laminado, resina, extração…'}
+        className={field}
+        aria-label="Buscar procedimento"
+        autoComplete="off"
+      />
+      {results.length ? (
+        <ul className="divide-y divide-rule rounded-xl border border-rule" aria-label="Resultados">
+          {results.map((g) => (
+            <li key={g.procedureId}>
+              <ProcedureRow g={g} choose={choose} />
+            </li>
+          ))}
+        </ul>
+      ) : query.trim() ? (
+        <p className="text-sm text-muted">
+          {byTooth ? 'Nada encontrado entre os procedimentos por dente. Procedimento por arcada ou caso? Use “Por procedimento”.' : 'Nada encontrado. Use “Outro procedimento” e descreva.'}
+        </p>
+      ) : null}
+      <details className="text-sm">
+        <summary className="min-h-9 cursor-pointer py-1 text-muted hover:text-ink">Ver lista completa</summary>
+        <div className="mt-2 max-h-96 space-y-4 overflow-y-auto pr-1" data-lista-completa>
+          {[...new Set(pool.map((o) => o.categoryName))].map((cat) => (
+            <div key={cat}>
+              <p className="eyebrow text-[10px]">{cat}</p>
+              <div className="mt-1 divide-y divide-rule rounded-xl border border-rule">
+                {groupByProcedure(pool.filter((o) => o.categoryName === cat)).map((g) => (
+                  <ProcedureRow key={g.procedureId} g={g} choose={choose} compact />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
     </div>
   )
 }

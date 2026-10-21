@@ -36,3 +36,12 @@ export function CaseCover({
     </span>
   )
 }
+
+/** Sem foto de capa: selo pequeno ao lado do código do paciente (nada de bloco vazio grande). */
+export function CoverBadge({ className }: { className?: string }) {
+  return (
+    <span aria-hidden="true" className={cn('flex size-12 shrink-0 items-center justify-center rounded-2xl border border-rule bg-[#0d0d0d] sm:size-14', className)} data-capa-selo>
+      <IconTooth size={22} className="text-white/25" />
+    </span>
+  )
+}
