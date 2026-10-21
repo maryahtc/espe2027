@@ -1536,9 +1536,12 @@ sem faces, condições, diagnóstico, anamnese, evolução, prescrição ou exam
 - **Modo de simulação:** odontograma e arcada funcionam no rascunho, sem gravar nada.
 - **Migração `20261021120000_odontograma_arcada`** (só aditiva): tipos `step_location` e `dental_arch`, coluna
   `location` (preenchida pela unidade e pela tabela acima), coluna `arch`, gatilhos de coerência novos (sem alterar
-  os existentes) e `arch`/`location` no fim da visão `active_performed_procedures`. **Ainda não aplicada em
-  produção** — aguarda autorização. Até lá o portal publicado segue o comportamento anterior (detecta a versão do
-  banco), sem arcada.
+  os existentes) e `arch`/`location` no fim da visão `active_performed_procedures`. **Aplicada em produção
+  em 21/10/2026**, com autorização da Maryah. Fingerprint antes/depois (52 itens): mudaram só `schema_info` (versão),
+  `procedure_steps` (idêntica sem a coluna `location`; `updated_at` preservado) e `change_log` (+47 registros
+  automáticos `update` só de `location`; os 587 anteriores idênticos). Catálogo 12/41/56; políticas, ACLs de tabelas e
+  funções, RLS, Storage e Auth idênticos; funções novas sem `execute` para `anon`/`authenticated`. Com o banco numa
+  versão anterior, o portal detecta isso e segue o comportamento antigo, sem arcada.
 - **Para a Minha Produção (Etapa 9), sem duplicar dados:** experiência (todas as etapas), concluídos (etapa que
   conclui), por categoria, mês, módulo, dente (cada posição listada) e arcada (campo novo; e, para posições FDI, pela
   numeração 1x/2x = superior, 3x/4x = inferior).
