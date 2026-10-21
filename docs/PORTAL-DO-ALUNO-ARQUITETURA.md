@@ -1,6 +1,6 @@
 # Portal do Aluno — Arquitetura (v1, decisões incorporadas)
 
-> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass.** Etapa 2 autorizada; ambiente em configuração (ver seção S).
+> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass · Etapa 6 · Meus casos APROVADA / CONCLUÍDA (21/10/2026; ver "Marco — ETAPA 6").** Etapa 2 autorizada; ambiente em configuração (ver seção S).
 > v0: 06/10/2026 · v1: 06/10/2026 — decisões da coordenação incorporadas (ver seção P, "Alterações v0 → v1").
 > Data de referência: primeira turma em **fevereiro de 2027**. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
 > (portal público de cronograma, `docs/ARQUITETURA.md`).
@@ -1345,7 +1345,7 @@ Parte 2 aprovada pela Maryah em 13/10/2026; com isso a Etapa 5 está oficialment
 | Publicação do portal público, configuração real do Bunny, tema "inteligência", envio em lote de aulas gravadas | Pendências das Etapas 3–4, mantidas |
 | Proteção de produção e backups | Etapa 11b, obrigatória antes do go-live |
 
-### Etapa 6 — Meus casos (proposta em revisão, 13/10/2026)
+### Etapa 6 — Meus casos (proposta de 13/10/2026; etapa APROVADA / CONCLUÍDA em 21/10/2026 — ver "Marco — ETAPA 6")
 
 Arquitetura aprovada conceitualmente em 13/10/2026, com ajustes (registro com 4 essenciais; caso ≠ procedimento;
 exclusão lógica para o aluno e definitiva só administrativa). Versão ajustada, registro rápido final e catálogo inicial
@@ -1585,6 +1585,80 @@ data; `caseJourney` em `lib/cases/model.ts`, componente `CaseJourney`).
   auditoria.
 - Fim da linha: só o status real — "Em andamento" ou "Caso concluído · data". Nada de próxima consulta ou previsão.
 - Edição, exclusão e restauração de cada registro continuam na própria etapa ("Editar").
+
+### Marco — ETAPA 6 (MEUS CASOS) APROVADA E CONCLUÍDA (21/10/2026)
+
+Aprovada pela Maryah em 21/10/2026, após o teste manual final no Modo de simulação. **A experiência e as decisões
+arquiteturais desta etapa estão congeladas**: mudar qualquer ponto abaixo exige nova proposta e aprovação explícita.
+
+Escopo aprovado: criação e gestão de casos; registro rápido por dente e por procedimento; odontograma FDI; arcada;
+observação por registro; procedimento → etapa; foto de capa privada; reflexão e informações complementares; conclusão e
+reabertura; jornada visual por consulta/data; filtro da jornada pelo odontograma; leitura somente leitura da
+coordenação/Admin; auditoria; exclusão lógica/restauração pelo aluno e exclusão definitiva administrativa; Modo de
+simulação sem gravações no banco ou no Storage.
+
+**Versão de referência (visual e funcional aprovada): commit `58ff665`** na branch `claude/upbeat-bohr-8heral`
+(publicada no portal de produção em 21/10/2026). O commit-marco "ETAPA 6 APROVADA — MEUS CASOS" registra este
+congelamento sem nenhuma alteração funcional (o repositório não usa tags; os marcos são commits, como o da Etapa 1).
+
+| Parte | Código no portal de produção | Banco de produção |
+|---|---|---|
+| 1 · Banco, catálogo, regras, Admin → Procedimentos | Publicado e em uso | `20261019120000_casos` e `20261019120100_catalogo_procedimentos` aplicadas em 19/10/2026 (só aditivas; catálogo aprovado: 12 categorias, 41 procedimentos, 56 etapas) |
+| 2 · Registro rápido e Meus casos | Publicado e em uso | Sem migração |
+| 3 · Capa privada, leitura coordenação/Admin, auditoria, exclusão definitiva | Publicado e em uso | `20261020120000_casos_capa` aplicada em 20/10/2026 (só aditiva; bucket privado `case-covers`) |
+| Ajustes finais · Modo de simulação | Publicado e em uso | Sem migração |
+| Ajustes finais · odontograma e arcada | Publicado e em uso | `20261021120000_odontograma_arcada` aplicada em 21/10/2026 (só aditiva; `procedure_steps.location`, `performed_procedures.arch`) |
+| Polimento de UX e jornada do caso | Publicado e em uso | Sem migração |
+
+Banco de produção ao fechar: versão `20261021120000_odontograma_arcada`; catálogo 12/41/56; nenhum caso ou registro de
+teste (0 registros em `performed_procedures`; conferência somente leitura em 21/10/2026).
+
+**Decisões e limites congelados (para evitar regressões)**
+
+1. **Não é prontuário.** Nada de faces, condições/patologias, diagnóstico, queixa, anamnese, evolução, plano clínico,
+   prescrição ou exames. A documentação clínica fica no Smile Cloud (link no caso). Observação por registro: nota curta
+   (200 caracteres) com aviso explícito.
+2. **Caso ≠ procedimento.** O caso é do paciente (iniciais/código, nunca nome, CPF ou telefone — mesmas regras na tela e
+   no banco); cada registro é uma **etapa** do catálogo. "Procedimento → etapa" é só apresentação: a estrutura
+   procedimento/etapa do catálogo não muda.
+3. **Localização na etapa, não na unidade:** `procedure_steps.location` (dentes · arcada · nenhuma); dente/arcada/caso
+   fixas, peça escolhida etapa a etapa no Admin. Arcada em `performed_procedures.arch`. Quantidade = nº de posições
+   marcadas, 1–2 pela arcada, 1 por caso. Uma só regra (`resolvePlacement`) no registro real e na simulação, espelhando
+   os gatilhos do banco, que conferem de novo.
+4. **FDI 11–48 só como posição.** Interface fala em "dentes"; "posição FDI" só onde pode não haver dente (PPF/pôntico,
+   implante, coroa sobre implante, enxerto ósseo). Dentes sempre exibidos e gravados na ordem do odontograma.
+5. **Consulta = data dos registros.** Não existe tabela de consultas; numeração pela ordem cronológica de todas as
+   datas do caso (não muda com o filtro). A jornada termina só no status real; nada de "próxima consulta/etapa".
+6. **Acesso rápido derivado**, sem estrutura nova: recentes → frequentes → atalhos padrão do catálogo; na simulação,
+   só os padrão.
+7. **Privacidade da foto:** bucket privado, link assinado de 10 min gerado no servidor, sem EXIF/GPS, sem o rosto
+   inteiro; a foto é opcional e só identifica o caso na lista.
+8. **Coordenação/Admin só leem.** Cada abertura de caso grava auditoria antes de qualquer dado sair do banco; por isso
+   o mapa de dentes deles não filtra (cada toque seria nova auditoria). O aluno não vê a auditoria.
+9. **Exclusão:** o aluno só exclui logicamente (e restaura); a definitiva é só do Admin, só de caso já excluído pelo
+   aluno, com motivo, código do paciente digitado e registro na auditoria.
+10. **Modo de simulação:** a conta Admin continua exclusivamente Admin; cookie cifrado (AES-256-GCM), ligado ao Admin e
+    à turma, até 2 h; nada é gravado no banco ou no Storage (foto só no navegador); sem aluno fictício persistente; sem
+    afrouxar RLS; comportamento do aluno real inalterado. **Toda página do aluno chama `guardStudentPage()` e toda ação
+    do aluno passa por `studentGate()`** — obrigatório também em páginas/ações futuras.
+11. **Degradação segura:** o código detecta a versão do banco (`odontogramReady`) e segue o comportamento anterior se a
+    migração ainda não estiver aplicada.
+12. **Minha Produção é a Etapa 9:** usará `active_performed_procedures` (com `arch` e `location`); nenhum painel agora.
+13. **Produção:** só migrações aditivas, com autorização e conferência antes/depois; testes, seeds e E2E só no ambiente
+    local/CI (regra do `AGENTS.md`).
+
+Testes ao fechar (todos fora da produção): banco 238 · unitários 106 · E2E local: casos 45, odontograma 51,
+simulação 70, capa/coordenação/Admin 70, botão registrar 9, procedimentos 21, acompanhamento 21, Início 41.
+
+**Pendências conhecidas (não bloqueiam; não iniciar sem decisão):**
+
+| Pendência | Onde entra |
+|---|---|
+| Restringir o link do caso ao domínio oficial do Smile Cloud | Antes do piloto (Etapa 12) |
+| Filtro por dente na leitura da coordenação/Admin sem auditoria repetida (sugerido, não decidido) | A decidir |
+| Renomear "Completar caso" (reflexão/dados) para evitar confusão com "Concluir caso" (sugerido, não decidido) | A decidir |
+| Minha Produção (painel) e recomendações | Etapa 9 |
+| Proteção de produção e backups | Etapa 11b, obrigatória antes do go-live |
 
 ## N. Decisões
 
