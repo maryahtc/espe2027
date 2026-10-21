@@ -19,6 +19,9 @@ create type public.dental_arch as enum ('superior', 'inferior', 'ambas');
 alter table public.procedure_steps add column location public.step_location not null default 'nenhuma';
 
 -- Preenchimento: pela unidade; nas etapas por peça, conforme aprovado (placa oclusal → arcada; demais → dentes).
+-- Só a localização muda: o carimbo automático de updated_at fica desligado durante este preenchimento (o histórico
+-- do catálogo, change_log, continua registrando a mudança de localização de cada etapa).
+alter table public.procedure_steps disable trigger procedure_steps_updated_at;
 update public.procedure_steps s
    set location = case
      when s.unit = 'dente' then 'dentes'::public.step_location
@@ -38,6 +41,7 @@ update public.procedure_steps s
      when s.unit = 'peca' then 'dentes'::public.step_location
      else 'nenhuma'::public.step_location
    end);
+alter table public.procedure_steps enable trigger procedure_steps_updated_at;
 
 alter table public.procedure_steps add constraint procedure_steps_location_check check (
   (unit = 'dente' and location = 'dentes')
