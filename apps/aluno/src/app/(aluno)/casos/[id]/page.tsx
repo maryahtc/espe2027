@@ -10,6 +10,8 @@ import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { CaseCover, CoverBadge } from '@/components/cases/CaseCover'
 import { CaseJourney } from '@/components/cases/CaseJourney'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
+import { CasePlan } from '@/components/plans/CasePlan'
+import { loadMyPlan } from '@/lib/plans/load'
 import { CoverUpload } from '@/components/cases/CoverUpload'
 import { RecordPlacement } from '@/components/cases/RecordPlacement'
 import { cohortModules, loadFaculty } from '@/lib/academic/load'
@@ -46,11 +48,11 @@ function Block({ id, title, children, aside }: { id: string; title: string; chil
 
 const inputCls = 'field mt-1.5 block min-h-11 w-full px-3 text-base'
 
-export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ registrado?: string; dente?: string }> }) {
+export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ registrado?: string; dente?: string; vinculo?: string }> }) {
   await guardStudentPage()
   const auth = await requireUser()
   if (!auth) notFound()
-  const [{ id }, { registrado, dente }] = await Promise.all([params, searchParams])
+  const [{ id }, { registrado, dente, vinculo }] = await Promise.all([params, searchParams])
   const c = await loadMyCase(id, auth.userId)
   if (!c) notFound()
   const [options, modules, faculty, taxonomy, writable, covers, archSupported] = await Promise.all([
@@ -62,7 +64,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
     coverUrls([c.coverPath]),
     odontogramReady(),
   ])
-  const help = await relatedContents(c, auth.userId)
+  const [help, plan] = await Promise.all([relatedContents(c, auth.userId), loadMyPlan(c.id)])
   const byStep = new Map(options.map((o) => [o.stepId, o]))
   const moduleName = (mid: string | null) => {
     const m = modules.find((x) => x.id === mid)
@@ -255,6 +257,20 @@ export default async function CasePage({ params, searchParams }: { params: Promi
             </details>
           ) : null}
         </Block>
+
+        {/* Etapa 8: o que se pretende fazer — separado da Jornada (null = Planejamento desativado neste banco). */}
+        {plan ? (
+          <Block id="planejamento" title="Planejamento do caso">
+            <CasePlan
+              caseId={c.id}
+              visits={plan}
+              records={c.records}
+              options={options}
+              editable={editable && c.status === 'em_andamento'}
+              link={vinculo === 'ok' || vinculo === 'falhou' ? vinculo : null}
+            />
+          </Block>
+        ) : null}
 
         <Block id="reflexao" title="Reflexão e dados do caso">
           <div className="grid gap-4 md:grid-cols-3">

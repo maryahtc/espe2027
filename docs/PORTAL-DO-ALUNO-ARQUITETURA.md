@@ -1829,7 +1829,39 @@ foi aplicada em produção** — aguarda relatório e autorização explícita.
 - **Regras puras** (`apps/aluno/src/lib/plans/model.ts`): comparação calculada planejado × realizado (registrado como
   planejado / em parte / não registrado / também realizado), ordem de exibição, posições que faltaram (só sob pedido)
   e pré-preenchimento do registro real (etapa desativada fica de fora; regra de localização mudada → "Revise").
-- Interface, ações, simulação e leitura da coordenação/Admin: Parte 2 (não iniciada).
+- Interface, ações, simulação e leitura da coordenação/Admin: Parte 2.
+
+### Etapa 8 · Planejamento do Caso — Parte 2: interface, fluxos e simulação (23/10/2026)
+
+**Implementada e testada só no ambiente local. Etapa 8 NÃO concluída. A migração `20261023120000_planejamento_caso`
+continua NÃO aplicada em produção.** O código pode ser publicado porque a detecção de versão mantém o Planejamento
+desligado enquanto produção estiver em `20261021120000_odontograma_arcada`.
+
+- **Detecção de versão** (`lib/plans/schema.ts`): `planReady()` lê `health().schema` e só liga com
+  `>= 20261023120000`. Uso real (aluno, coordenação, Admin): sem a migração nenhuma tela consulta as tabelas novas, a
+  seção não aparece, as rotas do editor dão 404 e `?plano=` no registro rápido é ignorado. **Na Simulação** o
+  Planejamento funciona mesmo com o banco antigo, porque vive só no rascunho cifrado (nenhuma tabela é lida/escrita).
+- **Página do caso**: "Jornada do caso" intacta; abaixo, "Planejamento do caso" com o aviso "Planejamento de estudo do
+  caso. Não é prontuário nem agenda; o plano clínico oficial fica no Smile Cloud." Lista vertical, linha tracejada,
+  marcadores vazados, "Planejado", procedimento → etapas, dentes discretos. Vazio: "+ Planejar consulta".
+- **Rotas** `/casos/[id]/planejamento/nova` e `/casos/[id]/planejamento/[consulta]`: Por dente / Por procedimento,
+  catálogo procedimento → etapa (componente `ProcedureChooser` extraído do registro rápido, sem mudar comportamento),
+  odontograma/arcada quando a etapa pede, vários itens, quantidade, "Outro procedimento", "Observação do planejamento
+  (opcional)" ≤ 200, excluir item, salvar, editar, excluir consulta planejada; ↑ ↓ na página do caso. Sem data,
+  horário, diagnóstico ou nota por item.
+- **"Registrar o que foi realizado"** abre o registro rápido real da Etapa 6 pré-preenchido (caso, hoje editável,
+  itens válidos, aviso "Confira e ajuste o que realmente foi feito."). Só o registro salvo grava em
+  `performed_procedures`; depois disso o vínculo é tentado; se falhar, os registros ficam e a página oferece vincular
+  manualmente.
+- **Consulta vinculada · DD/MM**: comparação calculada ao vivo (✓ registrado como planejado; ◐ registrado em parte;
+  ○ não registrado nesta consulta; + também realizado nesta consulta), "ver na Jornada", somente leitura, única ação
+  "Desfazer vínculo". Para ◐/○: "Levar para a próxima consulta planejada" ou "Planejar em nova consulta" (só o que
+  faltou); nada migra sozinho. "Vincular a uma consulta já registrada" lista só datas elegíveis e livres do caso.
+- **Coordenação/Admin**: mesma leitura e comparação dentro da leitura do caso, sem ações, com a auditoria existente.
+- **Simulação**: fluxo completo no rascunho (`lib/plans/sim.ts`), limite 10 consultas × 10 itens por caso, mensagem de
+  limite existente se o cookie encher antes; arquitetura do cookie inalterada.
+- **Etapa 6 (acréscimos permitidos)**: `QuickRegister` ganhou a prop opcional `fromPlan`; a ação de registro aceita
+  `planVisitId` opcional. Sem ela, comportamento idêntico (regressões verdes).
 
 ## N. Decisões
 

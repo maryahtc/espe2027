@@ -6,6 +6,7 @@
  * As regras dos casos repetem as do banco (gatilhos e restrições), para a experiência ser a mesma do aluno real.
  * Funções puras: testáveis sem banco.
  */
+import type { SimPlanVisit } from '@/lib/plans/sim'
 import type { CountUnit, DentalArch, StepLocation } from '@/lib/procedures/model'
 import { hasPersonalIdentifier, resolvePlacement, type CaseVM, type ModuleSpan, moduleForDate, patientLabelError, type RecordVM, validTooth } from '@/lib/cases/model'
 
@@ -58,6 +59,8 @@ export type SimState = {
   progress: Record<string, SimProgress>
   checks: string[]
   dismissed: string[]
+  /** Planejamento do caso (Etapa 8) — ausente em rascunhos anteriores. */
+  plans?: SimPlanVisit[]
 }
 
 export type SimPayload = {

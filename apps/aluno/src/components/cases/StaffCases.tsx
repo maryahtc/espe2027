@@ -9,6 +9,8 @@ import type { ReactNode } from 'react'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { CaseCover, CoverBadge } from '@/components/cases/CaseCover'
 import { CaseJourney } from '@/components/cases/CaseJourney'
+import { CasePlan } from '@/components/plans/CasePlan'
+import { loadStaffPlan } from '@/lib/plans/load'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { cohortModules, loadFaculty, today } from '@/lib/academic/load'
 import type { AuthState } from '@/lib/auth/session'
@@ -295,6 +297,8 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
     relatedContents(c, c.ownerId),
     admin ? loadCaseAudit({ caseId: c.id }) : Promise.resolve([] as AuditEntry[]),
   ])
+  // Etapa 8: Planejamento só leitura (a abertura do caso já gravou a auditoria); null = banco sem a migração.
+  const plan = await loadStaffPlan(c.id)
   const byStep = new Map(options.map((o) => [o.stepId, o]))
   const moduleName = (mid: string | null) => {
     const m = modules.find((x) => x.id === mid)
@@ -388,6 +392,12 @@ export async function StaffCasePage({ auth, base, id }: { auth: AuthState; base:
             <p className="text-sm text-muted">Nenhum registro ativo neste caso.</p>
           )}
         </Block>
+
+        {plan ? (
+          <Block id="planejamento" title="Planejamento do caso">
+            <CasePlan caseId={c.id} visits={plan} records={c.records} options={options} editable={false} staff />
+          </Block>
+        ) : null}
 
         <Block id="reflexao" title="Reflexão do aluno">
           <div className="grid gap-4 md:grid-cols-3">

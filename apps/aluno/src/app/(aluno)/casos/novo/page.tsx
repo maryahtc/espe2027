@@ -5,15 +5,17 @@ import Link from 'next/link'
 import { QuickRegister } from '@/components/cases/QuickRegister'
 import { studentArea } from '@/lib/academic/student'
 import { requireUser } from '@/lib/auth/session'
-import { loadRegistration } from '@/lib/cases/load'
+import { loadRegistration, loadStepOptions } from '@/lib/cases/load'
 import { odontogramReady } from '@/lib/cases/schema'
 import { caseHeadline } from '@/lib/cases/model'
 import { guardStudentPage } from '@/lib/simulation/guard'
+import { loadMyPlan } from '@/lib/plans/load'
+import { displayOrder, type PrefillLine, prefillLines } from '@/lib/plans/model'
 
 export const metadata: Metadata = { title: 'Registrar' }
 
 /** Registro rápido: o que o aluno fez hoje, em caso novo ou em andamento (meta: 20–30 s no celular). */
-export default async function NewRecordPage({ searchParams }: { searchParams: Promise<{ caso?: string }> }) {
+export default async function NewRecordPage({ searchParams }: { searchParams: Promise<{ caso?: string; plano?: string }> }) {
   await guardStudentPage()
   const auth = await requireUser()
   const area = await studentArea()
@@ -22,9 +24,17 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
       <EmptyState title="Registro de casos indisponível">Assim que sua conta estiver vinculada a uma turma, você registra seus casos aqui.</EmptyState>
     )
   }
-  const { caso } = await searchParams
+  const { caso, plano } = await searchParams
   const r = await loadRegistration(auth, area.cohort.id)
   const initial = r.openCases.find((c) => c.id === caso)?.id ?? null
+  const archSupported = await odontogramReady()
+  // Etapa 8: "Registrar o que foi realizado" — só pré-preenche (consulta planejada ainda sem vínculo, do mesmo caso).
+  let fromPlan: { visitId: string; label: string; lines: PrefillLine[]; skipped: string[] } | undefined
+  if (initial && plano) {
+    const plan = await loadMyPlan(initial)
+    const visit = plan ? displayOrder(plan).find((v) => v.id === plano && !v.realizedOn) : undefined
+    if (visit) fromPlan = { visitId: visit.id, label: `Consulta planejada ${visit.number}`, ...prefillLines(visit, await loadStepOptions(), archSupported) }
+  }
   return (
     <div className="max-w-3xl">
       <Link href={initial ? `/casos/${initial}` : '/casos'} className="text-sm text-muted hover:text-ink">
@@ -41,7 +51,8 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
           supervisors={r.supervisors}
           topics={r.topics}
           initialCaseId={initial}
-          archSupported={await odontogramReady()}
+          archSupported={archSupported}
+          fromPlan={fromPlan}
         />
       ) : (
         <EmptyState title="Esta conta não pode registrar casos agora">

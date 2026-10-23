@@ -21,6 +21,8 @@ import { type DentalArch, ARCHES } from '@/lib/procedures/model'
 import { loadStepOptions } from './load'
 import { hasPersonalIdentifier, parseTeeth, patientLabelError, resolvePlacement } from './model'
 import { odontogramReady } from './schema'
+import { planReady } from '@/lib/plans/schema'
+import { simPlanLink } from '@/lib/plans/sim'
 
 /**
  * Ações de Meus casos. Só o dono escreve, em turma ativa — o banco garante (RLS + gatilhos); aqui as mensagens são
@@ -99,11 +101,13 @@ type Payload = {
   lines: Array<{ stepId: string; quantity: number; teeth: number[]; description?: string; arch?: DentalArch | null; note?: string }>
   module: { auto: true } | { auto: false; id: string | null }
   extras?: { title?: string; supervisorId?: string; smile?: string; difficulty?: string; ease?: string; differently?: string; topicIds?: string[] }
+  /** Etapa 8: consulta planejada de origem ("Registrar o que foi realizado"). Só usada DEPOIS de salvar, para vincular. */
+  planVisitId?: string
 }
 
 /** Registra o que o aluno fez hoje: em caso novo (cria o caso) ou em caso em andamento. */
 export async function registerProcedures(_: ActionState, fd: FormData): Promise<ActionState> {
-  const out: { caseId?: string; count?: number } = {}
+  const out: { caseId?: string; count?: number; link?: 'ok' | 'falhou' } = {}
   const result = await run(async ({ auth, db, sim }) => {
     let p: Payload
     try {
@@ -112,9 +116,23 @@ export async function registerProcedures(_: ActionState, fd: FormData): Promise<
       throw new Error('Não foi possível ler o registro.')
     }
     if (sim) {
-      const r = await applySim(sim, (state, ctx) => simRegister(state, p as RegisterInput, ctx))
+      const r = await applySim(sim, (state, ctx) => {
+        const reg = simRegister(state, p as RegisterInput, ctx)
+        // Etapa 8: só depois do registro salvo, tenta vincular a consulta planejada (falha não desfaz o registro).
+        let link: 'ok' | 'falhou' | undefined
+        if (p.planVisitId) {
+          try {
+            simPlanLink(state, p.planVisitId, p.date)
+            link = 'ok'
+          } catch {
+            link = 'falhou'
+          }
+        }
+        return { ...reg, link }
+      })
       out.caseId = r.caseId
       out.count = r.count
+      out.link = r.link
       return
     }
     const date = checkDate(p.date)
@@ -191,8 +209,20 @@ export async function registerProcedures(_: ActionState, fd: FormData): Promise<
     fail(error)
     out.caseId = caseId
     out.count = rows.length
+    // Etapa 8: os registros reais já estão salvos; só agora tenta vincular a consulta planejada de origem.
+    // Se não der, os registros ficam (nada é desfeito) e a página oferece o vínculo manual.
+    if (p.planVisitId && UUID.test(p.planVisitId) && (await planReady())) {
+      const { data: linked, error: linkError } = await db
+        .from('case_plan_visits')
+        .update({ realized_on: date })
+        .eq('id', p.planVisitId)
+        .eq('case_id', caseId)
+        .is('realized_on', null)
+        .select('id')
+      out.link = !linkError && linked?.length ? 'ok' : 'falhou'
+    }
   })
-  if (out.caseId && !result?.erro) redirect(`/casos/${out.caseId}?registrado=${out.count}`)
+  if (out.caseId && !result?.erro) redirect(`/casos/${out.caseId}?registrado=${out.count}${out.link ? `&vinculo=${out.link}` : ''}`)
   return result
 }
 
