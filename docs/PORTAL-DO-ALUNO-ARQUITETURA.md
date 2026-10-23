@@ -1808,6 +1808,29 @@ da Coordenação/Admin · 11 · IA do Conexo (a redesenhar) · 12 · Infraestrut
 | Visão agregada da produção para coordenação/Admin | Etapa 10 |
 | Pendências da Etapa 6 (domínio do Smile Cloud, filtro por dente na leitura da coordenação, renomear "Completar caso") | Mantidas |
 
+### Etapa 8 · Planejamento do Caso — Parte 1: banco e regras (23/10/2026, só local)
+
+Plano final aprovado pela Maryah em 23/10/2026 (inclui: 20 consultas planejadas por caso × 15 itens por consulta no uso
+real; simulação 10 × 10 sem aumentar o cookie). **Parte 1 implementada e testada só no ambiente local. A migração NÃO
+foi aplicada em produção** — aguarda relatório e autorização explícita.
+
+- **Migração `20261023120000_planejamento_caso`** (só aditiva): tabelas `case_plan_visits` (consulta planejada:
+  caso, dono, posição, observação ≤ 200 sem identificadores pessoais, `realized_on` = consulta real vinculada) e
+  `case_plan_items` (etapa do catálogo, dentes, arcada, quantidade, descrição só do "Outro procedimento", posição);
+  função `case_plan_writable` (dono com turma/matrícula ativas, caso em andamento e não removido); gatilhos
+  `case_plan_visits_guard` (dono do caso, nasce sem vínculo, limite 20, vínculo só com registro ativo na data,
+  vinculada somente leitura exceto desfazer o vínculo, exclusão em cascata permitida) e `case_plan_items_guard`
+  (copia caso/dono/procedimento, etapa desativada recusada, descrição do "Outro", limite 15, consulta vinculada
+  imutável); **reutiliza `performed_procedures_location` da Etapa 6** para dentes/arcada/quantidade; índice único
+  caso + data vinculada; RLS: leitura por `case_readable`, escrita por `case_plan_writable`.
+- **Nada da Etapa 6/7 mudou**: fingerprint local antes/depois (551 itens): 550 idênticos, só `schema_info` mudou; 30
+  objetos novos, todos do planejamento. `performed_procedures`, `active_performed_procedures` e a função reutilizada
+  idênticas.
+- **Regras puras** (`apps/aluno/src/lib/plans/model.ts`): comparação calculada planejado × realizado (registrado como
+  planejado / em parte / não registrado / também realizado), ordem de exibição, posições que faltaram (só sob pedido)
+  e pré-preenchimento do registro real (etapa desativada fica de fora; regra de localização mudada → "Revise").
+- Interface, ações, simulação e leitura da coordenação/Admin: Parte 2 (não iniciada).
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)

@@ -133,6 +133,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"case_plan_items": {
+                  Row: {
+                    "arch": Database["public"]['Enums']["dental_arch"] | null,"case_id": string,"created_at": string,"id": string,"other_description": string | null,"owner_id": string,"position": number,"procedure_id": string,"quantity": number,"step_id": string,"teeth": (number)[],"updated_at": string,"visit_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "arch"?: Database["public"]['Enums']["dental_arch"] | null,"case_id": string,"created_at"?: string,"id"?: string,"other_description"?: string | null,"owner_id": string,"position"?: number,"procedure_id": string,"quantity"?: number,"step_id": string,"teeth"?: (number)[],"updated_at"?: string,"visit_id": string
+                  }
+                  Update: {
+                    "arch"?: Database["public"]['Enums']["dental_arch"] | null,"case_id"?: string,"created_at"?: string,"id"?: string,"other_description"?: string | null,"owner_id"?: string,"position"?: number,"procedure_id"?: string,"quantity"?: number,"step_id"?: string,"teeth"?: (number)[],"updated_at"?: string,"visit_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "case_plan_items_procedure_id_fkey"
+      columns: ["procedure_id"]
+isOneToOne: false
+      referencedRelation: "procedures"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_plan_items_step_id_fkey"
+      columns: ["step_id"]
+isOneToOne: false
+      referencedRelation: "procedure_steps"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_plan_items_visit_id_fkey"
+      columns: ["visit_id"]
+isOneToOne: false
+      referencedRelation: "case_plan_visits"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"case_plan_visits": {
+                  Row: {
+                    "case_id": string,"created_at": string,"id": string,"note": string | null,"owner_id": string,"position": number,"realized_on": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_id": string,"created_at"?: string,"id"?: string,"note"?: string | null,"owner_id": string,"position"?: number,"realized_on"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "case_id"?: string,"created_at"?: string,"id"?: string,"note"?: string | null,"owner_id"?: string,"position"?: number,"realized_on"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "case_plan_visits_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "clinical_cases"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"categories": {
                   Row: {
                     "archived_at": string | null,"created_at": string,"id": string,"name": string,"position": number,"slug": string,"updated_at": string
@@ -1108,6 +1160,9 @@ isOneToOne: false
                            },
 "case_file_case":
 { Args: { "p_path": string }; Returns: string
+                           },
+"case_plan_writable":
+{ Args: { "p_case_id": string }; Returns: boolean
                            },
 "case_readable":
 { Args: { "p_case_id": string }; Returns: boolean
