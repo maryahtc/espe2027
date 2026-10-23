@@ -1,6 +1,6 @@
 # Portal do Aluno — Arquitetura (v1, decisões incorporadas)
 
-> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass · Etapa 6 · Meus casos APROVADA / CONCLUÍDA (21/10/2026; ver "Marco — ETAPA 6").** Etapa 2 autorizada; ambiente em configuração (ver seção S).
+> Status: **arquitetura v1 aprovada · Etapa 1 APROVADA (06/10/2026) · direção visual oficial: Conexo / Dark Glass · Etapa 6 · Meus casos APROVADA / CONCLUÍDA (21/10/2026; ver "Marco — ETAPA 6") · Etapa 7 · Minha Produção APROVADA / CONCLUÍDA (23/10/2026; ver "Marco — ETAPA 7").** Etapa 2 autorizada; ambiente em configuração (ver seção S).
 > v0: 06/10/2026 · v1: 06/10/2026 — decisões da coordenação incorporadas (ver seção P, "Alterações v0 → v1").
 > Data de referência: primeira turma em **fevereiro de 2027**. Base: especificação "Portal do Aluno da Especialização" + leitura do repositório atual
 > (portal público de cronograma, `docs/ARQUITETURA.md`).
@@ -1690,7 +1690,7 @@ simulação 70, capa/coordenação/Admin 70, botão registrar 9, procedimentos 2
 | Minha Produção (painel) e recomendações | Etapa 9 |
 | Proteção de produção e backups | Etapa 11b, obrigatória antes do go-live |
 
-### Etapa 7 · Minha Produção (implementada em 21/10/2026 — aguardando teste e aprovação da Maryah)
+### Etapa 7 · Minha Produção (implementada em 21/10/2026; APROVADA / CONCLUÍDA em 23/10/2026 — ver "Marco — ETAPA 7")
 
 Plano final aprovado em 21/10/2026. **Sem migração, sem tabela/view nova, sem alteração no Supabase**: tudo é derivado
 dos registros da Etapa 6 no momento da leitura (`lib/production/model.ts`, regras puras com testes; carga em
@@ -1736,6 +1736,77 @@ catálogo e o cronograma reais (só leitura), nada gravado no banco ou Storage.
 Testes (fora da produção): unitários 131 (26 novos de produção) · E2E local `producao` 39 (conjunto conhecido com valores
 calculados à mão: todos os indicadores, filtros, categorias, mapa, módulos, cronograma alterado, remover/restaurar,
 isolamento, coordenação, estado vazio, simulação com fingerprint idêntico) + regressões da Etapa 6.
+
+### Marco — ETAPA 7 (MINHA PRODUÇÃO) APROVADA E CONCLUÍDA (23/10/2026)
+
+Aprovada pela Maryah em 23/10/2026, após o teste manual final no Modo de simulação. **A experiência, as regras de
+contagem e as decisões arquiteturais desta etapa estão congeladas**: mudar qualquer ponto abaixo exige nova proposta e
+aprovação explícita.
+
+**Versão de referência (funcional aprovada): commit `c2ab1fa`** na branch `claude/upbeat-bohr-8heral` (publicado no
+portal de produção em 21/10/2026). O commit-marco "ETAPA 7 APROVADA — MINHA PRODUÇÃO" registra este congelamento sem
+nenhuma alteração funcional.
+
+**Banco e Supabase:** a etapa **não exigiu migração nem qualquer alteração no Supabase** (schema, RLS, funções, Storage,
+catálogo ou dados). Banco de produção continua na versão `20261021120000_odontograma_arcada`; produção não foi
+consultada nem alterada nesta etapa.
+
+**Escopo aprovado e congelado**
+- Os quatro indicadores: **Casos clínicos**, **Consultas clínicas**, **Experiências clínicas** e **Tratamentos concluídos**;
+  "procedimentos diferentes" como informação secundária.
+- Minha evolução (Experiências | Tratamentos concluídos, por mês, curso inteiro, período filtrado em destaque).
+- Categoria → procedimento → etapas, com os tratamentos concluídos integrados a cada procedimento (sem seção própria).
+- Meu mapa clínico agregado; resumo separado por arcadas, registros sem dente informado e etapas por caso.
+- Produção por módulo; Áreas para explorar; Biblioteca só com vínculos reais.
+- Filtros (Todo o curso · Este ano do curso · Este módulo · Período) e estados vazios.
+- Modo de simulação (números do rascunho, sem gravações); acesso exclusivo do aluno.
+- Ausência de ranking, comparação, percentil, metas, alertas, IA e dados fictícios.
+
+**Decisões e limites congelados (para evitar regressões)**
+1. **Tudo derivado na leitura** dos registros da Etapa 6 (`lib/production/model.ts`, regras puras); nenhuma tabela,
+   view, coluna ou gravação nova para a produção do aluno. Simulação usa as mesmas regras sobre o rascunho.
+2. **Registro válido:** registro e caso não removidos, caso da turma atual do aluno; restaurar volta a contar,
+   exclusão definitiva some; o status do caso não interfere.
+3. **Posições** vêm do registro (dentes; arcada com ambas = superior + inferior; unidade caso = posição única; sem
+   posição = unidades anônimas pela quantidade).
+4. **Experiência** = chave distinta caso + data + etapa + posição (duplicata no mesmo dia conta uma vez; repetição em
+   outra data é nova experiência; independe de como as linhas foram lançadas).
+5. **Tratamento concluído** = só etapas que concluem; unidade distinta caso + procedimento + posição (no máximo 1 por
+   caso e procedimento na unidade caso); data e módulo da primeira conclusão. "Geral" e "Outro procedimento" nunca
+   concluem.
+6. **Consulta** = par distinto caso + data (mesmo conceito da jornada da Etapa 6). **Caso** = caso com registro válido
+   no recorte.
+7. **Módulo efetivo:** automático → recalculado pela data e pelo cronograma atual; corrigido pelo aluno → o gravado.
+   Nada persistido é alterado.
+8. **Ano do curso:** do início da turma à véspera do mesmo dia no ano seguinte; o último termina no fim da turma.
+9. **Mapa:** a intensidade representa exclusivamente a quantidade de experiências na posição FDI (legenda explícita);
+   arcadas nunca são distribuídas entre dentes; nada de condição, qualidade, complexidade ou diagnóstico.
+10. **Áreas para explorar:** só fatos ("ainda sem registro"), sobre o curso inteiro; nenhuma classificação de "pouca
+    exposição", meta, corte ou alerta até existirem referências institucionais.
+11. **Biblioteca:** só procedimento → tema → conteúdo liberado para a turma; sem vínculo, nada é mostrado.
+12. **Acesso:** só o aluno (coordenação vê aviso; Admin só pelo Modo de simulação). A visão agregada da turma é da
+    Etapa 10.
+13. O catálogo atual (categoria, "conclui", nomes) vale para o histórico; etapas e procedimentos desativados continuam
+    contando.
+
+**Testes ao fechar (todos fora da produção):** unitários 131 (26 de produção) · E2E local `producao` 39 · regressões
+casos 45, odontograma 51, simulação 70 (fingerprint do banco e Storage idêntico), capa/coordenação/Admin 70, botão
+registrar 9, Início 41 · build e lint. **Teste manual da Maryah no Modo de simulação: aprovado em 23/10/2026.**
+
+**Roadmap vigente (preservado):** 8 · Mapa de Tratamento / Planejamento do Caso · 9 · Workflows Clínicos · 10 · Painel
+da Coordenação/Admin · 11 · IA do Conexo (a redesenhar) · 12 · Infraestrutura, proteção e preparação para lançamento ·
+13 · Piloto real · 14 · Lançamento.
+
+**Pendências conhecidas (não bloqueiam; não iniciar sem decisão):**
+
+| Pendência | Onde entra |
+|---|---|
+| "Para você" na Início e recomendação logo após registrar (da antiga Etapa 9) | Sem etapa definida |
+| Referências institucionais de exposição por procedimento (para um dia classificar "pouca exposição") | Sem etapa definida (antes MVP 2) |
+| Vínculos procedimento → tema (Admin → Procedimentos) e conteúdos publicados, para a Biblioteca aparecer em Áreas para explorar | Operação do Admin (sem código) |
+| Bloco "Privacidade da produção" do Perfil ainda é protótipo sem efeito (opção de "visualização da turma") | A decidir junto da Etapa 10 / ranking opcional |
+| Visão agregada da produção para coordenação/Admin | Etapa 10 |
+| Pendências da Etapa 6 (domínio do Smile Cloud, filtro por dente na leitura da coordenação, renomear "Completar caso") | Mantidas |
 
 ## N. Decisões
 
