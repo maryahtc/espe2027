@@ -1862,6 +1862,39 @@ desligado enquanto produção estiver em `20261021120000_odontograma_arcada`.
   limite existente se o cookie encher antes; arquitetura do cookie inalterada.
 - **Etapa 6 (acréscimos permitidos)**: `QuickRegister` ganhou a prop opcional `fromPlan`; a ação de registro aceita
   `planVisitId` opcional. Sem ela, comportamento idêntico (regressões verdes).
+- **Ativação (23/10/2026):** migração `20261023120000_planejamento_caso` aplicada em produção com autorização
+  (fingerprint 551 → 581: 0 removidos, só `schema_info` alterado, 30 objetos novos). Etapa 8 ativa, aguardando
+  validação visual em uso normal — **não** marcada como aprovada/congelada.
+
+### Etapa 9 · Workflows Clínicos — Parte 1: banco e regras (24/10/2026, só local)
+
+Plano aprovado pela Maryah em 24/10/2026, com 3 ajustes: procedimento desativado esconde o workflow dos alunos (sem
+apagar nem despublicar; reativado, volta); nenhum "Normalmente segue" — sem próximos passos cadastrados, a seção não
+aparece; checklist só em `sessionStorage`, com "Desmarcar tudo", sem prazo. **Parte 1 implementada e testada só no
+ambiente local. A migração NÃO foi aplicada em produção.** Telas e remoção do protótipo "Pensar": Partes 2 e 3.
+
+Arquitetura conceitual: Workflow = como fazer · Planejamento do caso = o que pretendo fazer neste paciente · Jornada =
+o que realmente fiz · Minha Produção = o que estou construindo na formação.
+
+- **Migração `20261024120000_workflows_clinicos`** (só aditiva): tipo `workflow_item_kind` (passo, material,
+  atenção) e 5 tabelas — `workflows` (um ativo por procedimento; nome e categoria vêm do catálogo; descrição curta,
+  status, ordem, `published_at`, `archived_at`, `created_by`, `updated_by`), `workflow_stages` (nome, endereço
+  gerado do nome, ordem, ligação opcional com a etapa do catálogo do mesmo procedimento), `workflow_stage_items`,
+  `workflow_stage_next` (condição, destino no mesmo workflow e/ou orientação) e `workflow_stage_contents` (referência
+  a conteúdo publicado da Biblioteca, sem cópia).
+- **Quem pode**: `workflow_editor()` = admin ativo ou perfil de coordenação ativo com matrícula de coordenação ativa
+  em turma ativa — escreve só nas 5 tabelas novas. `workflow_readable()` = editor, ou matrícula ativa vendo
+  workflow publicado de procedimento ativo. Vínculo de conteúdo só aparece para quem pode ler o conteúdo.
+- **Regras no banco**: "Outro procedimento" recusado; procedimento desativado não aceita workflow novo; nasce
+  rascunho; publicado exige ≥ 1 etapa e ≥ 1 passo por etapa (gatilho adiado, conferido no fim da transação — por isso
+  `workflow_add_stage` cria etapa + primeiro passo juntos); publicado não se exclui (arquiva); limites 15 etapas,
+  30 itens por tipo, 6 próximos passos, 6 conteúdos; qualquer mudança atualiza `updated_at`/`updated_by`; histórico
+  interno no `change_log` existente (sem tela de versões).
+- **Nada existente mudou**: fingerprint local 581 → 668 itens: 0 removidos, só `schema_info` alterado, 87 objetos
+  novos, todos do Workflow.
+- **Regras puras** (`apps/aluno/src/lib/workflows/model.ts`): seções da etapa, próximos passos exatamente como
+  cadastrados (sem inferência), validação para publicar, visibilidade do aluno (para a Simulação), busca sem acento,
+  agrupamento por categoria do catálogo, link contextual do Planejamento e checklist em `sessionStorage`.
 
 ## N. Decisões
 

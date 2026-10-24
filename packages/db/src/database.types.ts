@@ -1061,6 +1061,136 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"workflow_stage_contents": {
+                  Row: {
+                    "content_id": string,"created_at": string,"id": string,"position": number,"stage_id": string,"workflow_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_id": string,"created_at"?: string,"id"?: string,"position"?: number,"stage_id": string,"workflow_id": string
+                  }
+                  Update: {
+                    "content_id"?: string,"created_at"?: string,"id"?: string,"position"?: number,"stage_id"?: string,"workflow_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflow_stage_contents_content_id_fkey"
+      columns: ["content_id"]
+isOneToOne: false
+      referencedRelation: "contents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflow_stage_contents_stage_id_fkey"
+      columns: ["stage_id"]
+isOneToOne: false
+      referencedRelation: "workflow_stages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"workflow_stage_items": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": Database["public"]['Enums']["workflow_item_kind"],"position": number,"stage_id": string,"text": string,"updated_at": string,"workflow_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["workflow_item_kind"],"position"?: number,"stage_id": string,"text": string,"updated_at"?: string,"workflow_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["workflow_item_kind"],"position"?: number,"stage_id"?: string,"text"?: string,"updated_at"?: string,"workflow_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflow_stage_items_stage_id_fkey"
+      columns: ["stage_id"]
+isOneToOne: false
+      referencedRelation: "workflow_stages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"workflow_stage_next": {
+                  Row: {
+                    "created_at": string,"id": string,"label": string | null,"note": string | null,"position": number,"stage_id": string,"target_stage_id": string | null,"updated_at": string,"workflow_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"label"?: string | null,"note"?: string | null,"position"?: number,"stage_id": string,"target_stage_id"?: string | null,"updated_at"?: string,"workflow_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"label"?: string | null,"note"?: string | null,"position"?: number,"stage_id"?: string,"target_stage_id"?: string | null,"updated_at"?: string,"workflow_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflow_stage_next_stage_id_fkey"
+      columns: ["stage_id"]
+isOneToOne: false
+      referencedRelation: "workflow_stages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflow_stage_next_target_stage_id_fkey"
+      columns: ["target_stage_id"]
+isOneToOne: false
+      referencedRelation: "workflow_stages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"workflow_stages": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"position": number,"procedure_step_id": string | null,"slug": string,"updated_at": string,"workflow_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"position"?: number,"procedure_step_id"?: string | null,"slug": string,"updated_at"?: string,"workflow_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"position"?: number,"procedure_step_id"?: string | null,"slug"?: string,"updated_at"?: string,"workflow_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflow_stages_procedure_step_id_fkey"
+      columns: ["procedure_step_id"]
+isOneToOne: false
+      referencedRelation: "procedure_steps"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflow_stages_workflow_id_fkey"
+      columns: ["workflow_id"]
+isOneToOne: false
+      referencedRelation: "workflows"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"workflows": {
+                  Row: {
+                    "archived_at": string | null,"created_at": string,"created_by": string | null,"id": string,"position": number,"procedure_id": string,"published_at": string | null,"status": Database["public"]['Enums']["content_status"],"summary": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"position"?: number,"procedure_id": string,"published_at"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"summary"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"position"?: number,"procedure_id"?: string,"published_at"?: string | null,"status"?: Database["public"]['Enums']["content_status"],"summary"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflows_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflows_procedure_id_fkey"
+      columns: ["procedure_id"]
+isOneToOne: false
+      referencedRelation: "procedures"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflows_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -1260,10 +1390,19 @@ isOneToOne: false
                            },
 "valid_teeth":
 { Args: { "p_teeth": (number)[] }; Returns: boolean
+                           },
+"workflow_add_stage":
+{ Args: { "p_first_step": string,"p_name": string,"p_procedure_step_id"?: string,"p_workflow_id": string }; Returns: string
+                           },
+"workflow_editor":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"workflow_readable":
+{ Args: { "p_workflow_id": string }; Returns: boolean
                            }
           }
           Enums: {
-            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","dental_arch": "superior"|"inferior"|"ambas","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio","step_location": "dentes"|"arcada"|"nenhuma"
+            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","dental_arch": "superior"|"inferior"|"ambas","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio","step_location": "dentes"|"arcada"|"nenhuma","workflow_item_kind": "passo"|"material"|"atencao"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1379,7 +1518,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"dental_arch": ["superior", "inferior", "ambas"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"],"step_location": ["dentes", "arcada", "nenhuma"]
+            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"dental_arch": ["superior", "inferior", "ambas"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"],"step_location": ["dentes", "arcada", "nenhuma"],"workflow_item_kind": ["passo", "material", "atencao"]
           }
         }
 } as const
