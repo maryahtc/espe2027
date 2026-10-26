@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   checklistKey,
+  formatDate,
   groupByCategory,
   nextSteps,
   parseChecked,
+  nextPosition,
   publishIssues,
+  reorderPositions,
   searchWorkflows,
   serializeChecked,
   stageSections,
@@ -90,10 +93,10 @@ describe('Workflows clínicos — regras puras', () => {
   })
 
   it('publicar: mesma regra do banco (≥ 1 etapa e ≥ 1 passo em cada etapa; material não conta)', () => {
-    expect(publishIssues({ stages: [] })).toEqual(['Adicione pelo menos uma etapa.'])
+    expect(publishIssues({ stages: [] })).toEqual(['O workflow ainda não tem nenhuma etapa.'])
     expect(publishIssues(wf())).toEqual([])
     const semPasso = stage('s9', 'Controle', 9, { items: [{ id: 'm', kind: 'material', text: 'Fio', position: 1 }] })
-    expect(publishIssues({ stages: [...wf().stages, semPasso] })).toEqual(['Etapa "Controle" sem passo a passo.'])
+    expect(publishIssues({ stages: [...wf().stages, semPasso] })).toEqual(['A etapa "Controle" ainda não possui nenhum passo.'])
   })
 
   it('aluno vê só publicado de procedimento ativo (reativar volta a mostrar)', () => {
@@ -143,5 +146,23 @@ describe('Workflows clínicos — regras puras', () => {
     expect(serializeChecked(s)).toBe('["m1","m2"]')
     s = toggleChecked(s, 'm1')
     expect([...s]).toEqual(['m2'])
+  })
+
+  it('↑ ↓: troca com o vizinho e renumera só o que muda; topo/fim não fazem nada', () => {
+    const l = [{ id: 'a', position: 1 }, { id: 'b', position: 2 }, { id: 'c', position: 3 }]
+    expect(reorderPositions(l, 'b', 'up')).toEqual([{ id: 'b', position: 1 }, { id: 'a', position: 2 }])
+    expect(reorderPositions(l, 'b', 'down')).toEqual([{ id: 'c', position: 2 }, { id: 'b', position: 3 }])
+    expect(reorderPositions(l, 'a', 'up')).toEqual([])
+    expect(reorderPositions(l, 'c', 'down')).toEqual([])
+    expect(reorderPositions(l, 'x', 'up')).toEqual([])
+    // posições repetidas (ex.: tudo 0) são corrigidas na mesma operação
+    expect(reorderPositions([{ id: 'a', position: 0 }, { id: 'b', position: 0 }], 'b', 'up')).toEqual([{ id: 'b', position: 1 }, { id: 'a', position: 2 }])
+    expect(nextPosition([])).toBe(1)
+    expect(nextPosition(l)).toBe(4)
+  })
+
+  it('data da última atualização em DD/MM/AAAA no fuso de São Paulo', () => {
+    expect(formatDate('2026-10-24T02:30:00Z')).toBe('23/10/2026')
+    expect(formatDate('2026-10-24T15:00:00Z')).toBe('24/10/2026')
   })
 })

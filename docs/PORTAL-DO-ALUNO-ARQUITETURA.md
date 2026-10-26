@@ -1896,6 +1896,34 @@ o que realmente fiz · Minha Produção = o que estou construindo na formação.
   cadastrados (sem inferência), validação para publicar, visibilidade do aluno (para a Simulação), busca sem acento,
   agrupamento por categoria do catálogo, link contextual do Planejamento e checklist em `sessionStorage`.
 
+### Etapa 9 · Workflows Clínicos — Parte 2: editor Admin + Coordenação (26/10/2026)
+
+Parte 1 aprovada (commit de referência `5e0e7da`). **A migração continua só local; produção segue em
+`20261023120000_planejamento_caso`.** Experiência do aluno, menu Clínica, checklist do aluno, "Consultar workflow" no
+Planejamento e remoção do protótipo "Pensar": Parte 3.
+
+- **Rotas** (mesmos componentes nas duas áreas, `components/workflows/editor/`): `/admin/workflows` e
+  `/coordenacao/workflows` — lista → `novo` → `[id]` (workflow) → `[id]/etapas/[etapa]` (conteúdo da etapa). As
+  telas de protótipo do Admin (árvore de decisão com dados fictícios) foram substituídas; o protótipo do aluno fica.
+- **Lista**: agrupada pelas categorias do catálogo; status, nº de etapas, última atualização e "por quem" (quando a
+  pessoa pode ver o perfil), aviso de procedimento desativado, busca (nome, sinônimo, categoria), filtro por status,
+  ↑ ↓ dentro da categoria.
+- **Novo**: procedimento do catálogo (agrupado por categoria); "Outro", inativo e já com workflow ativo aparecem
+  desabilitados com o motivo; descrição curta opcional; nasce rascunho.
+- **Workflow**: cabeçalho do catálogo, status, última atualização, aviso de procedimento desativado, descrição, etapas
+  com ↑ ↓, "+ Adicionar etapa" (nome, etapa equivalente do catálogo opcional — só do mesmo procedimento —, primeiro
+  passo, obrigatório se publicado), publicação com pendências explicadas ("A etapa "Prova" ainda não possui nenhum
+  passo."), Publicar / Despublicar / Arquivar / Restaurar / Excluir rascunho (só nunca publicado). "Ver como aluno"
+  preparado e desabilitado até a Parte 3.
+- **Etapa**: nome + ligação com o catálogo; blocos separados — Passo a passo (01, 02…), Checklist de materiais (□ só
+  visual), Pontos de atenção (opcional), Próximos passos (condição, destino no workflow e/ou orientação; nada
+  inferido), Para aprofundar (conteúdos publicados que a pessoa pode ler; vínculo antigo indisponível preservado como
+  "Conteúdo indisponível para alunos", sem revelar título à coordenação). Cada item: ↑ ↓, Editar ali mesmo, Excluir.
+- **Permissões**: tudo pela RLS da Parte 1. Coordenação ativa usa `/coordenacao/workflows` (cartão no painel e link no
+  menu); `/admin` continua só do Admin. Coordenação de turma encerrada vê "Sem acesso ao editor".
+- **Banco antigo**: `workflowsReady()` (versão ≥ `20261024120000`); sem a migração as telas mostram um aviso e não
+  consultam as tabelas novas, e a coordenação não vê cartão nem link.
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)

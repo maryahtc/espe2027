@@ -3,10 +3,12 @@ import { IconArrowRight } from '@portal/ui/icons'
 import { PageTitle } from '@portal/ui/section'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { workflowsReady } from '@/lib/workflows/schema'
 
 export const metadata: Metadata = { title: 'Coordenação' }
 
-export default function CoordinationPage() {
+export default async function CoordinationPage() {
+  const workflows = await workflowsReady()
   return (
     <>
       <PageTitle eyebrow="Coordenação" title="Visão da turma" lead="Para a coordenação acompanhar a formação e identificar lacunas." />
@@ -34,6 +36,16 @@ export default function CoordinationPage() {
         </span>
         <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
       </Link>
+      {workflows ? (
+        <Link href="/coordenacao/workflows" className="glass glass-interactive group mb-8 flex items-center justify-between gap-4 rounded-2xl p-5" data-cartao-workflows>
+          <span>
+            <span className="eyebrow block text-[10px]">Disponível</span>
+            <span className="mt-1 block text-lg font-light">Workflows clínicos</span>
+            <span className="mt-1 block text-sm text-muted">Criar e manter os protocolos de consulta rápida: etapas, passo a passo, materiais e próximos passos.</span>
+          </span>
+          <IconArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      ) : null}
       <EmptyState stage="Etapa 10" title="O que vai existir aqui">
         <ul className="list-disc space-y-1 pl-5">
           <li>Casos registrados, procedimentos e evolução mensal</li>

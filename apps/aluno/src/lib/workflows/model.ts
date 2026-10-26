@@ -75,8 +75,26 @@ export function nextSteps(stage: Pick<WorkflowStage, 'next'>, stages: Pick<Workf
 /** Mesma regra do banco para publicar: pelo menos 1 etapa e pelo menos 1 passo em cada etapa. */
 export function publishIssues(w: Pick<Workflow, 'stages'>): string[] {
   const stages = orderedStages(w)
-  if (stages.length === 0) return ['Adicione pelo menos uma etapa.']
-  return stages.filter((s) => !s.items.some((i) => i.kind === 'passo')).map((s) => `Etapa "${s.name}" sem passo a passo.`)
+  if (stages.length === 0) return ['O workflow ainda não tem nenhuma etapa.']
+  return stages.filter((s) => !s.items.some((i) => i.kind === 'passo')).map((s) => `A etapa "${s.name}" ainda não possui nenhum passo.`)
+}
+
+/**
+ * Mover um item uma posição (↑ ↓) dentro da sua lista: devolve só as linhas cuja posição muda, já renumeradas 1..n
+ * (corrige de quebra posições repetidas ou com buracos). Vazio = nada a fazer (já no topo/fim ou não encontrado).
+ */
+export function reorderPositions(list: Array<{ id: string; position: number }>, id: string, dir: 'up' | 'down'): Array<{ id: string; position: number }> {
+  const sorted = [...list].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))
+  const i = sorted.findIndex((r) => r.id === id)
+  const j = dir === 'up' ? i - 1 : i + 1
+  if (i < 0 || j < 0 || j >= sorted.length) return []
+  ;[sorted[i], sorted[j]] = [sorted[j]!, sorted[i]!]
+  return sorted.map((r, k) => ({ id: r.id, position: k + 1, before: r.position })).filter((r) => r.position !== r.before).map(({ id: rid, position }) => ({ id: rid, position }))
+}
+
+/** Próxima posição ao acrescentar no fim de uma lista. */
+export function nextPosition(list: Array<{ position: number }>): number {
+  return list.reduce((m, r) => Math.max(m, r.position), 0) + 1
 }
 
 /** O que o aluno vê: publicado e com o procedimento ativo (mesma regra da RLS, para a Simulação). */
@@ -150,3 +168,10 @@ export function toggleChecked(checked: Set<string>, id: string): Set<string> {
   else next.add(id)
   return next
 }
+
+/** "Última atualização: DD/MM/AAAA" no fuso de São Paulo. */
+export function formatDate(iso: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso))
+}
+
+export const STATUS_LABEL: Record<WorkflowStatus, string> = { rascunho: 'Rascunho', publicado: 'Publicado', arquivado: 'Arquivado' }

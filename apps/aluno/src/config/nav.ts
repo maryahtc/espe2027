@@ -193,14 +193,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
       {
         slug: 'workflows',
         label: 'Workflows clínicos',
-        summary: 'Árvores de raciocínio: perguntas, caminhos e conteúdos',
+        summary: 'Como fazer cada procedimento: etapas, passos, materiais e próximos passos',
         icon: 'branch',
         action: 'Novo workflow',
         stage: 'Etapa 9',
         details: [
-          'Editor por blocos: pergunta, orientação, decisão, alerta, conteúdo, resultado, referência',
-          'Mapa automático da árvore e "ver como aluno"',
-          'Rascunho, publicado ou arquivado',
+          'Um workflow por procedimento do catálogo (nome e categoria vêm do catálogo)',
+          'Etapas com passo a passo, materiais, pontos de atenção, próximos passos e conteúdos da Biblioteca',
+          'Rascunho, publicado ou arquivado — também editável pela coordenação',
         ],
       },
     ],
