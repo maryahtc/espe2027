@@ -1,6 +1,6 @@
 /**
- * Navegação do Portal do Aluno — 5 áreas principais (barra inferior no celular, lateral no desktop)
- * + Perfil. A ordem segue o ciclo da especialização: saber o que vem → aprender → pensar → fazer.
+ * Navegação do Portal do Aluno — 4 áreas principais (barra inferior no celular, lateral no desktop)
+ * + Perfil. A ordem segue o ciclo da especialização: saber o que vem → aprender → fazer.
  */
 export type NavIcon = 'home' | 'calendar' | 'book' | 'branch' | 'tooth' | 'user'
 
@@ -36,26 +36,30 @@ export const studentNav: NavArea[] = [
     children: [{ label: 'Biblioteca', href: '/biblioteca', match: ['/biblioteca'] }],
   },
   {
-    key: 'pensar',
-    label: 'Pensar',
-    href: '/workflows',
-    icon: 'branch',
-    match: ['/workflows'],
-    children: [{ label: 'Workflow clínico', href: '/workflows', match: ['/workflows'] }],
-  },
-  {
     key: 'clinica',
     label: 'Clínica',
     href: '/casos',
     icon: 'tooth',
-    match: ['/casos', '/producao'],
+    match: ['/casos', '/producao', '/workflows'],
     children: [
       { label: 'Meus casos', href: '/casos', match: ['/casos'] },
       // Etapa 7: produção real, derivada dos registros (sem números fictícios).
       { label: 'Minha produção', href: '/producao', match: ['/producao'] },
+      // Etapa 9: substitui o antigo "Pensar → Workflow clínico" (protótipo de árvore de decisão, removido).
+      { label: 'Workflows clínicos', href: '/workflows', match: ['/workflows'] },
     ],
   },
 ]
+
+/** Menu do aluno conforme o banco: sem a Etapa 9, a entrada de Workflows some (nenhuma rota quebrada). */
+export function studentNavFor({ workflows }: { workflows: boolean }): NavArea[] {
+  if (workflows) return studentNav
+  return studentNav.map((a) => ({
+    ...a,
+    match: a.match.filter((m) => m !== '/workflows'),
+    children: a.children?.filter((c) => c.href !== '/workflows'),
+  }))
+}
 
 export const profileNav = { label: 'Perfil', href: '/perfil', match: ['/perfil'] }
 

@@ -221,7 +221,6 @@ export const recommendation = {
   minutes: 18,
   topic: 'Término cervical',
   reason: 'Você relatou dificuldade com o término cervical no caso B.R.S., registrado em 02/03.',
-  workflow: { title: 'Abordagem estética anterior', href: '/workflows/abordagem-anterior/forma/acrescimo' },
   more: ['preparos-minimamente-invasivos', 'espessura-de-preparo-revisao'],
 }
 

@@ -1,5 +1,7 @@
 import { cn } from '@portal/ui/cn'
 import Link from 'next/link'
+import type { WorkflowLink } from '@/lib/workflows/student'
+import { workflowHref } from '@/lib/workflows/model'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { PlanAction } from '@/components/plans/PlanAction'
 import { hasOwnStepName, type RecordVM, sortTeeth, type StepOption, usesPositions } from '@/lib/cases/model'
@@ -36,7 +38,7 @@ function Mark({ status }: { status: ItemStatus }) {
   )
 }
 
-function ItemLine({ item, o }: { item: PlanItem; o: StepOption | undefined }) {
+function ItemLine({ item, o, wf }: { item: PlanItem; o: StepOption | undefined; wf?: string | null }) {
   const own = o && hasOwnStepName(o)
   const positions = usesPositions(o)
   return (
@@ -53,6 +55,12 @@ function ItemLine({ item, o }: { item: PlanItem; o: StepOption | undefined }) {
         {!item.teeth.length && !item.arch && o && o.unit !== 'caso' ? <span className="num text-xs text-muted">· {unitText(o.unit, item.quantity)}</span> : null}
       </span>
       {own && item.description ? <span className="mt-0.5 block text-xs text-ink-2">{item.description}</span> : null}
+      {/* Etapa 9: só navegação para a referência "como fazer" — não copia, não registra, não marca nada. */}
+      {wf ? (
+        <Link href={wf} className="mt-0.5 inline-flex min-h-8 items-center text-xs text-muted underline-offset-4 hover:text-ink hover:underline" data-consultar-workflow>
+          Consultar workflow ↗
+        </Link>
+      ) : null}
     </span>
   )
 }
@@ -69,13 +77,13 @@ function grouped<T extends { item: PlanItem }>(rows: T[], byStep: Map<string, St
   return [...out.entries()]
 }
 
-function Compared({ c, o, visitId, actions }: { c: ItemComparison; o: StepOption | undefined; visitId: string; actions: boolean }) {
+function Compared({ c, o, visitId, actions, wf }: { c: ItemComparison; o: StepOption | undefined; visitId: string; actions: boolean; wf?: string | null }) {
   const st = STATUS[c.status]
   return (
     <div className="flex items-start gap-2.5" data-item-plano={c.item.id} data-resultado={c.status}>
       <Mark status={c.status} />
       <span className="min-w-0 flex-1">
-        <ItemLine item={c.item} o={o} />
+        <ItemLine item={c.item} o={o} wf={wf} />
         <span className="mt-0.5 block text-xs text-muted">
           {st.text}
           {c.status === 'parcial' && c.planned.length ? ` · registrado: ${c.registered.map(posLabel).join(', ')} de ${c.planned.map(posLabel).join(', ')}` : ''}
@@ -106,6 +114,7 @@ export function CasePlan({
   editable,
   link,
   staff = false,
+  workflows,
 }: {
   caseId: string
   visits: PlanVisit[]
@@ -114,8 +123,14 @@ export function CasePlan({
   editable: boolean
   link?: string | null
   staff?: boolean
+  /** Etapa 9: procedimento → workflow publicado. Só para o aluno (a leitura da equipe não recebe). */
+  workflows?: Map<string, WorkflowLink>
 }) {
   const byStep = new Map(options.map((o) => [o.stepId, o]))
+  const wfHref = (item: PlanItem) => {
+    const link = staff ? undefined : workflows?.get(item.procedureId)
+    return link ? `${workflowHref({ procedureSlug: link.slug, stages: link.stages }, item.stepId)}?caso=${caseId}` : null
+  }
   const ordered = displayOrder(visits)
   const linkedDates = new Set(visits.map((v) => v.realizedOn).filter(Boolean))
   const eligible = [...new Set(records.filter((r) => !r.removed).map((r) => r.performedOn))].filter((d) => !linkedDates.has(d)).sort()
@@ -177,7 +192,7 @@ export function CasePlan({
                           <p className="text-base font-semibold">{g.name}</p>
                           <div className="mt-2 space-y-2 border-l border-dashed border-rule-strong pl-4">
                             {g.rows.map((c) => (
-                              <Compared key={c.item.id} c={c} o={byStep.get(c.item.stepId)} visitId={v.id} actions={editable} />
+                              <Compared key={c.item.id} c={c} o={byStep.get(c.item.stepId)} visitId={v.id} actions={editable} wf={wfHref(c.item)} />
                             ))}
                           </div>
                         </div>
@@ -188,7 +203,7 @@ export function CasePlan({
                           <ul className="mt-2 space-y-1.5 border-l border-dashed border-rule-strong pl-4">
                             {g.rows.map(({ item }) => (
                               <li key={item.id} data-item-plano={item.id}>
-                                <ItemLine item={item} o={byStep.get(item.stepId)} />
+                                <ItemLine item={item} o={byStep.get(item.stepId)} wf={wfHref(item)} />
                               </li>
                             ))}
                           </ul>

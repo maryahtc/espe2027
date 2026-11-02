@@ -21,7 +21,7 @@ import {
 import type { ContentChoice, WfEditor, WfEditorStage } from '@/lib/workflows/load'
 import { stageSections, WORKFLOW_LIMITS, type WorkflowItem, type WorkflowItemKind } from '@/lib/workflows/model'
 import { MoveButtons, WfButton } from './WfButton'
-import { CatalogStepSelect, two, WorkflowHeader } from './WorkflowEditorView'
+import { CatalogStepSelect, StudentViewLink, two, WorkflowHeader } from './WorkflowEditorView'
 
 const ITEM_BLOCKS: Array<{ kind: WorkflowItemKind; title: string; add: string; hint: string; one: string }> = [
   { kind: 'passo', title: 'Passo a passo', add: 'Adicionar passo', hint: 'Um passo por item, na ordem em que se faz.', one: 'passo' },
@@ -160,6 +160,9 @@ export function StageEditorView({
           ✓ {flash}
         </p>
       ) : null}
+      <p className="-mt-4 mb-2">
+        <StudentViewLink w={w} stageSlug={stage.slug} />
+      </p>
       <nav aria-label="Etapas" className="mb-8 flex flex-wrap justify-between gap-3 text-sm">
         {prev ? (
           <Link href={`${base}/${w.id}/etapas/${prev.id}`} className="inline-flex min-h-11 items-center text-muted hover:text-ink">

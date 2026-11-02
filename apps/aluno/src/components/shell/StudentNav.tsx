@@ -3,7 +3,7 @@
 import { cn } from '@portal/ui/cn'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { isActive, profileNav, studentNav } from '@/config/nav'
+import { isActive, profileNav, studentNavFor } from '@/config/nav'
 import { Logo } from './Logo'
 import { NavIcon } from './NavIcon'
 
@@ -11,8 +11,9 @@ import { NavIcon } from './NavIcon'
 /** Quem está logado (nome, iniciais e turma) — vem do layout, lido no servidor. */
 export type Viewer = { name: string; initials: string; cohort: string }
 
-export function StudentSidebar({ viewer }: { viewer: Viewer }) {
+export function StudentSidebar({ viewer, workflows = false }: { viewer: Viewer; workflows?: boolean }) {
   const pathname = usePathname()
+  const areas = studentNavFor({ workflows })
   return (
     <aside className="glass-strong sticky top-[var(--sim-h,0px)] hidden h-[calc(100dvh-var(--sim-h,0px))] w-64 shrink-0 flex-col border-r lg:flex">
       <div className="px-7 pt-8 pb-10">
@@ -21,7 +22,7 @@ export function StudentSidebar({ viewer }: { viewer: Viewer }) {
       </div>
       <nav aria-label="Principal" className="flex-1 overflow-y-auto px-4">
         <ul className="space-y-1">
-          {studentNav.map((area) => {
+          {areas.map((area) => {
             const active = isActive(pathname, area.match)
             return (
               <li key={area.key}>
@@ -100,16 +101,17 @@ export function StudentTopBar({ viewer }: { viewer: Viewer }) {
   )
 }
 
-/** Barra inferior com as 5 áreas (celular e tablet). */
-export function StudentBottomNav() {
+/** Barra inferior com as áreas principais (celular e tablet). */
+export function StudentBottomNav({ workflows = false }: { workflows?: boolean }) {
   const pathname = usePathname()
+  const areas = studentNavFor({ workflows })
   return (
     <nav
       aria-label="Principal"
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden"
     >
-      <ul className="glass glass-strong mx-auto grid max-w-lg grid-cols-5 rounded-[22px] px-1">
-        {studentNav.map((area) => {
+      <ul className={cn('glass glass-strong mx-auto grid max-w-lg rounded-[22px] px-1', areas.length === 4 ? 'grid-cols-4' : 'grid-cols-5')}>
+        {areas.map((area) => {
           const active = isActive(pathname, area.match)
           return (
             <li key={area.key}>
@@ -129,6 +131,34 @@ export function StudentBottomNav() {
           )
         })}
       </ul>
+    </nav>
+  )
+}
+
+/**
+ * Celular e tablet: a barra inferior mostra só as áreas. Dentro da Clínica, uma linha discreta leva às páginas da área
+ * (Meus casos · Minha produção · Workflows clínicos) — no desktop isso já está na barra lateral.
+ */
+export function AreaSubNav({ workflows = false }: { workflows?: boolean }) {
+  const pathname = usePathname()
+  const area = studentNavFor({ workflows }).find((a) => a.key === 'clinica')
+  // Liga junto com a Etapa 9 (banco antigo: telas da Clínica exatamente como hoje).
+  if (!workflows || !area?.children || area.children.length < 2 || !isActive(pathname, area.match)) return null
+  return (
+    <nav aria-label={area.label} className="-mt-1 mb-5 flex flex-wrap gap-x-5 gap-y-1 text-sm lg:hidden" data-subnav={area.key}>
+      {area.children.map((child) => {
+        const on = isActive(pathname, child.match)
+        return (
+          <Link
+            key={child.href}
+            href={child.href}
+            aria-current={on ? 'page' : undefined}
+            className={cn('inline-flex min-h-11 items-center border-b', on ? 'border-signal font-semibold text-ink' : 'border-transparent text-muted hover:text-ink')}
+          >
+            {child.label}
+          </Link>
+        )
+      })}
     </nav>
   )
 }

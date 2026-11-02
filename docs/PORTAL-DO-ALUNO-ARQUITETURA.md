@@ -557,6 +557,11 @@ lendo rascunho de workflow; aluno escrevendo em `contents`; professor lendo caso
 
 ## G. Workflow engine
 
+> **Substituído pela Etapa 9 (Workflows Clínicos, out–nov/2026).** O motor de árvore de decisão descrito abaixo (perguntas,
+> caminhos, `workflow_versions.graph`) e o protótipo "Pensar → Workflow clínico" com dados fictícios foram removidos.
+> O conceito atual — referência de consulta rápida por etapas clínicas, ligada ao catálogo — está na seção
+> "Etapa 9 · Workflows Clínicos" (Partes 1 a 3). Texto abaixo mantido só como histórico.
+
 ### G.1 Modelo do grafo (`workflow_versions.graph`)
 ```ts
 type Graph = {
@@ -1914,7 +1919,7 @@ Planejamento e remoção do protótipo "Pensar": Parte 3.
   com ↑ ↓, "+ Adicionar etapa" (nome, etapa equivalente do catálogo opcional — só do mesmo procedimento —, primeiro
   passo, obrigatório se publicado), publicação com pendências explicadas ("A etapa "Prova" ainda não possui nenhum
   passo."), Publicar / Despublicar / Arquivar / Restaurar / Excluir rascunho (só nunca publicado). "Ver como aluno"
-  preparado e desabilitado até a Parte 3.
+  preparado e desabilitado até a Parte 3 (ativado na Parte 3).
 - **Etapa**: nome + ligação com o catálogo; blocos separados — Passo a passo (01, 02…), Checklist de materiais (□ só
   visual), Pontos de atenção (opcional), Próximos passos (condição, destino no workflow e/ou orientação; nada
   inferido), Para aprofundar (conteúdos publicados que a pessoa pode ler; vínculo antigo indisponível preservado como
@@ -1923,6 +1928,29 @@ Planejamento e remoção do protótipo "Pensar": Parte 3.
   menu); `/admin` continua só do Admin. Coordenação de turma encerrada vê "Sem acesso ao editor".
 - **Banco antigo**: `workflowsReady()` (versão ≥ `20261024120000`); sem a migração as telas mostram um aviso e não
   consultam as tabelas novas, e a coordenação não vê cartão nem link.
+
+### Etapa 9 · Workflows Clínicos — Parte 3: experiência do aluno + integrações (02/11/2026)
+
+Parte 2 aprovada (commit de referência `3d0f850`). **A migração continua só local; produção segue em
+`20261023120000_planejamento_caso`.** Etapa 9 implementada, aguardando validação e autorização da migração.
+
+- **Menu**: Clínica → Meus casos · Minha produção · **Workflows clínicos**. A área "Pensar" e o protótipo de árvore
+  de decisão (com dados fictícios) foram removidos. No celular, dentro da Clínica, uma linha discreta leva às três
+  páginas (a barra inferior mostra só as áreas). Sem a migração, a entrada e essa linha não aparecem.
+- **Rotas**: `/workflows` (publicados de procedimento ativo, por categoria do catálogo, busca por nome, sinônimo e
+  categoria), `/workflows/[slug]` (visão geral: categoria, descrição, última atualização, aviso de referência, etapas
+  numeradas) e `/workflows/[slug]/[etapa]` (passo a passo numerado, checklist de materiais, pontos de atenção, próximos
+  passos só cadastrados, conteúdos da Biblioteca legíveis, ← → só pela ordem do workflow). `[slug]` = slug do
+  procedimento no catálogo. Sem progresso, conclusão ou porcentagem.
+- **Checklist**: `sessionStorage` da aba, com "Desmarcar tudo"; nada vai ao servidor.
+- **Planejamento do caso**: nos itens com workflow publicado (procedimento ativo), "Consultar workflow ↗" — abre a etapa
+  ligada à etapa do catálogo do item, senão a visão geral, com `?caso=` para "← Voltar ao caso". Só navegação. A
+  leitura do caso pela coordenação/Admin não mostra o link.
+- **Simulação**: mesma experiência do aluno (filtro explícito de publicado + procedimento ativo, conteúdos pela
+  visibilidade da turma simulada); nada é gravado e o cookie não muda.
+- **"Ver como aluno"** no editor: ativo só para workflow publicado de procedimento ativo (abre a tela definitiva;
+  Admin e coordenação podem abrir as telas de workflow publicadas fora da Simulação — `guardStudentPage({ staffView })`).
+  Rascunho nunca fica legível ao aluno; sem prévia administrativa de rascunho nesta etapa.
 
 ## N. Decisões
 

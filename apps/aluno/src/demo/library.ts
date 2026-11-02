@@ -15,7 +15,6 @@ export type LibraryItem = {
   /** Progresso do aluno na demonstração (0–100). */
   progress?: number
   attachments?: string[]
-  workflow?: { slug: string; path: string; label: string }
 }
 
 export const categories = ['Dentística', 'Prótese', 'Planejamento', 'Oclusão', 'Fotografia', 'Materiais', 'Periodontia']
@@ -34,7 +33,6 @@ export const library: LibraryItem[] = [
     modules: [12, 14],
     progress: 40,
     attachments: ['Escala de cor — guia de registro (PDF)'],
-    workflow: { slug: 'dente-escurecido', path: '', label: 'Dente escurecido' },
   },
   {
     slug: 'manejo-de-substratos-escurecidos',
@@ -47,7 +45,6 @@ export const library: LibraryItem[] = [
     description:
       'Clareamento prévio, controle de opacidade e escolha do material quando o fundo é escuro. Casos com e sem tratamento endodôntico.',
     modules: [18],
-    workflow: { slug: 'abordagem-anterior', path: 'cor/sim', label: 'Abordagem estética anterior' },
   },
   {
     slug: 'controle-de-profundidade-termino-cervical',
@@ -59,7 +56,6 @@ export const library: LibraryItem[] = [
     kind: 'Videoaula',
     description: 'Pontas guia, sulcos de orientação e checagem com guia de silicone para controlar a profundidade na cervical.',
     modules: [11, 14],
-    workflow: { slug: 'direta-ou-indireta', path: '', label: 'Direta ou indireta?' },
   },
   {
     slug: 'preparos-minimamente-invasivos',
@@ -105,7 +101,6 @@ export const library: LibraryItem[] = [
     kind: 'Videoaula',
     description: 'Quando a restauração direta deixa de ser previsível e como decidir entre onlay, overlay e coroa.',
     modules: [15],
-    workflow: { slug: 'direta-ou-indireta', path: '', label: 'Direta ou indireta?' },
   },
   {
     slug: 'isolamento-absoluto-em-anteriores',

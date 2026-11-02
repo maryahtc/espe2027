@@ -8,6 +8,7 @@ import {
   nextPosition,
   publishIssues,
   reorderPositions,
+  returnCase,
   searchWorkflows,
   serializeChecked,
   stageSections,
@@ -15,6 +16,7 @@ import {
   visibleToStudent,
   type Workflow,
   type WorkflowStage,
+  withCase,
   workflowHref,
 } from '@/lib/workflows/model'
 
@@ -164,5 +166,15 @@ describe('Workflows clínicos — regras puras', () => {
   it('data da última atualização em DD/MM/AAAA no fuso de São Paulo', () => {
     expect(formatDate('2026-10-24T02:30:00Z')).toBe('23/10/2026')
     expect(formatDate('2026-10-24T15:00:00Z')).toBe('24/10/2026')
+  })
+
+  it('volta ao caso: só id válido; os links internos levam o retorno junto', () => {
+    const id = '00000000-0000-4000-a000-000000000001'
+    expect(returnCase(id)).toBe(id)
+    expect(returnCase('../admin')).toBeNull()
+    expect(returnCase(undefined)).toBeNull()
+    expect(returnCase([id])).toBeNull()
+    expect(withCase('/workflows/laminado-ceramico/prova', id)).toBe(`/workflows/laminado-ceramico/prova?caso=${id}`)
+    expect(withCase('/workflows/laminado-ceramico', null)).toBe('/workflows/laminado-ceramico')
   })
 })

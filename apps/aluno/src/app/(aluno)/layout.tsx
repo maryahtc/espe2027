@@ -7,7 +7,8 @@ import { currentCohort } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
 import { SIM_STUDENT_INITIALS, SIM_STUDENT_NAME } from '@/lib/simulation/labels'
 import { getSimulation } from '@/lib/simulation/session'
-import { StudentBottomNav, StudentSidebar, StudentTopBar } from '@/components/shell/StudentNav'
+import { AreaSubNav, StudentBottomNav, StudentSidebar, StudentTopBar } from '@/components/shell/StudentNav'
+import { workflowsReady } from '@/lib/workflows/schema'
 
 export async function generateMetadata(): Promise<Metadata> {
   // Na simulação, a aba do navegador também avisa.
@@ -19,6 +20,8 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const sim = auth ? await getSimulation() : null
   // Regras de acesso da simulação (Admin fora dela, termo do rascunho): em template.tsx, conferidas a cada navegação.
   const cohort = auth ? await currentCohort() : null
+  // Workflows clínicos só no menu com o banco já na Etapa 9 (sem a migração, nenhuma entrada aponta para rota quebrada).
+  const workflows = auth ? await workflowsReady() : false
   // Sem Supabase (modo prévia), mantém a pessoa fictícia da Etapa 1.
   const name = sim ? SIM_STUDENT_NAME : auth ? (auth.displayName || auth.fullName || auth.email).trim() : student.name
   const viewer = {
@@ -46,17 +49,18 @@ export default async function StudentLayout({ children }: { children: React.Reac
       </a>
       {sim ? <SimulationBanner cohortName={sim.cohortVM.name} expiresAt={sim.expiresAt} /> : null}
       <div className="flex min-h-dvh">
-        <StudentSidebar viewer={viewer} />
+        <StudentSidebar viewer={viewer} workflows={workflows} />
         <div className="min-w-0 flex-1">
           {/* Sem Supabase (modo prévia) tudo é fictício; com banco, o aviso fica só nas telas ainda fictícias. */}
           {!auth ? <PreviewBanner /> : null}
           <StudentTopBar viewer={viewer} />
           <main id="conteudo" className="mx-auto w-full max-w-[1120px] px-4 pt-6 pb-28 sm:px-6 lg:px-12 lg:pt-10 lg:pb-20">
+            <AreaSubNav workflows={workflows} />
             {children}
           </main>
         </div>
       </div>
-      <StudentBottomNav />
+      <StudentBottomNav workflows={workflows} />
     </div>
   )
 }

@@ -150,12 +150,7 @@ export function WorkflowEditorView({ base, eyebrow, w, flash }: { base: string; 
               confirmText="Excluir este rascunho com todas as etapas? Não dá para desfazer."
             />
           ) : null}
-          <span className="inline-flex min-h-11 items-center gap-2 text-sm text-muted" data-ver-como-aluno>
-            <span aria-disabled="true" className="cursor-not-allowed font-semibold opacity-50">
-              Ver como aluno
-            </span>
-            <span className="text-xs">· disponível quando a tela do aluno for liberada</span>
-          </span>
+          <StudentViewLink w={w} />
         </div>
         {w.publishedAt && w.status === 'rascunho' ? <p className="mt-3 text-xs text-muted">Já foi publicado antes: não pode ser excluído, só arquivado.</p> : null}
       </Block>
@@ -181,5 +176,31 @@ export function CatalogStepSelect({ steps, value }: { steps: WfEditor['catalogSt
         Só uma ligação para, no futuro, abrir esta etapa a partir do Planejamento do caso. Não muda o catálogo nem a produção.
       </span>
     </label>
+  )
+}
+
+/**
+ * "Ver como aluno": abre a tela definitiva do aluno — só para workflow publicado de procedimento ativo (o que o aluno
+ * realmente vê). Rascunho nunca fica legível para alunos; aqui o link só fica desabilitado, com o motivo.
+ */
+export function StudentViewLink({ w, stageSlug }: { w: WfEditor; stageSlug?: string }) {
+  const live = w.status === 'publicado' && w.procedureActive
+  if (live)
+    return (
+      <Link
+        href={`/workflows/${w.procedureSlug}${stageSlug ? `/${stageSlug}` : ''}`}
+        className="inline-flex min-h-11 items-center text-sm font-semibold text-ink underline-offset-4 hover:underline"
+        data-ver-como-aluno="ativo"
+      >
+        Ver como aluno ↗
+      </Link>
+    )
+  return (
+    <span className="inline-flex min-h-11 items-center gap-2 text-sm text-muted" data-ver-como-aluno="indisponivel">
+      <span aria-disabled="true" className="cursor-not-allowed font-semibold opacity-50">
+        Ver como aluno
+      </span>
+      <span className="text-xs">· {w.status !== 'publicado' ? 'disponível depois de publicar' : 'procedimento desativado no catálogo'}</span>
+    </span>
   )
 }

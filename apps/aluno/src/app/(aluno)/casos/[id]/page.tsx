@@ -12,6 +12,7 @@ import { CaseJourney } from '@/components/cases/CaseJourney'
 import { CaseTeethMap } from '@/components/cases/CaseTeethMap'
 import { CasePlan } from '@/components/plans/CasePlan'
 import { loadMyPlan } from '@/lib/plans/load'
+import { workflowLinksFor } from '@/lib/workflows/student'
 import { CoverUpload } from '@/components/cases/CoverUpload'
 import { RecordPlacement } from '@/components/cases/RecordPlacement'
 import { cohortModules, loadFaculty } from '@/lib/academic/load'
@@ -66,6 +67,8 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   ])
   const [help, plan] = await Promise.all([relatedContents(c, auth.userId), loadMyPlan(c.id)])
   const byStep = new Map(options.map((o) => [o.stepId, o]))
+  // Etapa 9: quais procedimentos do planejamento têm workflow publicado (só leitura/navegação).
+  const workflows = plan?.length ? await workflowLinksFor(plan.flatMap((v) => v.items.map((i) => i.procedureId))) : undefined
   const moduleName = (mid: string | null) => {
     const m = modules.find((x) => x.id === mid)
     return m ? `Módulo ${m.label}` : null
@@ -268,6 +271,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               options={options}
               editable={editable && c.status === 'em_andamento'}
               link={vinculo === 'ok' || vinculo === 'falhou' ? vinculo : null}
+              workflows={workflows}
             />
           </Block>
         ) : null}

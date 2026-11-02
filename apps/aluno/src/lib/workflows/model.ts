@@ -130,10 +130,13 @@ export function groupByCategory<T extends Pick<Workflow, 'categoryName' | 'categ
  * Navegação contextual a partir do Planejamento: a etapa do workflow ligada à etapa do catálogo do item, se houver;
  * senão, a visão geral do workflow. Só leitura/navegação.
  */
-export function workflowHref(w: Pick<Workflow, 'procedureSlug' | 'stages'>, procedureStepId: string | null): string {
+export function workflowHref(
+  w: { procedureSlug: string; stages: Array<{ slug: string; procedureStepId: string | null; position: number }> },
+  procedureStepId: string | null,
+): string {
   const base = `/workflows/${w.procedureSlug}`
   if (!procedureStepId) return base
-  const stage = orderedStages(w).find((s) => s.procedureStepId === procedureStepId)
+  const stage = [...w.stages].sort((a, b) => a.position - b.position).find((s) => s.procedureStepId === procedureStepId)
   return stage ? `${base}/${stage.slug}` : base
 }
 
@@ -175,3 +178,15 @@ export function formatDate(iso: string): string {
 }
 
 export const STATUS_LABEL: Record<WorkflowStatus, string> = { rascunho: 'Rascunho', publicado: 'Publicado', arquivado: 'Arquivado' }
+
+/* ── Volta ao caso (vindo do Planejamento) ──────────────────────────────────────────────────────────── */
+
+/** `?caso=` válido (id de caso) ou null. Só navegação: a página do caso confere o acesso. */
+export function returnCase(value: string | string[] | undefined): string | null {
+  return typeof value === 'string' && /^[0-9a-f-]{36}$/.test(value) ? value : null
+}
+
+/** Mantém o retorno ao caso nos links internos do workflow. */
+export function withCase(href: string, caseId: string | null): string {
+  return caseId ? `${href}?caso=${caseId}` : href
+}
