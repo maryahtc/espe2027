@@ -1952,6 +1952,17 @@ Parte 2 aprovada (commit de referência `3d0f850`). **A migração continua só 
   Admin e coordenação podem abrir as telas de workflow publicadas fora da Simulação — `guardStudentPage({ staffView })`).
   Rascunho nunca fica legível ao aluno; sem prévia administrativa de rascunho nesta etapa.
 
+### ETAPA 9 · IMPLEMENTADA EM PRODUÇÃO · validação visual pendente (02/11/2026)
+
+- Supabase de produção restaurado pela Maryah (pausado por inatividade) e auditado só por leitura antes da migração:
+  versão `20261023120000_planejamento_caso`, histórico alinhado, 1 migração pendente, idêntica ao commit `5e0e7da`.
+- **Migração `20261024120000_workflows_clinicos` aplicada com autorização.** Fingerprint 581 → 668: 0 removidos, só
+  `schema_info` alterado, 87 objetos novos (iguais aos do teste local). Casos, registros, Planejamento, catálogo,
+  Biblioteca, módulos, matrículas, perfis, `auth.users` e Storage idênticos. Nenhum workflow de teste criado.
+- O histórico de migrações registrou a versão `20261102142609` (hora da aplicação, como nas anteriores), não
+  `20261024120000`; corrigir só com autorização.
+- **Não** marcada como aprovada/congelada: aguarda a validação visual da Maryah no portal.
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)
