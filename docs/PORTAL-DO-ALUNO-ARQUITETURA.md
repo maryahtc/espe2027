@@ -1871,6 +1871,36 @@ desligado enquanto produção estiver em `20261021120000_odontograma_arcada`.
   (fingerprint 551 → 581: 0 removidos, só `schema_info` alterado, 30 objetos novos). Etapa 8 ativa, aguardando
   validação visual em uso normal — **não** marcada como aprovada/congelada.
 
+### Marco — ETAPA 8 (PLANEJAMENTO DO CASO) APROVADA E CONCLUÍDA (12/11/2026)
+
+Aprovada pela Maryah em 12/11/2026, após uso em produção. **A experiência, o modelo de dados e as decisões desta etapa
+estão congelados**: mudar qualquer ponto exige nova proposta e aprovação explícita.
+
+**Versões de referência (funcionais aprovadas):** Parte 1 `2688434` (banco e regras) · Parte 2 `06ee749` (interface,
+fluxos e Simulação), na branch `claude/upbeat-bohr-8heral`. A integração "Consultar workflow ↗" veio depois, na Etapa 9
+(`6559c53`). O commit-marco "ETAPA 8 APROVADA — PLANEJAMENTO DO CASO" registra este congelamento sem alteração funcional.
+
+**Banco:** migração `20261023120000_planejamento_caso` aplicada em produção em 23/10/2026 com autorização (551 → 581
+itens; 0 removidos; só `schema_info` alterado; 30 objetos novos). Histórico de migrações alinhado (versão corrigida com
+autorização).
+
+**Escopo aprovado e congelado**
+- Planejamento do caso = o que o aluno pretende fazer neste paciente; separado da Jornada (o que aconteceu). Nunca
+  prontuário, agenda ou plano clínico oficial (que fica no Smile Cloud): sem data prevista, horário, diagnóstico ou nota
+  por item; "Observação do planejamento (opcional)" até 200 caracteres, sem identificadores.
+- Consultas planejadas (até 20 por caso, 15 itens cada) com o mesmo catálogo procedimento → etapa e as mesmas regras de
+  dentes/arcada/quantidade da Etapa 6; reordenar com ↑ ↓; caso concluído/removido ou turma encerrada = somente leitura.
+- "Registrar o que foi realizado" abre o registro real pré-preenchido; só o registro grava em `performed_procedures`;
+  vínculo por caso + data, tentado depois do registro; vinculada = somente leitura (só "Desfazer vínculo").
+- Comparação calculada ao vivo: ✓ registrado como planejado · ◐ em parte · ○ não registrado · + também realizado; levar
+  o que faltou para a próxima/nova consulta só sob pedido (nada migra sozinho).
+- Coordenação/Admin: leitura dentro do caso, sem ações, com a auditoria existente. Simulação: fluxo completo no
+  rascunho, limite 10 × 10, cookie inalterado.
+
+**Testes ao fechar (todos fora da produção):** banco 280 (41 do planejamento) · unitários 155 · E2E planejamento 49,
+banco antigo 11 · regressões casos 45, odontograma 51, simulação 70, produção 39, capa/coordenação/Admin 70, botão
+registrar 9, Início 41 · build, lint e typecheck. **Aprovação da Maryah: 12/11/2026.**
+
 ### Etapa 9 · Workflows Clínicos — Parte 1: banco e regras (24/10/2026, só local)
 
 Plano aprovado pela Maryah em 24/10/2026, com 3 ajustes: procedimento desativado esconde o workflow dos alunos (sem
