@@ -1339,6 +1339,9 @@ isOneToOne: false
 "log_case_view":
 { Args: { "p_case_id": string }; Returns: boolean
                            },
+"log_student_production_view":
+{ Args: { "p_cohort_id": string,"p_student_id": string }; Returns: boolean
+                           },
 "merge_topics":
 { Args: { "p_from": string,"p_into": string }; Returns: number
                            },

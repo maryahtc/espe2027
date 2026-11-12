@@ -2026,6 +2026,32 @@ editor 73, banco antigo 19 · regressões planejamento 49, casos 45, odontograma
 capa/coordenação/Admin 70, botão registrar 9, Início 41 · build, lint e typecheck. **Validação visual da Maryah em
 produção: aprovada em 12/11/2026.**
 
+### Etapa 10 · Painel da Coordenação/Admin — Parte 1: auditoria, agregação e regras (12/11/2026, só local)
+
+Escopo consolidado aprovado pela Maryah em 12/11/2026. **Parte 1 implementada e testada só no ambiente local; a migração
+NÃO foi aplicada em produção** (produção segue em `20261024120000_workflows_clinicos`). Sem telas nesta parte.
+
+- **Migração `20261112120000_auditoria_producao`** (só aditiva): função `log_student_production_view(aluno, turma)`, no
+  mesmo padrão de `log_case_view` (Etapa 6): confere a sessão, permissão de Admin ativo ou coordenação ativa da turma
+  (`coordinates`) e que o consultado é aluno da turma (matrícula ativa ou inativa); grava em `audit_log` quem, qual
+  aluno, turma e quando (`aluno.producao.abrir`, sem dados clínicos); recusa → `false` sem gravar. Nenhuma tabela,
+  política ou permissão existente muda. Fingerprint local 668 → 669 (0 removidos, só `schema_info`, 1 função nova).
+- **Caminhos de leitura** (`lib/cohort/load.ts`): `cohortPanel` devolve só agregados e a linha-resumo de cada aluno;
+  `studentProduction` é a única função com a produção detalhada de um aluno e grava a auditoria antes de ler. Sem a
+  migração (`auditReady`), a produção individual fica indisponível.
+- **Agregação** (`lib/cohort/model.ts`): por aluno, as funções da Etapa 7 sem alteração; turma = união (cada caso tem um
+  dono, então não há dupla contagem). Cobertura (matriculados = matrícula ativa ou inativa, situação atual; com/sem
+  registro no período), indicadores, evolução, panorama de experiências (alunos por procedimento/etapa, ordem do
+  catálogo; seção "Sem registros neste período" com os procedimentos ativos), dificuldades por tema, tabela de alunos
+  (padrão alfabético, último registro do curso inteiro) e contexto do cronograma. Nada de ranking ou classificação.
+- **Regras do Admin** (`lib/admin/attention.ts`, `overview.ts`): convites pendentes; preparação obrigatória em rascunho
+  (pendência) e nenhuma preparação cadastrada (editorial) em módulos publicados dos próximos 30 dias; conteúdo
+  publicado sem tema; módulo publicado sem professor; workflows em rascunho (editorial). Procedimento sem conteúdo não é
+  pendência.
+- **Privacidade** (`lib/privacy/access.ts`): permissões reais verificadas nos testes de banco, fonte do texto da Parte 3.
+- **Testes:** banco 351 (26 novos) · unitários 184 (20 novos) · typecheck, lint e build. As suítes E2E locais (que viviam
+  fora do repositório) se perderam na recriação do ambiente; serão refeitas dentro do repositório na Parte 2.
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)
