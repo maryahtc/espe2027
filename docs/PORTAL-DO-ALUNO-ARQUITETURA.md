@@ -1952,7 +1952,7 @@ Parte 2 aprovada (commit de referência `3d0f850`). **A migração continua só 
   Admin e coordenação podem abrir as telas de workflow publicadas fora da Simulação — `guardStudentPage({ staffView })`).
   Rascunho nunca fica legível ao aluno; sem prévia administrativa de rascunho nesta etapa.
 
-### ETAPA 9 · IMPLEMENTADA EM PRODUÇÃO · validação visual pendente (02/11/2026)
+### ETAPA 9 · IMPLEMENTADA EM PRODUÇÃO (02/11/2026) — aprovada em 12/11/2026, ver "Marco — ETAPA 9"
 
 - Supabase de produção restaurado pela Maryah (pausado por inatividade) e auditado só por leitura antes da migração:
   versão `20261023120000_planejamento_caso`, histórico alinhado, 1 migração pendente, idêntica ao commit `5e0e7da`.
@@ -1962,6 +1962,39 @@ Parte 2 aprovada (commit de referência `3d0f850`). **A migração continua só 
 - O histórico de migrações registrou a versão `20261102142609` (hora da aplicação, como nas anteriores), não
   `20261024120000`; corrigir só com autorização.
 - **Não** marcada como aprovada/congelada: aguarda a validação visual da Maryah no portal.
+
+### Marco — ETAPA 9 (WORKFLOWS CLÍNICOS) APROVADA E CONCLUÍDA (12/11/2026)
+
+Aprovada pela Maryah em 12/11/2026, após a validação visual em produção (workflow real criado, publicado e conferido em
+"Ver como aluno"). **A experiência, o modelo de dados e as decisões desta etapa estão congelados**: mudar qualquer ponto
+abaixo exige nova proposta e aprovação explícita.
+
+**Versões de referência (funcionais aprovadas):** Parte 1 `5e0e7da` (banco e regras) · Parte 2 `3d0f850` (editor
+Admin/Coordenação) · Parte 3 `6559c53` (experiência do aluno e integrações), na branch `claude/upbeat-bohr-8heral`. O
+commit-marco "ETAPA 9 APROVADA — WORKFLOWS CLÍNICOS" registra este congelamento sem alteração funcional.
+
+**Banco:** migração `20261024120000_workflows_clinicos` aplicada em produção em 02/11/2026 com autorização (581 → 668
+itens; 0 removidos; só `schema_info` alterado; 87 objetos novos). Histórico de migrações alinhado ao repositório
+(versão corrigida com autorização).
+
+**Escopo aprovado e congelado**
+- Conceito: Workflow = como fazer · Planejamento = o que pretendo fazer neste paciente · Jornada = o que fiz · Minha
+  Produção = o que estou construindo. Referência de consulta rápida; nunca prontuário, aula, tarefa ou progresso.
+- Um workflow ativo por procedimento do catálogo; nome e categoria sempre do catálogo; sem "Outro procedimento" e sem
+  workflow fora do catálogo na V1. Procedimento desativado esconde o workflow do aluno sem apagar nem despublicar.
+- Etapas clínicas (até 15) com passo a passo, checklist de materiais, pontos de atenção, próximos passos (só os
+  cadastrados, nunca inferidos) e "Para aprofundar" (referência à Biblioteca, sem cópia; indisponível some para o aluno).
+- Publicado exige ≥ 1 etapa e ≥ 1 passo por etapa; editar publicado vale na hora; publicado não se exclui (arquiva).
+- Admin e coordenação ativa editam (só as tabelas de workflow); aluno só lê publicado de procedimento ativo;
+  institucional (todas as turmas); `updated_by` + histórico interno no `change_log`, sem versionamento.
+- Aluno: Clínica → Workflows clínicos (lista por categoria com busca, visão geral, página da etapa), checklist só em
+  `sessionStorage`, ← → só pela ordem do workflow, "Consultar workflow ↗" no Planejamento (só navegação), Simulação
+  igual ao aluno sem gravação, "Ver como aluno" para publicados. Protótipo "Pensar" removido.
+
+**Testes ao fechar (todos fora da produção):** banco 325 (61 de workflows) · unitários 164 · E2E workflows aluno 58,
+editor 73, banco antigo 19 · regressões planejamento 49, casos 45, odontograma 51, simulação 70, produção 39,
+capa/coordenação/Admin 70, botão registrar 9, Início 41 · build, lint e typecheck. **Validação visual da Maryah em
+produção: aprovada em 12/11/2026.**
 
 ## N. Decisões
 
