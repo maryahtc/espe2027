@@ -13,9 +13,13 @@
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "db:test": "npm run test:migrations -w @portal/db"
+    "db:test": "npm run test:migrations -w @portal/db",
+    "e2e": "node e2e/run.mjs"
   },
   "engines": {
     "node": ">=20.9"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
   }
 }
