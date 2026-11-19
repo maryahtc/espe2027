@@ -7,7 +7,8 @@ import type { AuthState } from '@/lib/auth/session'
 import { CASE_COLS, type CaseRow, loadStepOptions, moduleSpans, type RecordRow, recordCols, toCase, toRecord } from '@/lib/cases/load'
 import type { ModuleSpan, StepOption } from '@/lib/cases/model'
 import { loadCohortCases } from '@/lib/cases/staff'
-import { type Period, type ProductionBase, productionBase } from '@/lib/production/model'
+import { type ProductionBase, productionBase } from '@/lib/production/model'
+import { type PeriodParams, type ResolvedPeriod, resolvePeriod } from '@/lib/production/period'
 import { trackingCohorts } from '@/lib/tracking/load'
 import {
   type Coverage,
@@ -61,6 +62,8 @@ export async function authorizedCohort(auth: AuthState, cohortId: string): Promi
 export type CohortPanel = {
   cohort: CohortVM
   today: string
+  /** Filtro do período já resolvido (mesmas regras da Minha Produção). */
+  r: ResolvedPeriod
   coverage: Coverage
   summary: ReturnType<typeof cohortSummary>
   evolution: ReturnType<typeof cohortEvolution>
@@ -71,7 +74,7 @@ export type CohortPanel = {
 }
 
 /** Visão da turma no período. null = turma não autorizada para esta pessoa. */
-export async function cohortPanel(auth: AuthState, cohortId: string, period: Period): Promise<CohortPanel | null> {
+export async function cohortPanel(auth: AuthState, cohortId: string, sp: PeriodParams): Promise<CohortPanel | null> {
   const cohort = await authorizedCohort(auth, cohortId)
   if (!cohort) return null
   const supabase = await client()
@@ -84,10 +87,13 @@ export async function cohortPanel(auth: AuthState, cohortId: string, period: Per
   const caseTopics = new Map<string, string[]>()
   for (const l of links ?? []) caseTopics.set(l.case_id, [...(caseTopics.get(l.case_id) ?? []), l.topic_id])
   const now = today()
-  const list = studentProductions(students, cases as OwnedCase[], cohortId, moduleSpans(modules), options, period)
+  const spans = moduleSpans(modules)
+  const r = resolvePeriod(sp, cohort, spans, now)
+  const list = studentProductions(students, cases as OwnedCase[], cohortId, spans, options, r.period)
   return {
     cohort,
     today: now,
+    r,
     coverage: coverage(list),
     summary: cohortSummary(list),
     evolution: cohortEvolution(list, cohort, now),

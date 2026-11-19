@@ -50,6 +50,7 @@ qualquer verificação falhar.
 | `simulacao` | Modo de simulação: termo, registro, planejamento, produção e workflows no rascunho; nada gravado; saída |
 | `workflows-editor` | Editor de Workflows (Admin e Coordenação) |
 | `workflows-aluno` | Workflows do aluno, checklist, integração com o Planejamento, Simulação |
+| `visao-turma` | Etapa 10: Visão da turma/Produção da turma (agregados = soma dos alunos, filtros, turmas, ordenação), produção individual auditada, recusas, estados vazios, 390 px |
 
 ## Escrever uma suíte nova
 

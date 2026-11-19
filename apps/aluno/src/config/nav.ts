@@ -223,10 +223,10 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
       {
         slug: 'producao',
         label: 'Produção da turma',
-        summary: 'Procedimentos, lacunas e dificuldades',
+        summary: 'Indicadores, panorama de experiências e dificuldades por tema',
         icon: 'chart',
         stage: 'Etapa 10',
-        details: ['Totais e distribuição por procedimento', 'Alunos com pouca exposição', 'Dificuldades mais relatadas por tema'],
+        details: ['Cobertura dos registros e indicadores da turma', 'Panorama de experiências clínicas', 'Dificuldades por tema e produção individual (auditada)'],
       },
     ],
   },

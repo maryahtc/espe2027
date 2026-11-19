@@ -235,3 +235,19 @@ export function sortRows(rows: StudentRow[], key: SortKey = 'nome', dir: SortDir
 export function modulesContext(modules: Array<{ end: string | null }>, today: string): { done: number; total: number } {
   return { done: modules.filter((m) => !!m.end && m.end < today).length, total: modules.length }
 }
+
+// ─── Turma padrão ────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Turma aberta quando o endereço não pede uma: a ativa em andamento hoje, senão a próxima ativa a começar, senão a
+ * primeira da lista (mesma regra da lista de casos da coordenação).
+ */
+export function defaultCohort<T extends { status: string; startsOn: string; endsOn: string }>(cohorts: T[], today: string): T | null {
+  const active = cohorts.filter((c) => c.status === 'ativa')
+  return (
+    active.find((c) => c.startsOn <= today && today <= c.endsOn) ??
+    [...active].filter((c) => c.startsOn > today).sort((a, b) => a.startsOn.localeCompare(b.startsOn))[0] ??
+    cohorts[0] ??
+    null
+  )
+}

@@ -2052,6 +2052,38 @@ NÃO foi aplicada em produção** (produção segue em `20261024120000_workflows
 - **Testes:** banco 351 (26 novos) · unitários 184 (20 novos) · typecheck, lint e build. As suítes E2E locais (que viviam
   fora do repositório) se perderam na recriação do ambiente; serão refeitas dentro do repositório na Parte 2.
 
+### Etapa 10 · Parte 2 — Visão da turma, produção individual e Produção da turma (19/11/2026, só local)
+
+Autorizada pela Maryah em 19/11/2026. **Implementada e testada só no ambiente local; a migração da Parte 1 continua NÃO
+aplicada em produção e nada foi publicado na branch de deploy.**
+
+Rotas:
+- `/coordenacao` — **Visão da turma** (substitui o marcador da Etapa 10). Turmas que a pessoa coordena (matrícula de
+  coordenação ativa); seletor quando há mais de uma. `?turma=` não autorizada → 404.
+- `/coordenacao/alunos/[id]?turma=` — produção individual, só leitura.
+- `/admin/producao` e `/admin/producao/alunos/[id]?turma=` — **Produção da turma** do Admin: o MESMO painel e a MESMA
+  página individual, com todas as turmas.
+
+Componentes (sem duplicar regras):
+- `lib/production/period.ts` (`resolvePeriod`, `periodQuery`) e `components/production/PeriodFilters.tsx`: os filtros da
+  Minha Produção (curso · ano do curso · módulo · período), agora usados pelas três telas.
+- `components/production/ProductionReport.tsx`: corpo da Minha Produção (indicadores, evolução, categorias, mapa, por
+  módulo, áreas sem registro). A Minha Produção do aluno passou a usá-lo sem mudar a saída (suíte `producao` 9/9);
+  a página individual usa o mesmo componente com texto neutro (`viewer="equipe"`).
+- `components/cohort/CohortPanelPage.tsx` (painel) e `StudentTable.tsx` (tabela ordenável; no celular vira lista, com a
+  ordenação num menu, sem rolagem lateral). Contas: `lib/cohort/model.ts` da Parte 1, inalteradas.
+- `components/cohort/StudentProductionPage.tsx`: o único caminho de dados é `studentProduction` (auditoria
+  `log_student_production_view` antes de ler). Cada abertura — inclusive trocar o filtro — grava um registro. Sem a
+  função no banco: estado "Produção individual indisponível", sem dados. Casos abrem na leitura de caso existente
+  (`log_case_view`). Links auditados com `prefetch={false}` (nada é aberto sem clique).
+
+Painel: cobertura (matriculados · com/sem registro no período, ativos/inativos), indicadores da Etapa 7, contexto do
+cronograma, evolução mensal, panorama (alunos por procedimento/etapa, ordem do catálogo) com "Sem registros neste
+período" recolhido, dificuldades por tema e tabela de alunos (padrão A→Z, qualquer coluna, sem cores/ranking).
+Aviso fixo: ausência de registro no portal não significa ausência de atividade clínica.
+
+Testes: suíte E2E `visao-turma` (67 verificações) + `tests/period.test.ts`.
+
 ## N. Decisões
 
 ### N.1 Tomadas (v1)
