@@ -2202,3 +2202,21 @@ item agregado de 20 módulos publicados sem professor definido.
 ---
 
 *Arquitetura v1. Aguardando autorização explícita para iniciar a Etapa 1.*
+
+
+## Autossuficiência do Admin · Bloco A — B2: quadro de pendências (EM DESENVOLVIMENTO, só local)
+
+Autorizado pela Maryah em 21/11/2026, só no ambiente local. **Nenhuma migração, carga inicial ou publicação em produção
+foi autorizada.** Objetivo: substituir as abas PENDÊNCIAS, EQUIPAMENTOS, MARKETING, FOTO E VÍDEO e EXPERIENCIA da
+planilha-base e os materiais a providenciar por módulo.
+
+- Migração `20261123120000_pendencias.sql` (só aditiva): tipos `task_category`, `task_priority`, `task_status`;
+  tabela `admin_tasks`; função `admin_task_editable`; gatilhos de consistência, `updated_at` e `change_log`.
+- Permissões: Admin vê, cria, edita e exclui tudo (gerais e todas as turmas). Coordenação vê, cria e edita só as da
+  turma que coordena (sem as gerais) e cancela em vez de excluir. Aluno e visitante: nenhum acesso.
+- Responsável: pessoa do cadastro de equipe (`faculty`), inclusive sem login.
+- Telas: `/admin/pendencias`, `/coordenacao/pendencias` (mesmo componente `components/tasks/TaskBoard.tsx`), bloco
+  "Pendências do módulo" no editor do módulo, contagens e "N pendências atrasadas" no painel do Admin. Sem a migração
+  no banco, as telas mostram só um aviso (`lib/tasks/schema.ts`).
+- Testes: banco `rls_pendencias.sql` (30), unitários `tasks-model.test.ts` e atenção, E2E `pendencias` (34).
+- Divergências planilha × portal: registro permanente em `docs/DIVERGENCIAS-PLANILHA-PORTAL.md`.

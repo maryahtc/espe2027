@@ -9,7 +9,7 @@
  */
 import { addDays, daysBetween } from '@/lib/dates'
 
-export type AttentionKind = 'convite' | 'preparacao-rascunho' | 'sem-preparacao' | 'conteudo-sem-tema' | 'modulo-sem-professor' | 'workflow-rascunho'
+export type AttentionKind = 'pendencia-atrasada' | 'convite' | 'preparacao-rascunho' | 'sem-preparacao' | 'conteudo-sem-tema' | 'modulo-sem-professor' | 'workflow-rascunho'
 export type AttentionItem = { kind: AttentionKind; tone: 'pendencia' | 'editorial'; text: string; href: string; when?: string; action?: string }
 
 export type AttentionInput = {
@@ -21,6 +21,8 @@ export type AttentionInput = {
   prep: Array<{ moduleId: string; requirement: string; status: string }>
   contents: Array<{ status: string; topics: number }>
   workflowsDraft: number
+  /** Pendências do quadro com prazo vencido e ainda em aberto (Bloco A). 0 quando o banco não tem o quadro. */
+  tasksOverdue?: number
 }
 
 /** Janela de preparação: a mesma da Início do aluno (30 dias antes do módulo). */
@@ -32,6 +34,15 @@ const inDays = (n: number) => (n === 0 ? 'começa hoje' : n === 1 ? 'começa ama
 export function attentionItems(input: AttentionInput): AttentionItem[] {
   const { today } = input
   const out: AttentionItem[] = []
+
+  // 0. Pendências do quadro com prazo vencido (cadastradas por pessoas; sempre pendência).
+  if (input.tasksOverdue && input.tasksOverdue > 0)
+    out.push({
+      kind: 'pendencia-atrasada',
+      tone: 'pendencia',
+      text: `${plural(input.tasksOverdue, 'pendência atrasada', 'pendências atrasadas')} no quadro`,
+      href: '/admin/pendencias?atrasadas=1',
+    })
 
   // 1. Convites pendentes: convidado, nunca entrou, não desativado.
   const pending = input.people.filter((p) => p.invited_at && !p.last_sign_in_at && !p.deactivated_at)

@@ -80,7 +80,7 @@ function describeChange(e: HistoryEntry): string {
 }
 
 /** Editor do módulo: um formulário por bloco; tudo grava na hora e entra no histórico. */
-export function ModuleEditor({ page, internalNotes, library }: { page: AdminModulePage; internalNotes: string; library?: ReactNode }) {
+export function ModuleEditor({ page, internalNotes, library, tasks }: { page: AdminModulePage; internalNotes: string; library?: ReactNode; tasks?: ReactNode }) {
   const { detail, cohort, faculty, history, students } = page
   const m = detail.module
   const published = m.status === 'publicado'
@@ -445,7 +445,13 @@ export function ModuleEditor({ page, internalNotes, library }: { page: AdminModu
         </ActionForm>
       </Block>
 
-      <Block index="10" title="Histórico" hint="Quem alterou, quando e o que mudou (últimas 40 alterações).">
+      {tasks ? (
+        <Block index="10" title="Pendências do módulo" hint="Providências deste módulo no quadro único de pendências (materiais, equipamentos, professores, foto e vídeo…).">
+          {tasks}
+        </Block>
+      ) : null}
+
+      <Block index={tasks ? '11' : '10'} title="Histórico" hint="Quem alterou, quando e o que mudou (últimas 40 alterações).">
         {history.length ? (
           <ol className="divide-y divide-rule rounded-2xl border border-rule bg-surface">
             {history.map((h) => (

@@ -150,6 +150,8 @@ export default async function AdminHome() {
                 ['workflows', 'workflows publicados', o.workflows?.published ?? null],
                 ['procedimentos', 'procedimentos ativos', o.proceduresActive],
                 ['avisos', 'avisos no ar', o.announcementsLive],
+                ['pendencias', 'pendências em aberto', o.tasks?.open ?? null],
+                ['pendencias-alta', 'pendências de prioridade alta', o.tasks?.highPriority ?? null],
               ] as const
             )
               .filter(([, , v]) => v !== null)
@@ -176,9 +178,16 @@ export default async function AdminHome() {
               Nenhum módulo publicado com data futura.
             </p>
           )}
-          <Link href="/admin/producao" className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-            Produção da turma <IconArrowRight size={14} />
-          </Link>
+          <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1">
+            {o.tasks ? (
+              <Link href="/admin/pendencias" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink" data-link-pendencias>
+                Quadro de pendências <IconArrowRight size={14} />
+              </Link>
+            ) : null}
+            <Link href="/admin/producao" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+              Produção da turma <IconArrowRight size={14} />
+            </Link>
+          </p>
         </section>
       </div>
 

@@ -6,6 +6,7 @@ import { PreviewBanner } from '@/components/shell/PreviewBanner'
 import { SimulationBanner } from '@/components/simulation/SimulationBanner'
 import { requireUser } from '@/lib/auth/session'
 import { getSimulation } from '@/lib/simulation/session'
+import { tasksReady } from '@/lib/tasks/schema'
 import { workflowsReady } from '@/lib/workflows/schema'
 
 export const metadata: Metadata = { title: { default: 'Coordenação', template: '%s · Coordenação · Conexo' } }
@@ -15,6 +16,7 @@ export default async function CoordinationLayout({ children }: { children: React
   const auth = await requireUser(['coordenacao', 'admin'])
   const sim = auth ? await getSimulation() : null
   const workflows = auth ? await workflowsReady() : false
+  const tasks = auth ? await tasksReady() : false
   return (
     <>
       {sim ? <SimulationBanner backToStudent cohortName={sim.cohortVM.name} expiresAt={sim.expiresAt} /> : null}
@@ -35,6 +37,11 @@ export default async function CoordinationLayout({ children }: { children: React
           <Link href="/coordenacao/avisos" className="text-muted hover:text-ink">
             Avisos
           </Link>
+          {tasks ? (
+            <Link href="/coordenacao/pendencias" className="text-muted hover:text-ink">
+              Pendências
+            </Link>
+          ) : null}
           {workflows ? (
             <Link href="/coordenacao/workflows" className="text-muted hover:text-ink">
               Workflows

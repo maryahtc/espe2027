@@ -221,6 +221,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
         details: ['Por turma, por aluno, por conteúdo e por módulo', 'Planilha para baixar'],
       },
       {
+        slug: 'pendencias',
+        label: 'Pendências',
+        summary: 'Quadro único: professores, materiais, equipamentos, parceiros, foto e vídeo, marketing',
+        icon: 'chart',
+        stage: 'Bloco A',
+        details: ['Responsável, prazo, prioridade e situação', 'Por módulo e por turma', 'Atrasadas aparecem no painel inicial'],
+      },
+      {
         slug: 'producao',
         label: 'Produção da turma',
         summary: 'Indicadores, panorama de experiências e dificuldades por tema',

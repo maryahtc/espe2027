@@ -103,6 +103,12 @@ describe('Admin · Precisa da sua atenção — regras objetivas', () => {
     expect(items[0]!.action).toBe('Definir professores em Módulos e cronograma')
   })
 
+  it('pendências atrasadas do quadro: um item agrupado, primeiro da lista, com link filtrado', () => {
+    const items = attentionItems(base({ tasksOverdue: 3, workflowsDraft: 1 }))
+    expect(items[0]).toEqual({ kind: 'pendencia-atrasada', tone: 'pendencia', text: '3 pendências atrasadas no quadro', href: '/admin/pendencias?atrasadas=1' })
+    expect(attentionItems(base({ tasksOverdue: 0 }))).toEqual([])
+  })
+
   it('workflows em rascunho: lembrete editorial, não erro', () => {
     expect(attentionItems(base({ workflowsDraft: 1 }))).toEqual([{ kind: 'workflow-rascunho', tone: 'editorial', text: '1 workflow em rascunho', href: '/admin/workflows?status=rascunho' }])
   })

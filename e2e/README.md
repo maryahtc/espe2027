@@ -51,6 +51,7 @@ qualquer verificação falhar.
 | `workflows-editor` | Editor de Workflows (Admin e Coordenação) |
 | `workflows-aluno` | Workflows do aluno, checklist, integração com o Planejamento, Simulação |
 | `painel-admin` | Etapa 10 · Parte 3: painel do Admin (números = banco, regras de atenção, pendências × lembretes, tudo resolvido), "Quem vê o quê" do Perfil, 390 px |
+| `pendencias` | Bloco A · B2: quadro de pendências (criar, editar, filtrar, situação, atrasadas no painel, módulo, isolamento por turma, aluno sem acesso, 390 px, sem a migração) |
 | `visao-turma` | Etapa 10: Visão da turma/Produção da turma (agregados = soma dos alunos, filtros, turmas, ordenação), produção individual auditada, recusas, estados vazios, 390 px |
 
 ## Escrever uma suíte nova

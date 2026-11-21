@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CohortPanelPage } from '@/components/cohort/CohortPanelPage'
 import { requireUser } from '@/lib/auth/session'
+import { tasksReady } from '@/lib/tasks/schema'
 import { workflowsReady } from '@/lib/workflows/schema'
 
 export const metadata: Metadata = { title: 'Visão da turma' }
@@ -11,11 +12,12 @@ export const metadata: Metadata = { title: 'Visão da turma' }
 export default async function CoordinationPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const auth = await requireUser(['coordenacao', 'admin'])
   if (!auth) notFound()
-  const workflows = await workflowsReady()
+  const [workflows, tasks] = await Promise.all([workflowsReady(), tasksReady()])
   const more: Array<[string, string]> = [
     ['/coordenacao/casos', 'Casos da turma'],
     ['/coordenacao/biblioteca', 'Progresso na biblioteca'],
     ['/coordenacao/avisos', 'Avisos'],
+    ...(tasks ? ([['/coordenacao/pendencias', 'Pendências']] as Array<[string, string]>) : []),
     ...(workflows ? ([['/coordenacao/workflows', 'Workflows clínicos']] as Array<[string, string]>) : []),
   ]
   return (

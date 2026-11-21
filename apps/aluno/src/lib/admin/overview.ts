@@ -2,6 +2,8 @@ import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import { cohortModules, today } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
+import { loadTaskStatuses } from '@/lib/tasks/load'
+import { type TaskCounts, taskCounts } from '@/lib/tasks/model'
 import { workflowsReady } from '@/lib/workflows/schema'
 import { type AttentionItem, attentionItems } from './attention'
 
@@ -20,6 +22,8 @@ export type AdminOverview = {
   announcementsLive: number
   /** Próximo módulo publicado (início hoje ou depois) entre as turmas ativas. Só contexto. */
   nextModule: { id: string; label: string; title: string; start: string; cohortName: string } | null
+  /** Quadro de pendências (null = banco ainda sem o quadro). */
+  tasks: TaskCounts | null
   attention: AttentionItem[]
 }
 
@@ -28,7 +32,8 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
   const supabase = await createSupabaseServerClient()
   if (!auth || !supabase) return null
   const now = today()
-  const wf = await workflowsReady()
+  const [wf, taskRows] = await Promise.all([workflowsReady(), loadTaskStatuses()])
+  const tasks = taskRows ? taskCounts(taskRows, now) : null
   const [{ data: cohorts }, { data: people }, { data: enr }, { data: contents }, { data: ct }, { data: procs }, { data: ann }, { data: flows }] = await Promise.all([
     supabase.from('cohorts').select('id, name, status'),
     supabase.rpc('admin_people'),
@@ -70,6 +75,7 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
     workflows: flows ? { published: count(flows, 'publicado'), draft: count(flows, 'rascunho') } : null,
     proceduresActive: (procs ?? []).length,
     announcementsLive: (ann ?? []).length,
+    tasks,
     nextModule: next ? { id: next.id, label: next.label, title: next.title, start: next.start, cohortName: cohortName.get(next.cohortId) ?? '' } : null,
     attention: attentionItems({
       today: now,
@@ -87,6 +93,7 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
       prep,
       contents: (contents ?? []).map((c) => ({ status: c.status, topics: topicCount.get(c.id) ?? 0 })),
       workflowsDraft: flows ? count(flows, 'rascunho') : 0,
+      tasksOverdue: tasks?.overdue ?? 0,
     }),
   }
 }
