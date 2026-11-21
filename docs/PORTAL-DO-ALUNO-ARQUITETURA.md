@@ -2052,10 +2052,20 @@ NÃO foi aplicada em produção** (produção segue em `20261024120000_workflows
 - **Testes:** banco 351 (26 novos) · unitários 184 (20 novos) · typecheck, lint e build. As suítes E2E locais (que viviam
   fora do repositório) se perderam na recriação do ambiente; serão refeitas dentro do repositório na Parte 2.
 
-### Etapa 10 · Parte 2 — Visão da turma, produção individual e Produção da turma (19/11/2026, só local)
+### Etapa 10 · Parte 2 — Visão da turma, produção individual e Produção da turma (PUBLICADA em 21/11/2026)
 
-Autorizada pela Maryah em 19/11/2026. **Implementada e testada só no ambiente local; a migração da Parte 1 continua NÃO
-aplicada em produção e nada foi publicado na branch de deploy.**
+Autorizada pela Maryah em 19/11/2026; interface aprovada e publicação controlada autorizada em 20–21/11/2026.
+
+**Publicação (21/11/2026):**
+- Migração `20261112120000_auditoria_producao` aplicada em produção (só ela; aditiva: 1 função + versão do esquema).
+  O conector gravou a versão `20261121164553`; corrigida para `20261112120000` com autorização (histórico = 17 arquivos).
+- Impressão digital de produção: antes `1f438feb…` (669 itens) → depois `aca9fddc…` (670); fora os 2 itens previstos
+  (função nova e `schema_info`), idêntica (`5c775383…`). Corpo da função idêntico ao arquivo aprovado.
+- Commit `cba144c` na branch de deploy (avanço direto de `453ef8e`); Vercel: Production "success". `/api/saude` →
+  `20261112120000_auditoria_producao`.
+- Sem testes autenticados em produção (sem credenciais e sem registros fictícios): cobertos pelos E2E locais.
+- Pendência separada (anterior, fora do escopo): 10 testes do `apps/publico` dependem de
+  `fixtures/preview/*.csv`, que nunca foi versionado.
 
 Rotas:
 - `/coordenacao` — **Visão da turma** (substitui o marcador da Etapa 10). Turmas que a pessoa coordena (matrícula de
@@ -2083,6 +2093,29 @@ período" recolhido, dificuldades por tema e tabela de alunos (padrão A→Z, qu
 Aviso fixo: ausência de registro no portal não significa ausência de atividade clínica.
 
 Testes: suíte E2E `visao-turma` (67 verificações) + `tests/period.test.ts`.
+
+### Etapa 10 · Parte 3 — Painel do Admin, "Precisa da sua atenção" e "Quem vê o quê" (EM DESENVOLVIMENTO, só local)
+
+Autorizada pela Maryah em 21/11/2026, só na branch de desenvolvimento. Sem migração. Não publicada.
+
+- **Painel inicial do Admin** (`app/admin/page.tsx`): sai o protótipo (`demo/admin.ts` removido). Números reais de
+  `lib/admin/overview.ts` (turmas ativas, alunos ativos, convites pendentes, módulos e conteúdos publicados/rascunho,
+  workflows, procedimentos ativos, avisos no ar, próximo módulo publicado). Só fatos de cadastro: nenhuma métrica de
+  desempenho, ranking ou leitura automática da formação clínica (isso fica em Produção da turma).
+- **Precisa da sua atenção** (`lib/admin/attention.ts`, regras da Parte 1) em dois grupos: **Pendências** (convite não
+  aceito; preparação obrigatória em rascunho de módulo que começa em até 30 dias; conteúdo publicado sem tema; módulo
+  publicado e não terminado sem professor) e **Lembretes editoriais** (módulo próximo sem nenhuma preparação;
+  workflows em rascunho). Ajuste de apresentação: vários módulos sem professor viram UM item agregado com o mais
+  próximo (o cronograma inteiro publicado deixaria ~20 linhas); a regra não mudou.
+- **Perfil → "Quem vê o quê"**: removidos os botões fictícios de privacidade ("Minha produção é privada" / "Quero
+  participar da visualização da turma") e o "Aviso de privacidade" sem destino. A seção vem de
+  `lib/privacy/access.ts` (`VISIBILITY`, `PRIVACY_NOTES`): casos, produção, progresso na biblioteca, nome/e-mail e
+  itens pessoais — quem vê (você, colegas, coordenação, Admin) — mais auditoria, acesso excepcional, caso excluído e
+  checklist. Cada afirmação aponta um teste existente; `tests/privacy-access.test.ts` falha se a referência sumir.
+- Testes novos: banco `rls_privacidade_perfil.sql` (9: perfil, lista de materiais, matrículas); unitários
+  `privacy-access.test.ts` e agregação em `admin-attention.test.ts`; E2E `painel-admin` (30).
+- Fora do escopo (frente separada "Gestão Operacional e Financeira do Conexo"): estoque, financeiro, repasses,
+  laboratórios e empresas parceiras.
 
 ## N. Decisões
 

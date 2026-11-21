@@ -86,6 +86,22 @@ describe('Admin · Precisa da sua atenção — regras objetivas', () => {
     expect(items.map((i) => [i.kind, i.text])).toEqual([['modulo-sem-professor', 'Módulo 01 · Módulo m1: sem professor definido']])
   })
 
+  it('vários módulos sem professor: um item agregado, com o mais próximo', () => {
+    const items = attentionItems(
+      base({
+        modules: [
+          mod('m2', '2027-05-01', '2027-05-03', { teachers: 0, staffTeachers: 0 }),
+          mod('m1', '2027-04-01', '2027-04-03', { teachers: 0, staffTeachers: 0 }),
+          mod('m3', '2027-06-01', '2027-06-03', { teachers: 0, staffTeachers: 0 }),
+        ],
+        prep: ['m1', 'm2', 'm3'].map((moduleId) => ({ moduleId, requirement: 'obrigatorio', status: 'publicado' })),
+      }),
+    )
+    expect(items).toHaveLength(1)
+    expect(items[0]).toMatchObject({ kind: 'modulo-sem-professor', tone: 'pendencia', text: '3 módulos publicados sem professor definido', href: '/admin/modulos' })
+    expect(items[0]!.when).toMatch(/^o mais próximo: Módulo 01 · Módulo m1, /)
+  })
+
   it('workflows em rascunho: lembrete editorial, não erro', () => {
     expect(attentionItems(base({ workflowsDraft: 1 }))).toEqual([{ kind: 'workflow-rascunho', tone: 'editorial', text: '1 workflow em rascunho', href: '/admin/workflows?status=rascunho' }])
   })

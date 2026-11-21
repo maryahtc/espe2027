@@ -6,6 +6,7 @@ import { NameForm } from '@/components/people/NameForm'
 import { student } from '@/demo/data'
 import { studentArea } from '@/lib/academic/student'
 import { getAuth } from '@/lib/auth/session'
+import { PRIVACY_NOTES, VISIBILITY } from '@/lib/privacy/access'
 import { monthLong, year } from '@/lib/dates'
 import { ExitSimulationButton } from '@/components/simulation/SimulationBanner'
 import { getSimulation } from '@/lib/simulation/session'
@@ -100,36 +101,47 @@ export default async function ProfilePage() {
         </Group>
       ) : null}
 
-      <Group title="Privacidade da produção">
-        <fieldset>
-          <legend className="text-[15px] font-semibold">Quem vê a minha produção</legend>
-          <div className="mt-3 space-y-2">
-            <label htmlFor="priv-privada" className="flex cursor-pointer gap-3 glass rounded-2xl p-4 has-[:checked]:border-[rgba(202,44,44,0.7)] has-[:checked]:bg-brand-tint">
-              <input id="priv-privada" type="radio" name="privacidade" defaultChecked className="mt-1 accent-[var(--brand)]" />
-              <span>
-                <span className="block text-[15px] font-semibold">Minha produção é privada</span>
-                <span className="mt-0.5 block text-sm text-muted">Colegas não veem seus números. Esta é a opção padrão.</span>
-              </span>
-            </label>
-            <label htmlFor="priv-turma" className="flex cursor-pointer gap-3 glass rounded-2xl p-4 has-[:checked]:border-[rgba(202,44,44,0.7)] has-[:checked]:bg-brand-tint">
-              <input id="priv-turma" type="radio" name="privacidade" className="mt-1 accent-[var(--brand)]" />
-              <span>
-                <span className="block text-[15px] font-semibold">Quero participar da visualização da turma</span>
-                <span className="mt-0.5 block text-sm text-muted">
-                  Aparecem só números agregados: total de procedimentos, casos e categorias. Você pode mudar quando quiser.
-                </span>
-              </span>
-            </label>
-          </div>
-        </fieldset>
-        <div className="mt-5 rounded-md bg-sunken p-4 text-sm leading-relaxed">
-          <p className="font-semibold">Em qualquer opção</p>
-          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-ink-2">
-            <li>Colegas nunca veem iniciais de pacientes, links do Smile Cloud ou suas dificuldades.</li>
-            <li>A coordenação acompanha a produção e os casos da turma para orientar a sua formação.</li>
-          </ul>
-        </div>
-      </Group>
+      <section id="privacidade" aria-labelledby="privacidade-t" className="glass scroll-mt-24 rounded-[22px] p-6 sm:p-7" data-privacidade>
+        <h2 id="privacidade-t" className="eyebrow">
+          Quem vê o quê
+        </h2>
+        <p className="mt-4 text-sm text-ink-2">
+          Estas regras valem para todos os alunos e são garantidas pelo próprio banco de dados. Não há opção a ligar ou desligar.
+        </p>
+        <ul className="mt-5 space-y-3" data-quem-ve-lista>
+          {VISIBILITY.map((r) => (
+            <li key={r.id} className="rounded-2xl border border-rule p-4" data-quem-ve={r.id}>
+              <p className="text-[15px] font-semibold">{r.what}</p>
+              {r.detail ? <p className="mt-0.5 text-xs text-muted">{r.detail}</p> : null}
+              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 sm:grid-cols-4">
+                {(
+                  [
+                    ['voce', 'Você', r.you],
+                    ['colegas', 'Colegas', r.colleagues],
+                    ['coordenacao', 'Coordenação', r.coordination],
+                    ['admin', 'Admin', r.admin],
+                  ] as const
+                ).map(([k, label, v]) => (
+                  <div key={k} data-pessoa={k} data-ve={v.yes ? 'sim' : 'nao'}>
+                    <dt className="text-xs text-muted">{label}</dt>
+                    <dd className={v.yes ? 'text-sm text-ink' : 'text-sm text-muted'}>
+                      {v.yes ? 'Vê' : 'Não vê'}
+                      {v.note ? <span className="block text-xs text-muted">{v.note}</span> : null}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <ul className="mt-5 list-disc space-y-1.5 pl-5 text-sm text-ink-2" data-privacidade-notas>
+          {PRIVACY_NOTES.map((x) => (
+            <li key={x.id} data-nota={x.id}>
+              {x.text}
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <Group title="Conta">
         {sim ? (
@@ -148,7 +160,10 @@ export default async function ProfilePage() {
           <Link href="/termo?next=/perfil" className="underline underline-offset-2">
             Termo de uso
           </Link>{' '}
-          · <span className="underline underline-offset-2">Aviso de privacidade</span>
+          ·{' '}
+          <Link href="#privacidade" className="underline underline-offset-2">
+            Quem vê o quê
+          </Link>
         </p>
       </Group>
     </div>

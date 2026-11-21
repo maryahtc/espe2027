@@ -67,10 +67,24 @@ export function attentionItems(input: AttentionInput): AttentionItem[] {
     out.push({ kind: 'conteudo-sem-tema', tone: 'pendencia', text: `${plural(noTopic, 'conteúdo publicado sem tema', 'conteúdos publicados sem tema')}`, href: '/admin/conteudos' })
 
   // 4. Módulo publicado, com datas e ainda não terminado, sem nenhum professor (atividades ou equipe docente).
-  for (const m of input.modules
+  //    Um só: item com o nome do módulo. Vários (comum no começo da turma, com o cronograma inteiro publicado): um
+  //    item agregado com o mais próximo, como convites e conteúdos — a regra é a mesma, só a lista não transborda.
+  const noTeacher = input.modules
     .filter((x) => x.status === 'publicado' && x.start && x.end && x.end >= today && x.teachers === 0 && x.staffTeachers === 0)
-    .sort((a, b) => a.start!.localeCompare(b.start!)))
+    .sort((a, b) => a.start!.localeCompare(b.start!))
+  if (noTeacher.length === 1) {
+    const m = noTeacher[0]!
     out.push({ kind: 'modulo-sem-professor', tone: 'pendencia', text: `Módulo ${m.label} · ${m.title}: sem professor definido`, href: `/admin/modulos/${m.id}` })
+  } else if (noTeacher.length > 1) {
+    const m = noTeacher[0]!
+    out.push({
+      kind: 'modulo-sem-professor',
+      tone: 'pendencia',
+      text: `${plural(noTeacher.length, 'módulo publicado', 'módulos publicados')} sem professor definido`,
+      href: '/admin/modulos',
+      when: `o mais próximo: Módulo ${m.label} · ${m.title}, ${m.start! <= today ? 'em andamento' : inDays(daysBetween(today, m.start!))}`,
+    })
+  }
 
   // 5. Workflows em rascunho: pendência editorial, não erro.
   if (input.workflowsDraft > 0)

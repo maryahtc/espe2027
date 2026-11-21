@@ -18,6 +18,8 @@ export type AdminOverview = {
   workflows: { published: number; draft: number } | null
   proceduresActive: number
   announcementsLive: number
+  /** Próximo módulo publicado (início hoje ou depois) entre as turmas ativas. Só contexto. */
+  nextModule: { id: string; label: string; title: string; start: string; cohortName: string } | null
   attention: AttentionItem[]
 }
 
@@ -28,7 +30,7 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
   const now = today()
   const wf = await workflowsReady()
   const [{ data: cohorts }, { data: people }, { data: enr }, { data: contents }, { data: ct }, { data: procs }, { data: ann }, { data: flows }] = await Promise.all([
-    supabase.from('cohorts').select('id, status'),
+    supabase.from('cohorts').select('id, name, status'),
     supabase.rpc('admin_people'),
     supabase.from('enrollments').select('cohort_id, status').eq('role_in_cohort', 'aluno'),
     supabase.from('contents').select('id, status'),
@@ -54,6 +56,10 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
     ...((mc ?? []) as unknown as Array<{ module_id: string; requirement: string; contents: { status: string } | null }>).map((x) => ({ moduleId: x.module_id, requirement: x.requirement, status: x.contents?.status ?? 'arquivado' })),
     ...((mr ?? []) as Array<{ module_id: string; requirement: string; status: string }>).map((x) => ({ moduleId: x.module_id, requirement: x.requirement, status: x.status })),
   ]
+  const cohortName = new Map((cohorts ?? []).map((c) => [c.id, c.name]))
+  const next = modules
+    .filter((m): m is typeof m & { start: string } => m.status === 'publicado' && !!m.start && m.start >= now)
+    .sort((a, b) => a.start.localeCompare(b.start))[0]
   const count = (list: Array<{ status: string }> | null | undefined, s: string) => (list ?? []).filter((x) => x.status === s).length
   return {
     cohortsActive: active.length,
@@ -64,6 +70,7 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
     workflows: flows ? { published: count(flows, 'publicado'), draft: count(flows, 'rascunho') } : null,
     proceduresActive: (procs ?? []).length,
     announcementsLive: (ann ?? []).length,
+    nextModule: next ? { id: next.id, label: next.label, title: next.title, start: next.start, cohortName: cohortName.get(next.cohortId) ?? '' } : null,
     attention: attentionItems({
       today: now,
       people: people ?? [],
