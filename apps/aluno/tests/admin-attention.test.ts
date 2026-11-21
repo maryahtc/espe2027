@@ -100,6 +100,7 @@ describe('Admin · Precisa da sua atenção — regras objetivas', () => {
     expect(items).toHaveLength(1)
     expect(items[0]).toMatchObject({ kind: 'modulo-sem-professor', tone: 'pendencia', text: '3 módulos publicados sem professor definido', href: '/admin/modulos' })
     expect(items[0]!.when).toMatch(/^o mais próximo: Módulo 01 · Módulo m1, /)
+    expect(items[0]!.action).toBe('Definir professores em Módulos e cronograma')
   })
 
   it('workflows em rascunho: lembrete editorial, não erro', () => {

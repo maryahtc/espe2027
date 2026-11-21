@@ -24,6 +24,10 @@ try {
     base.length === 1 && base[0].kind === 'modulo-sem-professor' && /\d+ módulos publicados sem professor definido/.test(base[0].text) && /o mais próximo/.test(base[0].text),
     base,
   )
+  const agg = ad.locator('[data-atencao="modulo-sem-professor"]')
+  t.check('Item agregado leva a Módulos e cronograma, com a ação explícita', (await agg.getAttribute('href')) === '/admin/modulos' && /Definir professores em Módulos e cronograma/.test(await agg.locator('[data-atencao-acao]').innerText()))
+  t.check('O link do item abre Módulos e cronograma (200)', (await go(ad, '/admin/modulos')) === 200)
+  await go(ad, '/admin')
 
   // ── Números reais = banco ──
   const T = cohortId()
@@ -109,6 +113,7 @@ try {
 
   // ── Perfil: Quem vê o quê ──
   await go(al, '/perfil')
+  t.check('Perfil sem o "Trocar foto" (ainda sem função)', !/Trocar foto/.test(await al.locator('main').innerText()))
   t.check('Perfil sem os controles fictícios de privacidade', (await al.locator('input[name="privacidade"]').count()) === 0 && !/Quero participar da visualização da turma|Minha produção é privada/.test(await al.locator('main').innerText()))
   t.check('"Quem vê o quê" com as 5 informações', (await al.locator('[data-quem-ve]').count()) === 5)
   t.check('Colegas não veem nenhuma delas', (await al.locator('[data-pessoa="colegas"][data-ve="sim"]').count()) === 0)

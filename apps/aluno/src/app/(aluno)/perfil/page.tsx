@@ -55,7 +55,6 @@ export default async function ProfilePage() {
         ) : account ? null : (
           <p className="mt-1 text-sm text-muted">{student.cohort} · mês {student.monthOfCourse} de {student.totalMonths}</p>
         )}
-        <span className="mt-4 text-xs text-muted underline underline-offset-2">Trocar foto</span>
       </div>
 
       <Group title="Dados">

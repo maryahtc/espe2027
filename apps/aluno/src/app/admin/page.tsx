@@ -41,6 +41,11 @@ function AttentionList({ items, tone }: { items: AttentionItem[]; tone: 'pendenc
             <span className="min-w-0 text-[15px] leading-snug">
               {a.text}
               {a.when ? <span className="block text-xs text-muted">{a.when}</span> : null}
+              {a.action ? (
+                <span className="mt-1 block text-xs font-semibold text-ink-2 underline-offset-4 group-hover:underline" data-atencao-acao>
+                  {a.action} →
+                </span>
+              ) : null}
             </span>
             <IconArrowRight size={16} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
           </Link>

@@ -10,7 +10,7 @@
 import { addDays, daysBetween } from '@/lib/dates'
 
 export type AttentionKind = 'convite' | 'preparacao-rascunho' | 'sem-preparacao' | 'conteudo-sem-tema' | 'modulo-sem-professor' | 'workflow-rascunho'
-export type AttentionItem = { kind: AttentionKind; tone: 'pendencia' | 'editorial'; text: string; href: string; when?: string }
+export type AttentionItem = { kind: AttentionKind; tone: 'pendencia' | 'editorial'; text: string; href: string; when?: string; action?: string }
 
 export type AttentionInput = {
   today: string
@@ -83,6 +83,7 @@ export function attentionItems(input: AttentionInput): AttentionItem[] {
       text: `${plural(noTeacher.length, 'módulo publicado', 'módulos publicados')} sem professor definido`,
       href: '/admin/modulos',
       when: `o mais próximo: Módulo ${m.label} · ${m.title}, ${m.start! <= today ? 'em andamento' : inDays(daysBetween(today, m.start!))}`,
+      action: 'Definir professores em Módulos e cronograma',
     })
   }
 
