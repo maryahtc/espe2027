@@ -2094,9 +2094,19 @@ Aviso fixo: ausência de registro no portal não significa ausência de atividad
 
 Testes: suíte E2E `visao-turma` (67 verificações) + `tests/period.test.ts`.
 
-### Etapa 10 · Parte 3 — Painel do Admin, "Precisa da sua atenção" e "Quem vê o quê" (EM DESENVOLVIMENTO, só local)
+### Etapa 10 · Parte 3 — Painel do Admin, "Precisa da sua atenção" e "Quem vê o quê" (PUBLICADA em 21/11/2026)
 
-Autorizada pela Maryah em 21/11/2026, só na branch de desenvolvimento. Sem migração. Não publicada.
+Autorizada pela Maryah em 21/11/2026; aprovada (commit `8c2fbbc`) com dois ajustes: o item agregado de módulos sem
+professor ganhou a ação explícita "Definir professores em Módulos e cronograma" (→ `/admin/modulos`) e o "Trocar foto"
+do Perfil foi retirado até ter função (commit `23653d8`).
+
+**Publicação (21/11/2026):** commit `23653d8` na branch de deploy (avanço direto de `cba144c`); Vercel Production
+"success". Sem migração: produção segue em `20261112120000_auditoria_producao` (17 migrações) e a impressão digital
+ficou idêntica antes e depois do deploy (`aca9fddc…`, 670 itens). Rotas do Admin, da coordenação e do aluno exigem login.
+Validação final local: banco 378/0, unitários 223/223, typecheck, lint, build e E2E 335/335. Sem testes autenticados em
+produção (sem credenciais e sem dados fictícios). Com os dados de 21/11, o painel real mostra 1 turma ativa, 1 aluno
+ativo, 0 convites, 0 conteúdos publicados, 1 workflow publicado, 41 procedimentos e, em "Precisa da sua atenção", só o
+item agregado de 20 módulos publicados sem professor definido.
 
 - **Painel inicial do Admin** (`app/admin/page.tsx`): sai o protótipo (`demo/admin.ts` removido). Números reais de
   `lib/admin/overview.ts` (turmas ativas, alunos ativos, convites pendentes, módulos e conteúdos publicados/rascunho,
