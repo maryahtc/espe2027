@@ -47,7 +47,8 @@ function TaskFields({ data, task, defaults }: { data: TaskBoardData; task?: Task
     ...data.modules.map((m) => [m.id, data.cohorts.length > 1 ? `${cohortName.get(m.cohortId) ?? ''} · ${m.label}` : m.label] as [string, string]),
   ]
   const people = data.people.filter((p) => p.active || p.id === task?.responsibleId)
-  const peopleOptions: Array<[string, string]> = [['', 'Sem responsável'], ...people.map((p) => [p.id, p.name] as [string, string])]
+  const academic = people.filter((p) => p.group === 'academica')
+  const operational = people.filter((p) => p.group === 'operacional')
   const depGroups = dependencyGroups(data.tasks, { current: task, isAdmin: data.admin })
   const moduleDefault = task?.moduleId ?? defaults?.moduleId ?? ''
   const cohortDefault =
@@ -66,7 +67,28 @@ function TaskFields({ data, task, defaults }: { data: TaskBoardData; task?: Task
         <Select label="Módulo (opcional)" name="modulo" defaultValue={moduleDefault} options={moduleOptions} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Select label="Responsável" name="responsavel" defaultValue={task?.responsibleId ?? ''} options={peopleOptions} />
+        <label className="block">
+          <span className="block text-sm font-semibold">Responsável</span>
+          <select name="responsavel" defaultValue={task?.responsibleId ?? ''} className="field mt-1.5 block min-h-11 w-full px-3 text-[15px]" data-responsavel-select>
+            <option value="">Sem responsável</option>
+            {operational.length ? (
+              <optgroup label="Equipe operacional" data-grupo-responsavel="operacional">
+                {operational.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+            <optgroup label="Equipe acadêmica" data-grupo-responsavel="academica">
+              {academic.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
         <Input label="Prazo (opcional)" name="prazo" type="date" defaultValue={task?.dueDate ?? ''} />
       </div>
       <Input label="Próxima ação (opcional)" name="proxima_acao" maxLength={500} defaultValue={task?.nextAction ?? ''} />

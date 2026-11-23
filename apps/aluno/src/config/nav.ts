@@ -118,6 +118,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
           'Coordenação: usuário com acesso a casos e produção da turma',
         ],
       },
+      {
+        slug: 'equipe-operacional',
+        label: 'Equipe operacional',
+        summary: 'Compras, recepção, apoio: responsáveis por providências',
+        icon: 'users',
+        stage: 'Bloco A',
+        details: ['Nome, função, contato (só Admin) e situação', 'Fora da programação acadêmica e do site público'],
+      },
     ],
   },
   {
@@ -131,6 +139,14 @@ export const adminGroups: Array<{ label: string; sections: AdminSection[] }> = [
         action: 'Novo módulo',
         stage: 'Etapa 3',
         details: [],
+      },
+      {
+        slug: 'professores',
+        label: 'Professores e logística',
+        summary: 'Confirmação, passagens e hospedagens por módulo',
+        icon: 'calendar',
+        stage: 'Bloco A',
+        details: ['Participação, passagem e hospedagem com situações independentes', 'Agenda e contato de cada professor'],
       },
       {
         slug: 'avisos',

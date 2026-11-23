@@ -72,6 +72,8 @@ function fields(fd: FormData) {
   const cohort = str(fd, 'turma', 40)
   const moduleField = str(fd, 'modulo', 40)
   const responsible = str(fd, 'responsavel', 40)
+  const respId = responsible.slice(2)
+  const respKind = isId(respId) ? responsible.slice(0, 2) : ''
   const due = str(fd, 'prazo', 10)
   const depends = str(fd, 'depende_de', 40)
   const link = str(fd, 'link', 500)
@@ -83,7 +85,9 @@ function fields(fd: FormData) {
     module_id: isId(moduleField) ? moduleField : null,
     category: oneOf<TaskCategory>(str(fd, 'categoria', 30), CATEGORIES, 'administrativo'),
     details: opt(fd, 'detalhes', 4000),
-    responsible_id: isId(responsible) ? responsible : null,
+    // Responsável: equipe acadêmica (f:) ou operacional (o:), nunca os dois.
+    responsible_id: respKind === 'f:' ? respId : null,
+    responsible_ops_id: respKind === 'o:' ? respId : null,
     due_date: due || null,
     priority: oneOf<TaskPriority>(str(fd, 'prioridade', 10), PRIORITIES, 'media'),
     status: oneOf<TaskStatus>(str(fd, 'situacao', 20), STATUSES, 'aberta'),

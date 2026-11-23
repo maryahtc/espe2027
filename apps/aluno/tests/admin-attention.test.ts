@@ -109,6 +109,15 @@ describe('Admin · Precisa da sua atenção — regras objetivas', () => {
     expect(attentionItems(base({ tasksOverdue: 0 }))).toEqual([])
   })
 
+  it('professores a confirmar e passagens/hospedagens pendentes (próximos 45 dias), com "aguardando terceiros"', () => {
+    const items = attentionItems(base({ logistics: { toConfirm: 2, travelPending: 1, lodgingPending: 3, waiting: 1 } }))
+    expect(items.map((i) => [i.kind, i.tone, i.text, i.when])).toEqual([
+      ['professores-a-confirmar', 'pendencia', '2 professores a confirmar nos módulos dos próximos 45 dias', undefined],
+      ['logistica-pendente', 'pendencia', '1 passagem e 3 hospedagens pendentes nos próximos 45 dias', '1 professor aguardando confirmação de terceiros'],
+    ])
+    expect(attentionItems(base({ logistics: { toConfirm: 0, travelPending: 0, lodgingPending: 0, waiting: 0 } }))).toEqual([])
+  })
+
   it('workflows em rascunho: lembrete editorial, não erro', () => {
     expect(attentionItems(base({ workflowsDraft: 1 }))).toEqual([{ kind: 'workflow-rascunho', tone: 'editorial', text: '1 workflow em rascunho', href: '/admin/workflows?status=rascunho' }])
   })

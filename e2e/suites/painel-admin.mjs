@@ -75,9 +75,11 @@ try {
   t.check('Módulo publicado sem professor: pendência agregada (+1 com o Módulo 4)', find('modulo-sem-professor').length === 1 && find('modulo-sem-professor')[0].tone === 'pendencia' && new RegExp(`${noTeacherBase + 1} módulos publicados sem professor`).test(find('modulo-sem-professor')[0].text), find('modulo-sem-professor'))
   t.check('Conteúdo publicado sem tema: pendência (só o sem tema conta)', find('conteudo-sem-tema').length === 1 && /1 conteúdo publicado sem tema/.test(find('conteudo-sem-tema')[0].text))
   t.check('Workflow em rascunho: lembrete editorial (não erro)', find('workflow-rascunho').length === 1 && find('workflow-rascunho')[0].tone === 'editorial')
+  // Módulos 1 e 2 entram na janela de 45 dias: professores a confirmar e logística pendente também são pendências (B1).
+  t.check('Professores a confirmar e logística pendente aparecem (módulos dentro de 45 dias)', find('professores-a-confirmar').length === 1 && find('logistica-pendente').length === 1)
   t.check(
     'Pendências e lembretes editoriais em grupos separados',
-    (await ad.locator('[data-atencao-grupo="pendencia"] [data-tom="editorial"]').count()) === 0 && (await ad.locator('[data-atencao-grupo="editorial"] [data-tom="pendencia"]').count()) === 0 && (await ad.locator('[data-atencao-grupo="pendencia"] [data-atencao]').count()) === 4 && (await ad.locator('[data-atencao-grupo="editorial"] [data-atencao]').count()) === 2,
+    (await ad.locator('[data-atencao-grupo="pendencia"] [data-tom="editorial"]').count()) === 0 && (await ad.locator('[data-atencao-grupo="editorial"] [data-tom="pendencia"]').count()) === 0 && (await ad.locator('[data-atencao-grupo="pendencia"] [data-atencao]').count()) === 6 && (await ad.locator('[data-atencao-grupo="editorial"] [data-atencao]').count()) === 2,
   )
   t.check('Cada item leva à tela certa', (await ad.locator('[data-atencao="convite"]').getAttribute('href')) === '/admin/alunos' && (await ad.locator('[data-atencao="workflow-rascunho"]').getAttribute('href')) === '/admin/workflows?status=rascunho' && (await ad.locator('[data-atencao="sem-preparacao"]').getAttribute('href')) === `/admin/modulos/${moduleId(1)}`)
   t.check('Números acompanham o banco (conteúdos publicados: 2, convites: 1)', (await num(ad, 'conteudos')) === '2' && (await num(ad, 'convites')) === '1')
@@ -97,6 +99,10 @@ try {
   sql("update workflows set status='arquivado', archived_at=now() where status='rascunho'")
   sql(
     `insert into module_staff (module_id, faculty_id, role) select m.id, (select f.id from faculty f where not exists (select 1 from module_staff s2 where s2.module_id=m.id and s2.faculty_id=f.id) order by f.id limit 1), 'principal' from modules m where m.cohort_id='${T}' and not exists (select 1 from module_staff s where s.module_id=m.id and s.role in ('principal','docente'))`,
+  )
+  // Logística resolvida para os professores dos módulos 1 e 2 (confirmados; passagem e hospedagem não precisam)
+  sql(
+    `insert into module_faculty_logistics (module_id, faculty_id, participation, travel, lodging) select distinct x.module_id, x.fid, 'confirmado'::participation_status, 'nao_precisa'::travel_status, 'nao_precisa'::lodging_status from (select module_id, faculty_id fid from module_staff union select module_id, faculty_id from session_faculty) x join modules m on m.id=x.module_id where m.cohort_id='${T}' and m.number in (1,2) on conflict (module_id, faculty_id) do update set participation='confirmado', travel='nao_precisa', lodging='nao_precisa'`,
   )
   await go(ad, '/admin')
   t.check('Tudo resolvido: "Nada pendente agora"', (await ad.locator('[data-atencao]').count()) === 0 && (await ad.locator('[data-atencao-vazia]').count()) === 1, await items(ad))

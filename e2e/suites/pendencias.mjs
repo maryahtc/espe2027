@@ -37,7 +37,7 @@ try {
   await nf.locator('select[name=categoria]').selectOption('equipamentos')
   await nf.locator('select[name=prioridade]').selectOption('alta')
   await nf.locator('select[name=turma]').selectOption('')
-  await nf.locator('select[name=responsavel]').selectOption(apoio)
+  await nf.locator('select[name=responsavel]').selectOption(`f:${apoio}`)
   await nf.locator('input[name=prazo]').fill(days(-2))
   await nf.locator('details summary').click()
   await nf.locator('input[name=qtd_necessaria]').fill('2')

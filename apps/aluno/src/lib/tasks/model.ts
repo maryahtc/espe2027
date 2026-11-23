@@ -147,6 +147,8 @@ export function taskCounts(list: Array<Pick<TaskVM, 'status' | 'dueDate' | 'prio
 
 const pick = <T extends string>(v: string | undefined, all: readonly T[]): T | undefined => (v && (all as readonly string[]).includes(v) ? (v as T) : undefined)
 const uuid = (v: string | undefined) => (v && /^[0-9a-f-]{36}$/.test(v) ? v : undefined)
+/** Chave de responsável: "f:<uuid>" (acadêmica) ou "o:<uuid>" (operacional). */
+const personKey = (v: string | undefined) => (v && /^[fo]:[0-9a-f-]{36}$/.test(v) ? v : undefined)
 
 /** Lê os filtros do endereço (?categoria=&situacao=&prioridade=&modulo=&responsavel=&turma=&atrasadas=1). */
 export function parseFilters(sp: Record<string, string | undefined>): TaskFilters {
@@ -156,7 +158,7 @@ export function parseFilters(sp: Record<string, string | undefined>): TaskFilter
     status,
     priority: pick(sp.prioridade, PRIORITIES),
     moduleId: uuid(sp.modulo),
-    responsibleId: uuid(sp.responsavel),
+    responsibleId: personKey(sp.responsavel),
     cohortId: sp.turma === 'geral' ? 'geral' : uuid(sp.turma),
     overdue: sp.atrasadas === '1' || undefined,
   }

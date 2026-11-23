@@ -2,6 +2,8 @@ import 'server-only'
 import { createSupabaseServerClient } from '@portal/db/server'
 import { cohortModules, today } from '@/lib/academic/load'
 import { requireUser } from '@/lib/auth/session'
+import { LOGISTICS_WINDOW_DAYS } from '@/lib/admin/attention'
+import { loadLogisticsBoard } from '@/lib/logistics/load'
 import { loadTaskStatuses } from '@/lib/tasks/load'
 import { type TaskCounts, taskCounts } from '@/lib/tasks/model'
 import { workflowsReady } from '@/lib/workflows/schema'
@@ -32,7 +34,7 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
   const supabase = await createSupabaseServerClient()
   if (!auth || !supabase) return null
   const now = today()
-  const [wf, taskRows] = await Promise.all([workflowsReady(), loadTaskStatuses()])
+  const [wf, taskRows, lgBoard] = await Promise.all([workflowsReady(), loadTaskStatuses(), loadLogisticsBoard(auth, { scope: 'futuros', withinDays: LOGISTICS_WINDOW_DAYS })])
   const tasks = taskRows ? taskCounts(taskRows, now) : null
   const [{ data: cohorts }, { data: people }, { data: enr }, { data: contents }, { data: ct }, { data: procs }, { data: ann }, { data: flows }] = await Promise.all([
     supabase.from('cohorts').select('id, name, status'),
@@ -94,6 +96,7 @@ export async function loadAdminOverview(): Promise<AdminOverview | null> {
       contents: (contents ?? []).map((c) => ({ status: c.status, topics: topicCount.get(c.id) ?? 0 })),
       workflowsDraft: flows ? count(flows, 'rascunho') : 0,
       tasksOverdue: tasks?.overdue ?? 0,
+      logistics: lgBoard ? lgBoard.summary : undefined,
     }),
   }
 }

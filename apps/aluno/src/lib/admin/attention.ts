@@ -9,7 +9,7 @@
  */
 import { addDays, daysBetween } from '@/lib/dates'
 
-export type AttentionKind = 'pendencia-atrasada' | 'convite' | 'preparacao-rascunho' | 'sem-preparacao' | 'conteudo-sem-tema' | 'modulo-sem-professor' | 'workflow-rascunho'
+export type AttentionKind = 'pendencia-atrasada' | 'professores-a-confirmar' | 'logistica-pendente' | 'convite' | 'preparacao-rascunho' | 'sem-preparacao' | 'conteudo-sem-tema' | 'modulo-sem-professor' | 'workflow-rascunho'
 export type AttentionItem = { kind: AttentionKind; tone: 'pendencia' | 'editorial'; text: string; href: string; when?: string; action?: string }
 
 export type AttentionInput = {
@@ -23,7 +23,12 @@ export type AttentionInput = {
   workflowsDraft: number
   /** Pendências do quadro com prazo vencido e ainda em aberto (Bloco A). 0 quando o banco não tem o quadro. */
   tasksOverdue?: number
+  /** Professores e logística dos módulos que começam em até LOGISTICS_WINDOW_DAYS (Bloco A · B1). */
+  logistics?: { toConfirm: number; travelPending: number; lodgingPending: number; waiting: number }
 }
+
+/** Janela de logística: módulos que começam nos próximos 45 dias. */
+export const LOGISTICS_WINDOW_DAYS = 45
 
 /** Janela de preparação: a mesma da Início do aluno (30 dias antes do módulo). */
 export const PREP_WINDOW_DAYS = 30
@@ -42,6 +47,24 @@ export function attentionItems(input: AttentionInput): AttentionItem[] {
       tone: 'pendencia',
       text: `${plural(input.tasksOverdue, 'pendência atrasada', 'pendências atrasadas')} no quadro`,
       href: '/admin/pendencias?atrasadas=1',
+    })
+
+  // 0b. Professores e logística dos próximos módulos (sempre pendência; "aguardando terceiros" vai no detalhe).
+  const lg = input.logistics
+  if (lg && lg.toConfirm > 0)
+    out.push({
+      kind: 'professores-a-confirmar',
+      tone: 'pendencia',
+      text: `${plural(lg.toConfirm, 'professor a confirmar', 'professores a confirmar')} nos módulos dos próximos ${LOGISTICS_WINDOW_DAYS} dias`,
+      href: '/admin/professores?escopo=futuros&situacao=pendente',
+    })
+  if (lg && lg.travelPending + lg.lodgingPending > 0)
+    out.push({
+      kind: 'logistica-pendente',
+      tone: 'pendencia',
+      text: `${plural(lg.travelPending, 'passagem', 'passagens')} e ${plural(lg.lodgingPending, 'hospedagem', 'hospedagens')} pendentes nos próximos ${LOGISTICS_WINDOW_DAYS} dias`,
+      href: '/admin/professores?escopo=futuros&situacao=pendente',
+      when: lg.waiting ? `${plural(lg.waiting, 'professor aguardando', 'professores aguardando')} confirmação de terceiros` : undefined,
     })
 
   // 1. Convites pendentes: convidado, nunca entrou, não desativado.

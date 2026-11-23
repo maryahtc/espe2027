@@ -12,7 +12,7 @@ import { tasksReady } from './schema'
  */
 
 const COLS =
-  'id, cohort_id, module_id, category, title, details, responsible_id, due_date, priority, status, next_action, depends_on_id, dependency_note, quantity_needed, quantity_available, partner_name, link_url, completed_at, updated_at'
+  'id, cohort_id, module_id, category, title, details, responsible_id, responsible_ops_id, due_date, priority, status, next_action, depends_on_id, dependency_note, quantity_needed, quantity_available, partner_name, link_url, completed_at, updated_at'
 
 type Row = {
   id: string
@@ -22,6 +22,7 @@ type Row = {
   title: string
   details: string | null
   responsible_id: string | null
+  responsible_ops_id: string | null
   due_date: string | null
   priority: TaskVM['priority']
   status: TaskVM['status']
@@ -37,7 +38,8 @@ type Row = {
 }
 
 export type ModuleOption = { id: string; cohortId: string; label: string }
-export type PersonOption = { id: string; name: string; kind: string; active: boolean }
+/** Responsável: chave "f:<id>" (equipe acadêmica, faculty) ou "o:<id>" (Equipe operacional). */
+export type PersonOption = { id: string; name: string; group: 'academica' | 'operacional'; active: boolean }
 
 export type TaskBoardData = {
   tasks: TaskVM[]
@@ -59,16 +61,20 @@ export async function loadTaskBoard(auth: AuthState, filter: { moduleId?: string
   const cohortIds = cohorts.map((c) => c.id)
   let q = supabase.from('admin_tasks').select(COLS)
   if (filter.moduleId) q = q.eq('module_id', filter.moduleId)
-  const [{ data: rows }, { data: mods }, { data: fac }] = await Promise.all([
+  const [{ data: rows }, { data: mods }, { data: fac }, { data: ops }] = await Promise.all([
     q.returns<Row[]>(),
     cohortIds.length
       ? supabase.from('modules').select('id, cohort_id, number, title').in('cohort_id', cohortIds).neq('status', 'arquivado').order('position')
       : Promise.resolve({ data: [] as Array<{ id: string; cohort_id: string; number: number | null; title: string }> }),
     supabase.from('faculty').select('id, display_name, kind, active').order('display_name'),
+    supabase.from('ops_people').select('id, name, role_title, active').order('name'),
   ])
   const modules: ModuleOption[] = (mods ?? []).map((m) => ({ id: m.id, cohortId: m.cohort_id, label: `${moduleLabel(m)}${m.title && !/^Módulo \d+$/.test(m.title) ? ` · ${m.title}` : ''}` }))
   const modName = new Map(modules.map((m) => [m.id, m.label]))
-  const people: PersonOption[] = (fac ?? []).map((f) => ({ id: f.id, name: f.display_name, kind: f.kind, active: f.active }))
+  const people: PersonOption[] = [
+    ...(fac ?? []).map((f) => ({ id: `f:${f.id}`, name: f.display_name, group: 'academica' as const, active: f.active })),
+    ...(ops ?? []).map((o) => ({ id: `o:${o.id}`, name: o.role_title ? `${o.name} (${o.role_title})` : o.name, group: 'operacional' as const, active: o.active })),
+  ]
   const personName = new Map(people.map((p) => [p.id, p.name]))
   const cohortName = new Map(cohorts.map((c) => [c.id, c.name]))
   const list = rows ?? []
@@ -82,8 +88,8 @@ export async function loadTaskBoard(auth: AuthState, filter: { moduleId?: string
     category: r.category,
     title: r.title,
     details: r.details,
-    responsibleId: r.responsible_id,
-    responsibleName: r.responsible_id ? (personName.get(r.responsible_id) ?? null) : null,
+    responsibleId: r.responsible_id ? `f:${r.responsible_id}` : r.responsible_ops_id ? `o:${r.responsible_ops_id}` : null,
+    responsibleName: r.responsible_id ? (personName.get(`f:${r.responsible_id}`) ?? null) : r.responsible_ops_id ? (personName.get(`o:${r.responsible_ops_id}`) ?? null) : null,
     dueDate: r.due_date,
     priority: r.priority,
     status: r.status,

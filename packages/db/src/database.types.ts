@@ -9,16 +9,64 @@ export type Database = {
   
   "public": {
           Tables: {
-            "admin_tasks": {
+            "faculty_contacts": {
                   Row: {
-                    "category": Database["public"]["Enums"]["task_category"],"cohort_id": string | null,"completed_at": string | null,"created_at": string,"created_by": string | null,"dependency_note": string | null,"depends_on_id": string | null,"details": string | null,"due_date": string | null,"id": string,"link_url": string | null,"module_id": string | null,"next_action": string | null,"partner_name": string | null,"priority": Database["public"]["Enums"]["task_priority"],"quantity_available": number | null,"quantity_needed": number | null,"responsible_id": string | null,"status": Database["public"]["Enums"]["task_status"],"title": string,"updated_at": string,"updated_by": string | null
+                    "city": string | null,"email": string | null,"faculty_id": string,"notes": string | null,"phone": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "category"?: Database["public"]["Enums"]["task_category"],"cohort_id"?: string | null,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"dependency_note"?: string | null,"depends_on_id"?: string | null,"details"?: string | null,"due_date"?: string | null,"id"?: string,"link_url"?: string | null,"module_id"?: string | null,"next_action"?: string | null,"partner_name"?: string | null,"priority"?: Database["public"]["Enums"]["task_priority"],"quantity_available"?: number | null,"quantity_needed"?: number | null,"responsible_id"?: string | null,"status"?: Database["public"]["Enums"]["task_status"],"title": string,"updated_at"?: string,"updated_by"?: string | null
+                    "city"?: string | null,"email"?: string | null,"faculty_id": string,"notes"?: string | null,"phone"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "category"?: Database["public"]["Enums"]["task_category"],"cohort_id"?: string | null,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"dependency_note"?: string | null,"depends_on_id"?: string | null,"details"?: string | null,"due_date"?: string | null,"id"?: string,"link_url"?: string | null,"module_id"?: string | null,"next_action"?: string | null,"partner_name"?: string | null,"priority"?: Database["public"]["Enums"]["task_priority"],"quantity_available"?: number | null,"quantity_needed"?: number | null,"responsible_id"?: string | null,"status"?: Database["public"]["Enums"]["task_status"],"title"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "city"?: string | null,"email"?: string | null,"faculty_id"?: string,"notes"?: string | null,"phone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: []
+                },"module_faculty_logistics": {
+                  Row: {
+                    "answered_on": string | null,"check_in": string | null,"check_out": string | null,"created_at": string,"created_by": string | null,"faculty_id": string,"id": string,"invited_on": string | null,"lodging": Database["public"]["Enums"]["lodging_status"],"lodging_locator": string | null,"lodging_name": string | null,"lodging_notes": string | null,"lodging_receipt_url": string | null,"lodging_responsible_id": string | null,"lodging_responsible_ops_id": string | null,"lodging_waiting_on": string | null,"module_id": string,"notes": string | null,"participation": Database["public"]["Enums"]["participation_status"],"travel": Database["public"]["Enums"]["travel_status"],"travel_arrival": string | null,"travel_departure": string | null,"travel_locator": string | null,"travel_notes": string | null,"travel_receipt_url": string | null,"travel_responsible_id": string | null,"travel_responsible_ops_id": string | null,"travel_waiting_on": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answered_on"?: string | null,"check_in"?: string | null,"check_out"?: string | null,"created_at"?: string,"created_by"?: string | null,"faculty_id": string,"id"?: string,"invited_on"?: string | null,"lodging"?: Database["public"]["Enums"]["lodging_status"],"lodging_locator"?: string | null,"lodging_name"?: string | null,"lodging_notes"?: string | null,"lodging_receipt_url"?: string | null,"lodging_responsible_id"?: string | null,"lodging_responsible_ops_id"?: string | null,"lodging_waiting_on"?: string | null,"module_id": string,"notes"?: string | null,"participation"?: Database["public"]["Enums"]["participation_status"],"travel"?: Database["public"]["Enums"]["travel_status"],"travel_arrival"?: string | null,"travel_departure"?: string | null,"travel_locator"?: string | null,"travel_notes"?: string | null,"travel_receipt_url"?: string | null,"travel_responsible_id"?: string | null,"travel_responsible_ops_id"?: string | null,"travel_waiting_on"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "answered_on"?: string | null,"check_in"?: string | null,"check_out"?: string | null,"created_at"?: string,"created_by"?: string | null,"faculty_id"?: string,"id"?: string,"invited_on"?: string | null,"lodging"?: Database["public"]["Enums"]["lodging_status"],"lodging_locator"?: string | null,"lodging_name"?: string | null,"lodging_notes"?: string | null,"lodging_receipt_url"?: string | null,"lodging_responsible_id"?: string | null,"lodging_responsible_ops_id"?: string | null,"lodging_waiting_on"?: string | null,"module_id"?: string,"notes"?: string | null,"participation"?: Database["public"]["Enums"]["participation_status"],"travel"?: Database["public"]["Enums"]["travel_status"],"travel_arrival"?: string | null,"travel_departure"?: string | null,"travel_locator"?: string | null,"travel_notes"?: string | null,"travel_receipt_url"?: string | null,"travel_responsible_id"?: string | null,"travel_responsible_ops_id"?: string | null,"travel_waiting_on"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: []
+                },"ops_people": {
+                  Row: {
+                    "active": boolean,"created_at": string,"id": string,"name": string,"role_title": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"created_at"?: string,"id"?: string,"name": string,"role_title"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "active"?: boolean,"created_at"?: string,"id"?: string,"name"?: string,"role_title"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: []
+                },"ops_people_contacts": {
+                  Row: {
+                    "email": string | null,"notes": string | null,"person_id": string,"phone": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "email"?: string | null,"notes"?: string | null,"person_id": string,"phone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "email"?: string | null,"notes"?: string | null,"person_id"?: string,"phone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: []
+                },"admin_tasks": {
+                  Row: {
+                    "category": Database["public"]["Enums"]["task_category"],"cohort_id": string | null,"completed_at": string | null,"created_at": string,"created_by": string | null,"dependency_note": string | null,"depends_on_id": string | null,"details": string | null,"due_date": string | null,"id": string,"link_url": string | null,"module_id": string | null,"next_action": string | null,"partner_name": string | null,"priority": Database["public"]["Enums"]["task_priority"],"quantity_available": number | null,"quantity_needed": number | null,"responsible_id": string | null,"responsible_ops_id": string | null,"status": Database["public"]["Enums"]["task_status"],"title": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category"?: Database["public"]["Enums"]["task_category"],"cohort_id"?: string | null,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"dependency_note"?: string | null,"depends_on_id"?: string | null,"details"?: string | null,"due_date"?: string | null,"id"?: string,"link_url"?: string | null,"module_id"?: string | null,"next_action"?: string | null,"partner_name"?: string | null,"priority"?: Database["public"]["Enums"]["task_priority"],"quantity_available"?: number | null,"quantity_needed"?: number | null,"responsible_id"?: string | null,"responsible_ops_id"?: string | null,"status"?: Database["public"]["Enums"]["task_status"],"title": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "category"?: Database["public"]["Enums"]["task_category"],"cohort_id"?: string | null,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"dependency_note"?: string | null,"depends_on_id"?: string | null,"details"?: string | null,"due_date"?: string | null,"id"?: string,"link_url"?: string | null,"module_id"?: string | null,"next_action"?: string | null,"partner_name"?: string | null,"priority"?: Database["public"]["Enums"]["task_priority"],"quantity_available"?: number | null,"quantity_needed"?: number | null,"responsible_id"?: string | null,"responsible_ops_id"?: string | null,"status"?: Database["public"]["Enums"]["task_status"],"title"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: []
                 },"announcement_dismissals": {
@@ -1417,7 +1465,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","dental_arch": "superior"|"inferior"|"ambas","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio","step_location": "dentes"|"arcada"|"nenhuma","task_category": "academico"|"administrativo"|"professores"|"materiais"|"equipamentos"|"parceiros"|"marketing"|"foto_video"|"experiencia_aluno","task_priority": "alta"|"media"|"baixa","task_status": "aberta"|"em_andamento"|"aguardando"|"concluida"|"cancelada","workflow_item_kind": "passo"|"material"|"atencao"
+            "activity_type": "teorica"|"pratica"|"hands_on"|"clinica"|"demonstracao"|"discussao_caso"|"online"|"outro","app_role": "admin"|"coordenacao"|"aluno","case_status": "em_andamento"|"concluido","cohort_role": "aluno"|"coordenacao","cohort_status": "ativa"|"encerrada","content_kind": "video"|"artigo"|"capitulo"|"livro"|"pdf"|"slides"|"link","content_status": "rascunho"|"publicado"|"arquivado","count_unit": "dente"|"peca"|"arcada"|"caso","day_period": "manha"|"tarde"|"noite"|"dia_todo","dental_arch": "superior"|"inferior"|"ambas","enrollment_status": "ativa"|"inativa","event_kind": "online"|"clinica"|"prazo"|"outro","faculty_kind": "docente"|"equipe_clinica"|"convidado"|"coordenacao"|"apoio","module_phase": "antes"|"durante"|"depois","procedure_kind": "tratamento"|"geral","progress_status": "iniciado"|"concluido","requirement_level": "obrigatorio"|"recomendado"|"complementar","resource_kind": "link"|"arquivo"|"texto","staff_role": "principal"|"docente"|"equipe_clinica"|"coordenacao"|"apoio","step_location": "dentes"|"arcada"|"nenhuma","lodging_status": "nao_precisa"|"a_reservar"|"aguardando_confirmacao"|"reservada"|"cancelada","participation_status": "a_convidar"|"convidado"|"confirmado"|"recusado"|"cancelado","travel_status": "nao_precisa"|"a_providenciar"|"aguardando_confirmacao"|"comprada"|"cancelada","task_category": "academico"|"administrativo"|"professores"|"materiais"|"equipamentos"|"parceiros"|"marketing"|"foto_video"|"experiencia_aluno","task_priority": "alta"|"media"|"baixa","task_status": "aberta"|"em_andamento"|"aguardando"|"concluida"|"cancelada","workflow_item_kind": "passo"|"material"|"atencao"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1533,7 +1581,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"dental_arch": ["superior", "inferior", "ambas"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"],"step_location": ["dentes", "arcada", "nenhuma"],"task_category": ["academico", "administrativo", "professores", "materiais", "equipamentos", "parceiros", "marketing", "foto_video", "experiencia_aluno"],"task_priority": ["alta", "media", "baixa"],"task_status": ["aberta", "em_andamento", "aguardando", "concluida", "cancelada"],"workflow_item_kind": ["passo", "material", "atencao"]
+            "activity_type": ["teorica", "pratica", "hands_on", "clinica", "demonstracao", "discussao_caso", "online", "outro"],"app_role": ["admin", "coordenacao", "aluno"],"case_status": ["em_andamento", "concluido"],"cohort_role": ["aluno", "coordenacao"],"cohort_status": ["ativa", "encerrada"],"content_kind": ["video", "artigo", "capitulo", "livro", "pdf", "slides", "link"],"content_status": ["rascunho", "publicado", "arquivado"],"count_unit": ["dente", "peca", "arcada", "caso"],"day_period": ["manha", "tarde", "noite", "dia_todo"],"dental_arch": ["superior", "inferior", "ambas"],"enrollment_status": ["ativa", "inativa"],"event_kind": ["online", "clinica", "prazo", "outro"],"faculty_kind": ["docente", "equipe_clinica", "convidado", "coordenacao", "apoio"],"module_phase": ["antes", "durante", "depois"],"procedure_kind": ["tratamento", "geral"],"progress_status": ["iniciado", "concluido"],"requirement_level": ["obrigatorio", "recomendado", "complementar"],"resource_kind": ["link", "arquivo", "texto"],"staff_role": ["principal", "docente", "equipe_clinica", "coordenacao", "apoio"],"step_location": ["dentes", "arcada", "nenhuma"],"lodging_status": ["nao_precisa", "a_reservar", "aguardando_confirmacao", "reservada", "cancelada"],"participation_status": ["a_convidar", "convidado", "confirmado", "recusado", "cancelado"],"travel_status": ["nao_precisa", "a_providenciar", "aguardando_confirmacao", "comprada", "cancelada"],"task_category": ["academico", "administrativo", "professores", "materiais", "equipamentos", "parceiros", "marketing", "foto_video", "experiencia_aluno"],"task_priority": ["alta", "media", "baixa"],"task_status": ["aberta", "em_andamento", "aguardando", "concluida", "cancelada"],"workflow_item_kind": ["passo", "material", "atencao"]
           }
         }
 } as const

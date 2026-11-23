@@ -1,11 +1,14 @@
 -- Bloco A · B2 — Quadro único de pendências e providências da especialização (substitui as abas PENDÊNCIAS,
 -- EQUIPAMENTOS, MARKETING, FOTO E VÍDEO e EXPERIENCIA da planilha-base, e os materiais a providenciar por módulo).
 --
--- Migração SÓ ADITIVA: 3 tipos novos, 1 tabela nova, funções e políticas próprias, gatilhos na tabela nova e a versão
+-- Migração SÓ ADITIVA: 3 tipos novos, 3 tabelas novas (quadro + Equipe operacional e seus contatos), funções e políticas próprias, gatilhos na tabela nova e a versão
 -- do esquema. Nenhuma tabela, coluna, política, função ou dado existente é alterado.
 --
 -- Regras (aprovadas em 21/11/2026):
--- - Responsável é uma pessoa do cadastro de equipe (public.faculty), inclusive sem login no portal.
+-- - Responsável: alguém da equipe acadêmica (public.faculty) OU da Equipe operacional (public.ops_people), nunca os dois.
+-- - Equipe operacional (aprovada em 23/11/2026): cadastro independente de docentes e coordenação. Ninguém dela aparece
+--   em listas de professores, programação, equipe do módulo, Biblioteca ou site público (nenhuma dessas telas ou visões
+--   lê esta tabela). Coordenação vê só o nome; contatos (tabela separada) só o Admin. Sem exclusão: desativar.
 -- - Admin: vê, cria e edita todas as pendências (gerais e de qualquer turma).
 -- - Coordenação ativa: vê as gerais (sem turma) SOMENTE PARA LEITURA; vê, cria e edita as da turma que coordena;
 --   não vê as específicas de outras turmas.
@@ -21,6 +24,37 @@ create type public.task_category as enum (
 create type public.task_priority as enum ('alta', 'media', 'baixa');
 create type public.task_status as enum ('aberta', 'em_andamento', 'aguardando', 'concluida', 'cancelada');
 
+-- ─── Equipe operacional ──────────────────────────────────────────────────────────────────────────
+create table public.ops_people (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (length(btrim(name)) between 1 and 120),
+  role_title text check (role_title is null or length(role_title) <= 120),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+comment on table public.ops_people is
+  'Equipe operacional (compras, recepção…). Independente de faculty: nunca entra na programação acadêmica.';
+
+-- Contato numa tabela à parte: a coordenação lê ops_people (nome), mas nunca esta.
+create table public.ops_people_contacts (
+  person_id uuid primary key references public.ops_people (id) on delete cascade,
+  email text check (email is null or (length(email) <= 200 and email like '%_@_%')),
+  phone text check (phone is null or length(phone) <= 40),
+  notes text check (notes is null or length(notes) <= 500),
+  updated_at timestamptz not null default now()
+);
+
+create trigger ops_people_updated_at before update on public.ops_people
+  for each row execute function public.set_updated_at();
+create trigger ops_people_contacts_updated_at before update on public.ops_people_contacts
+  for each row execute function public.set_updated_at();
+-- Histórico: sem turma, então só o Admin lê (política existente do change_log).
+create trigger ops_people_log after insert or update or delete on public.ops_people
+  for each row execute function public.log_change();
+create trigger ops_people_contacts_log after insert or update or delete on public.ops_people_contacts
+  for each row execute function public.log_change();
+
 create table public.admin_tasks (
   id uuid primary key default gen_random_uuid(),
   cohort_id uuid references public.cohorts (id) on delete restrict,
@@ -29,6 +63,7 @@ create table public.admin_tasks (
   title text not null check (length(btrim(title)) between 1 and 200),
   details text check (details is null or length(details) <= 4000),
   responsible_id uuid references public.faculty (id) on delete set null,
+  responsible_ops_id uuid references public.ops_people (id) on delete set null,
   due_date date,
   priority public.task_priority not null default 'media',
   status public.task_status not null default 'aberta',
@@ -44,7 +79,8 @@ create table public.admin_tasks (
   updated_by uuid references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (depends_on_id is null or depends_on_id <> id)
+  check (depends_on_id is null or depends_on_id <> id),
+  check (num_nonnulls(responsible_id, responsible_ops_id) <= 1)
 );
 create index admin_tasks_cohort_idx on public.admin_tasks (cohort_id);
 create index admin_tasks_module_idx on public.admin_tasks (module_id);
@@ -140,6 +176,20 @@ revoke all on function public.admin_task_readable(uuid), public.admin_task_edita
 grant execute on function public.admin_task_readable(uuid), public.admin_task_editable(uuid) to authenticated;
 
 alter table public.admin_tasks enable row level security;
+
+-- Equipe operacional: nome para Admin e coordenação ativa; cadastro e contatos só o Admin. Sem exclusão.
+revoke all on public.ops_people, public.ops_people_contacts from public, anon, authenticated;
+grant select, insert, update on public.ops_people, public.ops_people_contacts to authenticated;
+alter table public.ops_people enable row level security;
+alter table public.ops_people_contacts enable row level security;
+create policy ops_people_select on public.ops_people for select to authenticated using (public.is_staff());
+create policy ops_people_insert on public.ops_people for insert to authenticated with check (public.is_admin());
+create policy ops_people_update on public.ops_people for update to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+create policy ops_people_contacts_select on public.ops_people_contacts for select to authenticated using (public.is_admin());
+create policy ops_people_contacts_insert on public.ops_people_contacts for insert to authenticated with check (public.is_admin());
+create policy ops_people_contacts_update on public.ops_people_contacts for update to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 create policy admin_tasks_select on public.admin_tasks for select to authenticated
   using (public.admin_task_readable(cohort_id));

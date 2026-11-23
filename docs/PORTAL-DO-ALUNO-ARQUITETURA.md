@@ -2218,11 +2218,37 @@ planilha-base e os materiais a providenciar por módulo.
   Aluno e visitante: nenhum acesso.
 - Dependências: só entre pendências da mesma turma (ou ambas gerais); mudar a turma de uma pendência da qual outra da
   turma antiga depende é recusado; "Depende de" mostra só as em aberto da mesma turma (ao criar, agrupadas por turma).
-- Responsável: hoje, pessoa do cadastro de equipe (`faculty`). Pessoas operacionais (ex.: compras) aguardam a decisão
-  sobre o cadastro de "Equipe operacional" (proposta de 23/11/2026), para não aparecerem nas listas acadêmicas.
+- Responsável: alguém da equipe acadêmica (`faculty`) OU da **Equipe operacional** (`ops_people`), nunca os dois.
+- **Equipe operacional** (aprovada em 23/11/2026, na mesma migração local): `ops_people` (nome, função, ativo) e
+  `ops_people_contacts` (só o Admin). Independente de docentes: nenhuma tela acadêmica, da Biblioteca ou do site
+  público lê essas tabelas. Coordenação vê só o nome. Sem exclusão (desativar). Tela `/admin/equipe-operacional`.
 - Responsável: pessoa do cadastro de equipe (`faculty`), inclusive sem login.
 - Telas: `/admin/pendencias`, `/coordenacao/pendencias` (mesmo componente `components/tasks/TaskBoard.tsx`), bloco
   "Pendências do módulo" no editor do módulo, contagens e "N pendências atrasadas" no painel do Admin. Sem a migração
   no banco, as telas mostram só um aviso (`lib/tasks/schema.ts`).
 - Testes: banco `rls_pendencias.sql` (34), unitários `tasks-model.test.ts` e atenção, E2E `pendencias` (42).
 - Divergências planilha × portal: registro permanente em `docs/DIVERGENCIAS-PLANILHA-PORTAL.md`.
+
+
+## Autossuficiência do Admin · Bloco A — B1: professores e logística (EM DESENVOLVIMENTO, só local)
+
+Aprovado pela Maryah em 23/11/2026, só no ambiente local. Migração `20261124120000_professores_logistica.sql` (só
+aditiva; **não aplicada em produção**). A programação acadêmica (módulos, dias, atividades, equipe, docentes) só é
+lida, nunca alterada (verificado nos testes de banco e E2E).
+
+- `faculty_contacts`: e-mail, telefone, cidade de origem, observações (sem cachê, que fica para a Gestão Financeira).
+- `module_faculty_logistics`, um registro por professor e módulo, com situações independentes:
+  participação (a convidar, convidado, confirmado, recusado, cancelado); passagem (não precisa, a providenciar,
+  aguardando confirmação, comprada, cancelada) com chegada/saída, localizador, link do comprovante, responsável,
+  "aguardando quem" e observações; hospedagem (não precisa, a reservar, aguardando confirmação, reservada, cancelada)
+  com hotel, check-in/out, número da reserva, comprovante, responsável, "aguardando quem" e observações.
+- Permissões: Admin vê e edita; coordenação ativa consulta (só leitura) a logística dos módulos e os contatos dos
+  professores ligados à turma que coordena; aluno e visitante nada; ninguém exclui. Histórico no `change_log`
+  (contatos: só o Admin lê).
+- Telas: `/admin/professores` (quadro por módulo: próximos 4, futuros ou todos; filtros "com pendência", "aguardando
+  terceiros", "resolvidas"), `/admin/professores/[id]` (agenda e contato), `/coordenacao/professores` (consulta).
+  Professores do módulo = equipe + atividades + quem já tem registro de logística.
+- Painel do Admin: "N professores a confirmar" e "N passagens e N hospedagens pendentes" para módulos que começam em
+  até 45 dias, com quantos aguardam terceiros.
+- Testes: banco `rls_logistica.sql` (22) e `rls_equipe_operacional.sql` (15); unitários `logistics-model.test.ts`;
+  E2E `logistica` (27) e `equipe-operacional` (21).

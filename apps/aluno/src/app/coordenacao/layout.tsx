@@ -6,6 +6,7 @@ import { PreviewBanner } from '@/components/shell/PreviewBanner'
 import { SimulationBanner } from '@/components/simulation/SimulationBanner'
 import { requireUser } from '@/lib/auth/session'
 import { getSimulation } from '@/lib/simulation/session'
+import { logisticsReady } from '@/lib/logistics/schema'
 import { tasksReady } from '@/lib/tasks/schema'
 import { workflowsReady } from '@/lib/workflows/schema'
 
@@ -17,6 +18,7 @@ export default async function CoordinationLayout({ children }: { children: React
   const sim = auth ? await getSimulation() : null
   const workflows = auth ? await workflowsReady() : false
   const tasks = auth ? await tasksReady() : false
+  const logistics = auth ? await logisticsReady() : false
   return (
     <>
       {sim ? <SimulationBanner backToStudent cohortName={sim.cohortVM.name} expiresAt={sim.expiresAt} /> : null}
@@ -40,6 +42,11 @@ export default async function CoordinationLayout({ children }: { children: React
           {tasks ? (
             <Link href="/coordenacao/pendencias" className="text-muted hover:text-ink">
               Pendências
+            </Link>
+          ) : null}
+          {logistics ? (
+            <Link href="/coordenacao/professores" className="text-muted hover:text-ink">
+              Professores
             </Link>
           ) : null}
           {workflows ? (
