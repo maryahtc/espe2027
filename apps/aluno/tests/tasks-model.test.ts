@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterTasks, isOverdue, missingQuantity, parseFilters, sortTasks, type TaskVM, taskCounts } from '@/lib/tasks/model'
+import { canEditTask, dependencyGroups, filterTasks, isOverdue, missingQuantity, parseFilters, sortTasks, type TaskVM, taskCounts } from '@/lib/tasks/model'
 
 const TODAY = '2026-11-23'
 let seq = 0
@@ -94,5 +94,32 @@ describe('quadro de pendências: regras', () => {
       overdue: true,
     })
     expect(parseFilters({ categoria: 'financeiro', situacao: 'feito' })).toMatchObject({ category: undefined, status: undefined })
+  })
+
+  it('quem edita: Admin tudo; coordenação só pendências de turma (gerais somente leitura)', () => {
+    expect(canEditTask(t({ cohortId: null }), true)).toBe(true)
+    expect(canEditTask(t({ cohortId: null }), false)).toBe(false)
+    expect(canEditTask(t({ cohortId: 'c1' }), false)).toBe(true)
+  })
+
+  it('"Depende de": só em aberto, mesma turma, nunca a própria; coordenação sem o grupo das gerais', () => {
+    const a = t({ title: 'A turma 1', cohortId: 'c1', cohortName: 'Turma 1' })
+    const b = t({ title: 'B turma 1', cohortId: 'c1', cohortName: 'Turma 1' })
+    const fechada = t({ title: 'C turma 1 concluída', cohortId: 'c1', cohortName: 'Turma 1', status: 'concluida' })
+    const outra = t({ title: 'D turma 2', cohortId: 'c2', cohortName: 'Turma 2' })
+    const geral = t({ title: 'E geral', cohortId: null })
+    const all = [a, b, fechada, outra, geral]
+    // Editando "a": só "b" (mesma turma, em aberto, não a própria)
+    expect(dependencyGroups(all, { current: a, isAdmin: true })).toEqual([{ cohortId: 'c1', label: 'Turma 1', tasks: [{ id: b.id, title: 'B turma 1' }] }])
+    // Editando a geral: só outras gerais (nenhuma aqui)
+    expect(dependencyGroups(all, { current: geral, isAdmin: true })).toEqual([])
+    // Criando (Admin): agrupadas por turma, gerais primeiro
+    expect(dependencyGroups(all, { isAdmin: true }).map((g) => [g.label, g.tasks.length])).toEqual([
+      ['Gerais (sem turma)', 1],
+      ['Turma 1', 2],
+      ['Turma 2', 1],
+    ])
+    // Criando (coordenação): sem o grupo das gerais
+    expect(dependencyGroups(all, { isAdmin: false }).some((g) => g.cohortId === null)).toBe(false)
   })
 })

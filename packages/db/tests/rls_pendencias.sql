@@ -1,6 +1,7 @@
 -- ⚠ NÃO EXECUTAR NO SUPABASE DE PRODUÇÃO (regra de 07/10/2026, ver AGENTS.md).
 -- Rodar só no ambiente local (supabase start) ou no Postgres do CI.
--- Testes — Bloco A · B2: quadro de pendências (admin_tasks). Permissões por papel e turma, consistência e histórico.
+-- Testes — Bloco A · B2: quadro de pendências (admin_tasks). Permissões por papel e turma (gerais: leitura para a
+-- coordenação), sem exclusão (nem Admin), consistência das dependências e histórico.
 -- Transação desfeita no final.
 -- Pessoas: A (aluno T1) · C (coordena T1) · X (coordena T2) · Y (coordena T1, perfil desativado) · Z (coordenação T1,
 --          matrícula inativa) · D (admin). Equipe sem login: R (apoio).
@@ -102,7 +103,7 @@ begin
   perform pg_temp.entrar(c);
   select count(*) into n from public.admin_tasks where id in (t_geral, t_t1, t_t2);
   reset role;
-  insert into resultados (teste, passou) values ('Coordenação vê só as pendências da própria turma (nem gerais, nem de outra turma)', n = 1);
+  insert into resultados (teste, passou) values ('Coordenação vê as gerais e as da própria turma, não as de outra turma', n = 2);
   perform pg_temp.entrar(c);
   insert into public.admin_tasks (title, module_id, category, quantity_needed, quantity_available)
     values ('Kit de isolamento do módulo', m1, 'materiais', 12, 4) returning id into t_mod;
@@ -138,6 +139,12 @@ begin
   get diagnostics n = row_count;
   reset role;
   insert into resultados (teste, passou) values ('Coordenação não edita pendência de outra turma nem geral', n = 0);
+  perform pg_temp.entrar(c);
+  update public.admin_tasks set status = 'cancelada' where id = t_geral;
+  get diagnostics n = row_count;
+  reset role;
+  insert into resultados (teste, passou) values ('Pendência geral é somente leitura para a coordenação (nem cancelar)',
+    n = 0 and (select status from public.admin_tasks where id = t_geral) = 'aberta');
 
   ok := false;
   perform pg_temp.entrar(c);
@@ -148,17 +155,24 @@ begin
   reset role;
   insert into resultados (teste, passou) values ('Coordenação não move pendência para turma que não coordena', ok);
 
+  ok := false;
   perform pg_temp.entrar(c);
-  delete from public.admin_tasks where id = t_t1;
-  get diagnostics n = row_count;
+  begin
+    delete from public.admin_tasks where id = t_t1;
+  exception when insufficient_privilege then ok := true;
+  end;
   reset role;
-  insert into resultados (teste, passou) values ('Coordenação não exclui (cancela em vez disso)', n = 0 and exists (select 1 from public.admin_tasks where id = t_t1));
+  insert into resultados (teste, passou) values ('Coordenação não exclui (sem permissão de exclusão)', ok and exists (select 1 from public.admin_tasks where id = t_t1));
 
   -- ── Coordenação de outra turma, desativada, com matrícula inativa ──
   perform pg_temp.entrar(x);
-  select count(*) into n from public.admin_tasks where cohort_id = t1 or cohort_id is null;
+  select count(*) into n from public.admin_tasks where cohort_id = t1;
   reset role;
-  insert into resultados (teste, passou) values ('Coordenação de outra turma não vê nada da turma 1 nem as gerais', n = 0);
+  insert into resultados (teste, passou) values ('Coordenação de outra turma não vê as pendências da turma 1', n = 0);
+  perform pg_temp.entrar(x);
+  select count(*) into n from public.admin_tasks where cohort_id is null;
+  reset role;
+  insert into resultados (teste, passou) values ('Coordenação de outra turma também vê as gerais (só leitura)', n = 1);
   perform pg_temp.entrar(y);
   select count(*) into n from public.admin_tasks;
   reset role;
@@ -258,16 +272,36 @@ begin
   insert into resultados (teste, passou) values ('Histórico registra criação e alterações (change_log), com a turma',
     (select count(*) from public.change_log where table_name = 'admin_tasks' and row_id = t_t1::text) >= 4
     and (select bool_and(cohort_id = t1) from public.change_log where table_name = 'admin_tasks' and row_id = t_t1::text));
+  ok := false;
   perform pg_temp.entrar(adm);
-  delete from public.admin_tasks where id = t_t2;
-  get diagnostics n = row_count;
+  begin
+    delete from public.admin_tasks where id = t_t2;
+  exception when insufficient_privilege then ok := true;
+  end;
   reset role;
-  insert into resultados (teste, passou) values ('Admin exclui pendência', n = 1);
+  insert into resultados (teste, passou) values ('Nem o Admin exclui pelo banco/API (sem permissão de exclusão)', ok and exists (select 1 from public.admin_tasks where id = t_t2));
   perform pg_temp.entrar(adm);
-  delete from public.admin_tasks where id = t_t1;
+  update public.admin_tasks set status = 'cancelada' where id = t_t2;
   reset role;
-  insert into resultados (teste, passou) values ('Excluir uma pendência de que outra depende só desfaz o vínculo',
-    (select depends_on_id is null from public.admin_tasks where id = t_mod));
+  insert into resultados (teste, passou) values ('Encerrar = cancelar: registro e histórico preservados',
+    (select status from public.admin_tasks where id = t_t2) = 'cancelada'
+    and (select count(*) from public.change_log where table_name = 'admin_tasks' and row_id = t_t2::text and action = 'delete') = 0);
+  ok := false;
+  perform pg_temp.entrar(adm);
+  begin
+    update public.admin_tasks set cohort_id = t2, module_id = null where id = t_t1;
+  exception when check_violation then ok := true;
+  end;
+  reset role;
+  insert into resultados (teste, passou) values ('Mudar a turma de uma pendência da qual outra da turma antiga depende é recusado', ok);
+  ok := false;
+  begin
+    set local role anon;
+    delete from public.admin_tasks;
+  exception when insufficient_privilege then ok := true;
+  end;
+  reset role;
+  insert into resultados (teste, passou) values ('Visitante não exclui', ok);
 
   insert into resultados (teste, passou) values ('O quadro não altera módulos, atividades, equipes, docentes, matrículas nem perfis', pg_temp.resto() = fp);
 end

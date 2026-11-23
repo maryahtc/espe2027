@@ -5,11 +5,13 @@ import Link from 'next/link'
 import { ActionForm } from '@/components/admin/academic/ActionForm'
 import { Input, Select, TextArea } from '@/components/admin/academic/ui'
 import { formatDayMonth, relativeDays, year } from '@/lib/dates'
-import { deleteTask, saveTask, setTaskStatus } from '@/lib/tasks/actions'
+import { saveTask, setTaskStatus } from '@/lib/tasks/actions'
 import type { TaskBoardData } from '@/lib/tasks/load'
 import {
   CATEGORIES,
   CATEGORY_LABEL,
+  canEditTask,
+  dependencyGroups,
   filterTasks,
   isOpen,
   isOverdue,
@@ -26,7 +28,8 @@ import {
 
 /**
  * Quadro único de pendências e providências (Bloco A · B2). Mesmo componente para Admin e coordenação; o que cada um
- * vê e pode fazer vem do banco (RLS). Nunca aparece para alunos.
+ * vê e pode fazer vem do banco (RLS). Coordenação: gerais só leitura. Ninguém exclui (encerrar = "Cancelada").
+ * Nunca aparece para alunos.
  */
 
 type SP = Record<string, string | undefined>
@@ -45,10 +48,7 @@ function TaskFields({ data, task, defaults }: { data: TaskBoardData; task?: Task
   ]
   const people = data.people.filter((p) => p.active || p.id === task?.responsibleId)
   const peopleOptions: Array<[string, string]> = [['', 'Sem responsável'], ...people.map((p) => [p.id, p.name] as [string, string])]
-  const dependsOptions: Array<[string, string]> = [
-    ['', 'Nenhuma'],
-    ...data.tasks.filter((t) => t.id !== task?.id && isOpen(t)).map((t) => [t.id, t.title] as [string, string]),
-  ]
+  const depGroups = dependencyGroups(data.tasks, { current: task, isAdmin: data.admin })
   const moduleDefault = task?.moduleId ?? defaults?.moduleId ?? ''
   const cohortDefault =
     task?.cohortId ?? defaults?.cohortId ?? (moduleDefault ? data.modules.find((m) => m.id === moduleDefault)?.cohortId : undefined) ?? (data.admin ? '' : (data.cohorts[0]?.id ?? ''))
@@ -72,7 +72,22 @@ function TaskFields({ data, task, defaults }: { data: TaskBoardData; task?: Task
       <Input label="Próxima ação (opcional)" name="proxima_acao" maxLength={500} defaultValue={task?.nextAction ?? ''} />
       <TextArea label="Detalhes (opcional)" name="detalhes" rows={2} maxLength={4000} defaultValue={task?.details ?? ''} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Select label="Depende de (opcional)" name="depende_de" defaultValue={task?.dependsOnId ?? ''} options={dependsOptions} />
+        <label className="block">
+          <span className="block text-sm font-semibold">Depende de (opcional)</span>
+          <span className="mt-0.5 block text-xs text-muted">{task ? 'Só pendências em aberto da mesma turma.' : 'Precisa ser da mesma turma escolhida acima.'}</span>
+          <select name="depende_de" defaultValue={task?.dependsOnId ?? ''} className="field mt-1.5 block min-h-11 w-full px-3 text-[15px]" data-depende-de>
+            <option value="">Nenhuma</option>
+            {depGroups.map((g) => (
+              <optgroup key={g.cohortId ?? 'geral'} label={g.label} data-grupo-turma={g.cohortId ?? 'geral'}>
+                {g.tasks.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
         <Input label="Dependência externa (opcional)" name="dependencia" maxLength={500} defaultValue={task?.dependencyNote ?? ''} placeholder="Ex.: resposta da empresa" />
       </div>
       <details className="rounded-2xl border border-rule px-4 py-3" open={!!(task?.quantityNeeded != null || task?.partnerName || task?.linkUrl)}>
@@ -103,11 +118,19 @@ function Chip({ children, tone = 'muted', ...rest }: { children: React.ReactNode
 }
 
 function TaskItem({ task, data, today }: { task: TaskVM; data: TaskBoardData; today: string }) {
+  const editable = canEditTask(task, data.admin)
   const late = isOverdue(task, today)
   const missing = missingQuantity(task)
   const where = [task.cohortName && data.cohorts.length > 1 ? task.cohortName : null, task.moduleLabel].filter(Boolean).join(' · ') || (task.cohortId ? null : 'Geral')
   return (
-    <li className="glass rounded-2xl p-4 sm:p-5" data-pendencia={task.id} data-categoria={task.category} data-situacao={task.status} data-atrasada={late ? '1' : '0'}>
+    <li
+      className="glass rounded-2xl p-4 sm:p-5"
+      data-pendencia={task.id}
+      data-categoria={task.category}
+      data-situacao={task.status}
+      data-atrasada={late ? '1' : '0'}
+      data-somente-leitura={editable ? undefined : '1'}
+    >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">
           <p className={cn('text-[15px] leading-snug font-semibold break-words', !isOpen(task) && 'text-muted line-through decoration-1')} data-titulo>
@@ -122,6 +145,7 @@ function TaskItem({ task, data, today }: { task: TaskVM; data: TaskBoardData; to
                 Atrasada
               </Chip>
             ) : null}
+            {editable ? null : <Chip>Geral · somente leitura</Chip>}
           </div>
         </div>
       </div>
@@ -181,32 +205,29 @@ function TaskItem({ task, data, today }: { task: TaskVM; data: TaskBoardData; to
         ) : null}
       </dl>
       {task.details ? <p className="mt-2 text-sm whitespace-pre-line text-ink-2">{task.details}</p> : null}
-      <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2 border-t border-rule pt-3">
-        <ActionForm action={setTaskStatus} row submit="Atualizar" silent className="gap-2" >
-          <input type="hidden" name="id" value={task.id} />
-          <label className="sr-only" htmlFor={`sit-${task.id}`}>
-            Situação
-          </label>
-          <select id={`sit-${task.id}`} name="situacao" defaultValue={task.status} className="field min-h-10 px-2 text-sm" data-trocar-situacao>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        </ActionForm>
-        <details className="w-full" data-editar>
-          <summary className="cursor-pointer text-xs font-semibold text-muted hover:text-ink">Editar</summary>
-          <ActionForm action={saveTask} submit="Salvar alterações" className="mt-3">
-            <TaskFields data={data} task={task} />
+      {editable ? (
+        <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2 border-t border-rule pt-3">
+          <ActionForm action={setTaskStatus} row submit="Atualizar" silent className="gap-2">
+            <input type="hidden" name="id" value={task.id} />
+            <label className="sr-only" htmlFor={`sit-${task.id}`}>
+              Situação
+            </label>
+            <select id={`sit-${task.id}`} name="situacao" defaultValue={task.status} className="field min-h-10 px-2 text-sm" data-trocar-situacao>
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABEL[s]}
+                </option>
+              ))}
+            </select>
           </ActionForm>
-          {data.admin ? (
-            <ActionForm action={deleteTask} submit="Excluir pendência" quiet confirmText="Excluir esta pendência? O histórico guarda o registro." className="mt-3" >
-              <input type="hidden" name="id" value={task.id} />
+          <details className="w-full" data-editar>
+            <summary className="cursor-pointer text-xs font-semibold text-muted hover:text-ink">Editar</summary>
+            <ActionForm action={saveTask} submit="Salvar alterações" className="mt-3">
+              <TaskFields data={data} task={task} />
             </ActionForm>
-          ) : null}
-        </details>
-      </div>
+          </details>
+        </div>
+      ) : null}
     </li>
   )
 }
@@ -218,7 +239,7 @@ export function TaskBoard({ data, sp, path, eyebrow, today }: { data: TaskBoardD
   const link = (q: Record<string, string>) => `${path}?${new URLSearchParams(q)}`
   const cohortFilter: Array<[string, string]> = [
     ['', 'Todas'],
-    ...(data.admin ? ([['geral', 'Geral (sem turma)']] as Array<[string, string]>) : []),
+    ['geral', 'Geral (sem turma)'],
     ...data.cohorts.map((c) => [c.id, c.name] as [string, string]),
   ]
   const usedPeople = new Set(data.tasks.map((t) => t.responsibleId).filter(Boolean))
@@ -229,6 +250,10 @@ export function TaskBoard({ data, sp, path, eyebrow, today }: { data: TaskBoardD
         title="Pendências"
         lead="Quadro único de pendências e providências: professores, materiais, equipamentos, parceiros, foto e vídeo, marketing e experiência do aluno."
       />
+      <p className="-mt-4 mb-6 text-xs text-muted" data-regra-encerrar>
+        Pendências não são excluídas: para encerrar, marque como Concluída ou Cancelada. O histórico fica guardado.
+        {data.admin ? '' : ' As pendências gerais (sem turma) aparecem aqui só para leitura.'}
+      </p>
 
       <nav aria-label="Resumo" className="flex flex-wrap gap-2 text-sm" data-contagens>
         {(

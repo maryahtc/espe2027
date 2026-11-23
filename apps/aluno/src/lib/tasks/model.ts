@@ -161,3 +161,35 @@ export function parseFilters(sp: Record<string, string | undefined>): TaskFilter
     overdue: sp.atrasadas === '1' || undefined,
   }
 }
+
+/**
+ * Quem edita (inclusive mudar a situação): Admin, tudo; coordenação, só as da turma que coordena. As gerais (sem turma)
+ * aparecem para a coordenação somente para leitura. Ninguém exclui: encerrar = "cancelada".
+ */
+export const canEditTask = (t: Pick<TaskVM, 'cohortId'>, isAdmin: boolean) => isAdmin || t.cohortId !== null
+
+export type DependencyGroup = { cohortId: string | null; label: string; tasks: Array<{ id: string; title: string }> }
+
+/**
+ * Pendências que podem ser escolhidas em "Depende de": só em aberto e só da mesma turma (ou ambas gerais), nunca a
+ * própria. Editando: só o grupo da turma da pendência. Criando (a turma ainda não foi escolhida): agrupadas por turma; a
+ * coordenação não vê o grupo das gerais (não cria pendência geral, e pendência de turma não depende de geral).
+ */
+export function dependencyGroups(
+  tasks: Array<Pick<TaskVM, 'id' | 'title' | 'status' | 'cohortId' | 'cohortName'>>,
+  opts: { current?: Pick<TaskVM, 'id' | 'cohortId'>; isAdmin: boolean },
+): DependencyGroup[] {
+  const groups = new Map<string, DependencyGroup>()
+  for (const t of tasks) {
+    if (!isOpen(t) || t.id === opts.current?.id) continue
+    if (opts.current && t.cohortId !== opts.current.cohortId) continue
+    if (!opts.current && t.cohortId === null && !opts.isAdmin) continue
+    const key = t.cohortId ?? 'geral'
+    const g = groups.get(key) ?? { cohortId: t.cohortId, label: t.cohortId ? (t.cohortName ?? 'Turma') : 'Gerais (sem turma)', tasks: [] }
+    g.tasks.push({ id: t.id, title: t.title })
+    groups.set(key, g)
+  }
+  return [...groups.values()]
+    .map((g) => ({ ...g, tasks: g.tasks.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR')) }))
+    .sort((a, b) => (a.cohortId === null ? -1 : b.cohortId === null ? 1 : a.label.localeCompare(b.label, 'pt-BR')))
+}

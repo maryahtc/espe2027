@@ -6,9 +6,10 @@
 --
 -- Regras (aprovadas em 21/11/2026):
 -- - Responsável é uma pessoa do cadastro de equipe (public.faculty), inclusive sem login no portal.
--- - Admin: vê, cria, edita e exclui todas as pendências (gerais e de qualquer turma).
--- - Coordenação: vê, cria e edita só as pendências da turma que coordena (matrícula de coordenação ativa); não vê as
---   gerais (sem turma) e não exclui (cancela).
+-- - Admin: vê, cria e edita todas as pendências (gerais e de qualquer turma).
+-- - Coordenação ativa: vê as gerais (sem turma) SOMENTE PARA LEITURA; vê, cria e edita as da turma que coordena;
+--   não vê as específicas de outras turmas.
+-- - Ninguém exclui (nem o Admin, nem pela API): encerrar = situação "cancelada"; o histórico fica preservado.
 -- - Aluno e visitante: nenhum acesso.
 -- - Pendência ligada a módulo pertence à turma do módulo. Uma pendência não depende dela mesma.
 -- - Histórico no change_log existente (quem, quando, o que mudou).
@@ -79,6 +80,12 @@ begin
   ) then
     raise exception 'A pendência de que esta depende precisa ser da mesma turma.' using errcode = '23514';
   end if;
+  -- Mudar a turma não pode deixar dependências cruzadas: quem depende desta pendência precisa continuar na mesma turma.
+  if tg_op = 'UPDATE' and new.cohort_id is distinct from old.cohort_id and exists (
+    select 1 from public.admin_tasks d where d.depends_on_id = new.id and d.cohort_id is distinct from new.cohort_id
+  ) then
+    raise exception 'Há pendências de outra turma que dependem desta; ajuste-as antes de mudar a turma.' using errcode = '23514';
+  end if;
   if new.status = 'concluida' and (tg_op = 'INSERT' or old.status is distinct from 'concluida') then
     new.completed_at := now();
   elsif new.status <> 'concluida' then
@@ -101,7 +108,20 @@ create trigger admin_tasks_log after insert or update or delete on public.admin_
   for each row execute function public.log_change();
 
 -- ─── Permissões ──────────────────────────────────────────────────────────────────────────────────
--- Quem pode ver/editar uma pendência: Admin, ou coordenação ativa da turma dela (gerais: só Admin).
+-- Ler: Admin; coordenação ativa (gerais e as da turma que coordena).
+create or replace function public.admin_task_readable(p_cohort_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select public.is_admin()
+    or (p_cohort_id is null and public.is_staff())
+    or (p_cohort_id is not null and public.coordinates(p_cohort_id))
+$$;
+
+-- Criar/editar: Admin; coordenação ativa só na turma que coordena (gerais: só o Admin).
 create or replace function public.admin_task_editable(p_cohort_id uuid)
 returns boolean
 language sql
@@ -112,21 +132,21 @@ as $$
   select public.is_admin() or (p_cohort_id is not null and public.coordinates(p_cohort_id))
 $$;
 
+-- Sem exclusão: nenhuma permissão de DELETE para quem usa o portal (nem política). Cancelar = situação "cancelada".
 revoke all on public.admin_tasks from public, anon, authenticated;
-grant select, insert, update, delete on public.admin_tasks to authenticated;
-revoke all on function public.admin_task_editable(uuid), public.admin_tasks_guard() from public, anon, authenticated;
-grant execute on function public.admin_task_editable(uuid) to authenticated;
+grant select, insert, update on public.admin_tasks to authenticated;
+revoke all on function public.admin_task_readable(uuid), public.admin_task_editable(uuid), public.admin_tasks_guard()
+  from public, anon, authenticated;
+grant execute on function public.admin_task_readable(uuid), public.admin_task_editable(uuid) to authenticated;
 
 alter table public.admin_tasks enable row level security;
 
 create policy admin_tasks_select on public.admin_tasks for select to authenticated
-  using (public.admin_task_editable(cohort_id));
+  using (public.admin_task_readable(cohort_id));
 create policy admin_tasks_insert on public.admin_tasks for insert to authenticated
   with check (public.admin_task_editable(cohort_id));
 create policy admin_tasks_update on public.admin_tasks for update to authenticated
   using (public.admin_task_editable(cohort_id))
   with check (public.admin_task_editable(cohort_id));
-create policy admin_tasks_delete on public.admin_tasks for delete to authenticated
-  using (public.is_admin());
 
 update public.schema_info set version = '20261123120000_pendencias', updated_at = now();

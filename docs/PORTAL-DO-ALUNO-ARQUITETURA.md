@@ -2212,11 +2212,17 @@ planilha-base e os materiais a providenciar por módulo.
 
 - Migração `20261123120000_pendencias.sql` (só aditiva): tipos `task_category`, `task_priority`, `task_status`;
   tabela `admin_tasks`; função `admin_task_editable`; gatilhos de consistência, `updated_at` e `change_log`.
-- Permissões: Admin vê, cria, edita e exclui tudo (gerais e todas as turmas). Coordenação vê, cria e edita só as da
-  turma que coordena (sem as gerais) e cancela em vez de excluir. Aluno e visitante: nenhum acesso.
+- Permissões (revisadas em 23/11/2026): Admin vê, cria e edita tudo. Coordenação ativa vê as gerais **somente para
+  leitura** e vê, cria e edita as da turma que coordena; não vê as específicas de outras turmas. **Ninguém exclui** —
+  nem o Admin, nem pela API (sem permissão de DELETE): encerrar = Concluída ou Cancelada, histórico preservado.
+  Aluno e visitante: nenhum acesso.
+- Dependências: só entre pendências da mesma turma (ou ambas gerais); mudar a turma de uma pendência da qual outra da
+  turma antiga depende é recusado; "Depende de" mostra só as em aberto da mesma turma (ao criar, agrupadas por turma).
+- Responsável: hoje, pessoa do cadastro de equipe (`faculty`). Pessoas operacionais (ex.: compras) aguardam a decisão
+  sobre o cadastro de "Equipe operacional" (proposta de 23/11/2026), para não aparecerem nas listas acadêmicas.
 - Responsável: pessoa do cadastro de equipe (`faculty`), inclusive sem login.
 - Telas: `/admin/pendencias`, `/coordenacao/pendencias` (mesmo componente `components/tasks/TaskBoard.tsx`), bloco
   "Pendências do módulo" no editor do módulo, contagens e "N pendências atrasadas" no painel do Admin. Sem a migração
   no banco, as telas mostram só um aviso (`lib/tasks/schema.ts`).
-- Testes: banco `rls_pendencias.sql` (30), unitários `tasks-model.test.ts` e atenção, E2E `pendencias` (34).
+- Testes: banco `rls_pendencias.sql` (34), unitários `tasks-model.test.ts` e atenção, E2E `pendencias` (42).
 - Divergências planilha × portal: registro permanente em `docs/DIVERGENCIAS-PLANILHA-PORTAL.md`.

@@ -109,11 +109,19 @@ try {
   t.check('Coordenação abre o quadro e tem o link no menu', (await go(co, '/coordenacao/pendencias')) === 200 && (await co.locator('header a[href="/coordenacao/pendencias"]').count()) === 1)
   await go(co, '/coordenacao/pendencias?situacao=todas')
   const coTitles = await titles(co)
-  t.check('Coordenação vê só a própria turma (nem a geral, nem a turma 2)', JSON.stringify(coTitles) === JSON.stringify(['Kit de boas-vindas do Módulo 1']), coTitles)
+  t.check('Coordenação vê a própria turma e as gerais, não a turma 2', JSON.stringify([...coTitles].sort()) === JSON.stringify(['Kit de boas-vindas do Módulo 1', 'Microscópios para o módulo de endodontia']), coTitles)
+  const geralCo = co.locator(`[data-pendencia="${gid}"]`)
+  t.check(
+    'Pendência geral: somente leitura para a coordenação (sem situação nem edição)',
+    (await geralCo.getAttribute('data-somente-leitura')) === '1' && (await geralCo.locator('[data-trocar-situacao], [data-editar]').count()) === 0 && /somente leitura/.test(await geralCo.innerText()),
+  )
+  t.check('Coordenação tem o filtro "Geral (sem turma)"', (await co.locator('[data-filtros-pendencias] select[name=turma] option[value="geral"]').count()) === 1)
   await co.locator('[data-nova-pendencia] > summary').click()
   const cf = co.locator('[data-nova-pendencia] form')
   const cohortOpts = await cf.locator('select[name=turma] option').evaluateAll((os) => os.map((o) => o.value))
-  t.check('Coordenação não tem a opção "Geral (sem turma)"', !cohortOpts.includes('') && cohortOpts.includes(T) && !cohortOpts.includes(T2))
+  t.check('Coordenação não tem a opção "Geral (sem turma)" ao criar', !cohortOpts.includes('') && cohortOpts.includes(T) && !cohortOpts.includes(T2))
+  const coGroups = await cf.locator('[data-depende-de] optgroup').evaluateAll((gs) => gs.map((g) => g.getAttribute('data-grupo-turma')))
+  t.check('"Depende de" da coordenação: só a própria turma (sem gerais nem outras turmas)', coGroups.length === 1 && coGroups[0] === T, coGroups)
   await cf.locator('input[name=demanda]').fill('Confirmar fotógrafo do Módulo 1')
   await cf.locator('select[name=categoria]').selectOption('foto_video')
   await cf.locator('details summary').click()
@@ -123,10 +131,13 @@ try {
   t.check('Coordenação cria pendência na própria turma (com link)', one("select cohort_id||'|'||link_url from admin_tasks where title='Confirmar fotógrafo do Módulo 1'") === `${T}|https://exemplo.org/pasta`)
   await go(co, '/coordenacao/pendencias')
   await co.locator(`[data-pendencia="${kid}"] [data-editar] > summary`).click()
-  t.check('Coordenação não tem o botão de excluir', (await co.locator('button:has-text("Excluir pendência")').count()) === 0)
+  t.check('Nenhum botão de excluir para a coordenação', (await co.locator('button:has-text("Excluir")').count()) === 0)
+  const editGroups = await co.locator(`[data-pendencia="${kid}"] [data-depende-de] optgroup`).evaluateAll((gs) => gs.map((g) => g.getAttribute('data-grupo-turma')))
+  t.check('"Depende de" ao editar: só pendências da mesma turma', editGroups.every((g) => g === T))
   const co2 = await login(browser, 'coord2@pend.local', { phone: false })
   await go(co2, '/coordenacao/pendencias?situacao=todas')
-  t.check('Coordenação da turma 2 vê só a da turma 2', JSON.stringify(await titles(co2)) === JSON.stringify(['Pendência só da turma 2']))
+  const co2Titles = await titles(co2)
+  t.check('Coordenação da turma 2 vê a da turma 2 e as gerais, nada da turma 1', JSON.stringify([...co2Titles].sort()) === JSON.stringify(['Microscópios para o módulo de endodontia', 'Pendência só da turma 2']), co2Titles)
 
   // ── Aluno ──
   const al = await login(browser, 'aluno@pend.local')
@@ -135,12 +146,34 @@ try {
   const api = await (await rest(tk, 'GET', 'admin_tasks?select=id')).json()
   t.check('API: aluno não lê nenhuma pendência', Array.isArray(api) && api.length === 0)
 
-  // ── Exclusão pelo Admin ──
+  // ── Sem exclusão (nem o Admin): encerrar = cancelar ──
   await go(ad, '/admin/pendencias?situacao=todas')
   await ad.locator(`[data-pendencia="${t2task}"] [data-editar] > summary`).click()
-  await ad.locator(`[data-pendencia="${t2task}"] button:has-text("Excluir pendência")`).click()
+  t.check('Nenhum botão de excluir, nem para o Admin', (await ad.locator('button:has-text("Excluir")').count()) === 0 && /não são excluídas/.test(await ad.locator('[data-regra-encerrar]').innerText()))
+  await ad.locator(`[data-pendencia="${t2task}"] [data-trocar-situacao]`).selectOption('cancelada')
+  await ad.locator(`[data-pendencia="${t2task}"] form`).first().locator('button[type=submit]').click()
   await settleAfter(ad)
-  t.check('Admin exclui (com confirmação) e o histórico guarda a exclusão', one(`select count(*) from admin_tasks where id='${t2task}'`) === '0' && one(`select count(*) from change_log where table_name='admin_tasks' and row_id='${t2task}' and action='delete'`) === '1')
+  t.check('Admin cancela: registro preservado, histórico sem exclusão', one(`select status from admin_tasks where id='${t2task}'`) === 'cancelada' && one(`select count(*) from change_log where table_name='admin_tasks' and row_id='${t2task}' and action='delete'`) === '0')
+  const tkAd = await token('admin@pend.local')
+  const delRes = await rest(tkAd, 'DELETE', `admin_tasks?id=eq.${t2task}`)
+  t.check('API: nem o Admin exclui (recusado), registro continua', delRes.status >= 400 && one(`select count(*) from admin_tasks where id='${t2task}'`) === '1', delRes.status)
+
+  // ── Dependência de outra turma: recusada com mensagem clara ──
+  const geralAberta = one("insert into admin_tasks (title, category) values ('Geral aberta E2E', 'administrativo') returning id")
+  await go(ad, '/admin/pendencias')
+  await ad.locator('[data-nova-pendencia] > summary').click()
+  const df = ad.locator('[data-nova-pendencia] form')
+  const adGroups = await df.locator('[data-depende-de] optgroup').evaluateAll((gs) => gs.map((g) => g.getAttribute('data-grupo-turma')))
+  t.check('"Depende de" ao criar (Admin): agrupado por turma', adGroups.includes('geral') && adGroups.includes(T))
+  await df.locator('input[name=demanda]').fill('Teste dependência cruzada')
+  await df.locator('select[name=turma]').selectOption(T)
+  await df.locator('[data-depende-de]').selectOption(geralAberta)
+  await df.locator('button[type=submit]').click()
+  await settleAfter(ad)
+  t.check(
+    'Turma 1 dependendo de pendência geral: recusado com mensagem, nada gravado',
+    /mesma turma/.test(await df.locator('[role=alert]').innerText()) && one("select count(*) from admin_tasks where title='Teste dependência cruzada'") === '0',
+  )
 
   // ── 390 px ──
   const am = await login(browser, 'admin@pend.local')

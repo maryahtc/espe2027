@@ -9,8 +9,9 @@ import { CATEGORIES, PRIORITIES, STATUSES, type TaskCategory, type TaskPriority,
 import { tasksReady } from './schema'
 
 /**
- * Ações do quadro de pendências. Admin: tudo. Coordenação: só pendências das turmas que coordena; não cria pendência
- * geral e não exclui. As conferências aqui dão uma mensagem clara; a garantia é a RLS no banco.
+ * Ações do quadro de pendências. Admin: cria e edita tudo. Coordenação: cria e edita só nas turmas que coordena; as
+ * gerais são somente leitura. Ninguém exclui: encerrar = situação "cancelada" (histórico preservado). As conferências
+ * aqui dão uma mensagem clara; a garantia é a RLS no banco.
  */
 type Db = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>
 
@@ -106,6 +107,12 @@ export async function saveTask(_: ActionState, fd: FormData): Promise<ActionStat
       if (!row.cohort_id && !row.module_id) throw new Error('Escolha a turma da pendência.')
       if (row.cohort_id && !allowed.has(row.cohort_id)) throw new Error('Sem permissão para pendências desta turma.')
     }
+    if (row.depends_on_id) {
+      // Dependência só entre pendências da mesma turma (o banco recusa de qualquer forma; aqui a mensagem é clara).
+      const { data: dep } = await db.from('admin_tasks').select('cohort_id').eq('id', row.depends_on_id).maybeSingle()
+      const targetCohort = row.cohort_id ?? (row.module_id ? ((await db.from('modules').select('cohort_id').eq('id', row.module_id).maybeSingle()).data?.cohort_id ?? null) : null)
+      if (!dep || dep.cohort_id !== targetCohort) throw new Error('A pendência escolhida em "Depende de" precisa ser da mesma turma (ou ambas gerais).')
+    }
     if (id) {
       if (!isId(id)) throw new Error('Pendência inválida.')
       const { error, count } = await db.from('admin_tasks').update(row, { count: 'exact' }).eq('id', id)
@@ -129,18 +136,5 @@ export async function setTaskStatus(_: ActionState, fd: FormData): Promise<Actio
     fail(error)
     if (!count) throw new Error('Pendência não encontrada ou sem permissão.')
     return 'Situação atualizada.'
-  })
-}
-
-/** Exclusão definitiva: só o Admin (a coordenação cancela). */
-export async function deleteTask(_: ActionState, fd: FormData): Promise<ActionState> {
-  return run(async ({ auth, db }) => {
-    if (auth.role !== 'admin') throw new Error('Só o Admin exclui. Use a situação "Cancelada".')
-    const id = str(fd, 'id', 40)
-    if (!isId(id)) throw new Error('Pendência inválida.')
-    const { error, count } = await db.from('admin_tasks').delete({ count: 'exact' }).eq('id', id)
-    fail(error)
-    if (!count) throw new Error('Pendência não encontrada.')
-    return 'Pendência excluída.'
   })
 }
