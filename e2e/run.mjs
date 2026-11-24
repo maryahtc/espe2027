@@ -19,7 +19,7 @@ const DBDIR = path.join(ROOT, 'packages/db')
 const APPDIR = path.join(ROOT, 'apps/aluno')
 const SUITES = path.join(ROOT, 'e2e/suites')
 const PORT = 3001
-const ORDER = ['home', 'registro', 'casos', 'odontograma', 'planejamento', 'producao', 'permissoes', 'simulacao', 'workflows-editor', 'workflows-aluno', 'visao-turma', 'painel-admin', 'pendencias', 'equipe-operacional', 'logistica']
+const ORDER = ['home', 'registro', 'casos', 'odontograma', 'planejamento', 'producao', 'permissoes', 'simulacao', 'workflows-editor', 'workflows-aluno', 'visao-turma', 'painel-admin', 'pendencias', 'equipe-operacional', 'logistica', 'seguranca-bloco-a']
 
 const args = process.argv.slice(2)
 const flags = new Set(args.filter((a) => a.startsWith('--')))
